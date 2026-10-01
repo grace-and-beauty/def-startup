@@ -94,6 +94,14 @@ export function canIssueCards(business: BillingInfo, now: Date): boolean {
   return business.billing_status !== "canceled" && effectivePlan(business, now) !== "inactive";
 }
 
+/**
+ * /c/[slug] accepts a new customer: cards may be issued and the plan's
+ * customer limit is not reached yet.
+ */
+export function canAcceptCustomer(business: BillingInfo, customers: number, now: Date): boolean {
+  return canIssueCards(business, now) && customers < getLimit(business, "customers", now);
+}
+
 /** Stamps / rewards at the scanner: allowed until the business is inactive. */
 export function canStamp(business: BillingInfo, now: Date): boolean {
   return effectivePlan(business, now) !== "inactive";

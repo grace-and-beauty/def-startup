@@ -7,6 +7,8 @@ export interface ScanCard {
   stampsRequired: number;
   rewardsAvailable: number;
   totalVisits: number;
+  /** ISO time when the next stamp is allowed (cooldown); null = now. */
+  nextStampAt: string | null;
 }
 
 export type ScanFailure =
@@ -16,6 +18,7 @@ export type ScanFailure =
   | "cooldown"
   | "no_reward"
   | "session_expired"
+  | "inactive"
   | "error";
 
 /** Card state after a stamp / redeem (the UI keeps the customer name from the lookup). */

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CardPreview } from "@/components/card-preview";
-import { ServiceUnavailable } from "@/components/message-screen";
+import { MessageScreen, ServiceUnavailable } from "@/components/message-screen";
 import { t } from "@/lib/i18n";
-import { loadPublicBusiness } from "@/lib/public/loaders";
+import { isAcceptingCustomers, loadPublicBusiness } from "@/lib/public/loaders";
 import { isGoogleWalletConfigured } from "@/lib/wallet";
 
 import { joinProgram } from "./actions";
@@ -24,7 +24,16 @@ export default async function JoinPage({ params }: PageProps<"/c/[slug]">) {
   if (loaded.status === "not_found") notFound();
 
   const { business, program } = loaded.data;
-  // TODO(stage 3): inactive business → «Програма тимчасово недоступна» (architecture §5.1, §6.2).
+  // Canceled / inactive business or plan customer limit reached (architecture §5.1, §6.2).
+  if (!(await isAcceptingCustomers(business, new Date()))) {
+    return (
+      <MessageScreen
+        title={t("join.programUnavailableTitle")}
+        text={t("join.programUnavailableText")}
+        showHomeLink={false}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-6">

@@ -15,6 +15,8 @@ const ERROR_KEYS = {
   invalidPhone: "join.invalidPhone",
   notFound: "join.notFound",
   unavailable: "unavailable.title",
+  programUnavailable: "join.programUnavailableTitle",
+  rateLimited: "join.rateLimited",
   unknown: "common.error",
 } as const;
 

@@ -5,6 +5,7 @@ import type {
   ApplyStampResult,
   Card,
   Customer,
+  IssueCardResult,
   RedeemRewardResult,
   TablesUpdate,
   WalletType,
@@ -67,6 +68,38 @@ export async function createCard(
       .select("*")
       .single(),
   );
+}
+
+/**
+ * Customer + card in one transaction (RPC issue_card). maxCustomers is the
+ * plan limit (Infinity / null = unlimited) and is checked under a per-business
+ * lock, so parallel joins can't exceed it. A duplicate qrToken throws
+ * DataError.isUniqueViolation — retry with a new token.
+ */
+export async function issueCard(
+  admin: Db,
+  input: {
+    businessId: string;
+    name: string | null;
+    phone: string | null;
+    qrToken: string;
+    maxCustomers: number | null;
+  },
+): Promise<IssueCardResult> {
+  const max = input.maxCustomers;
+  const rows = unwrapRequired(
+    "issueCard",
+    await admin.rpc("issue_card", {
+      p_business_id: input.businessId,
+      p_name: input.name,
+      p_phone: input.phone,
+      p_qr_token: input.qrToken,
+      p_max_customers: max !== null && Number.isFinite(max) ? Math.max(0, Math.floor(max)) : null,
+    }),
+  );
+  const [row] = rows;
+  if (!row) throw new Error("issueCard: empty result");
+  return row;
 }
 
 export async function countCards(db: Db, businessId: string, since?: Date): Promise<number> {

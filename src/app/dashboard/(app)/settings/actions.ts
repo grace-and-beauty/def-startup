@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { ownerContextForAction, type OwnerContext } from "@/lib/auth/owner";
 import { updateBusiness, updateProgram } from "@/lib/data";
@@ -98,8 +99,15 @@ export async function updateRule(_prev: SettingsState, formData: FormData): Prom
   });
 }
 
+/** Checkbox: "on" when checked, absent otherwise. */
+const checkboxSchema = z
+  .union([z.literal("on"), z.null()])
+  .transform((value) => value === "on");
+
 export async function updateReminders(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
-  const enabled = formData.get("enabled") === "on";
+  const enabledParsed = checkboxSchema.safeParse(formData.get("enabled"));
+  if (!enabledParsed.success) return fail("unknown");
+  const enabled = enabledParsed.data;
   const rawDays = formString(formData, "reminderDays").trim();
   const rawText = formString(formData, "reminderText").trim();
 

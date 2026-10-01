@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { ownerContextForAction } from "@/lib/auth/owner";
 import { countMessagesSince, insertMessage } from "@/lib/data";
@@ -9,6 +10,10 @@ import { getLimit, hasFeature, remaining } from "@/lib/domain/plans";
 
 import { countRecipients, monthStart } from "./recipients";
 import type { BroadcastState, BroadcastTarget } from "./types";
+
+const targetSchema = z
+  .union([z.literal(""), z.enum(["all", "at_risk"])])
+  .transform((value): BroadcastTarget => (value === "" ? "all" : value));
 
 /**
  * Broadcast to all cards or to at-risk customers (architecture §5.3):
@@ -30,9 +35,9 @@ export async function sendBroadcast(prev: BroadcastState, formData: FormData): P
 
   const text = broadcastTextSchema.safeParse(formString(formData, "text"));
   if (!text.success) return fail("textInvalid");
-  const rawTarget = formString(formData, "target") || "all";
-  if (rawTarget !== "all" && rawTarget !== "at_risk") return fail("targetInvalid");
-  const target: BroadcastTarget = rawTarget;
+  const targetParsed = targetSchema.safeParse(formString(formData, "target"));
+  if (!targetParsed.success) return fail("targetInvalid");
+  const target: BroadcastTarget = targetParsed.data;
   if (target === "at_risk" && !hasFeature(business, "analytics", now)) return fail("targetInvalid");
 
   let count: number;

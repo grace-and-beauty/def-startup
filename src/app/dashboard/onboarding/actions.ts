@@ -17,7 +17,7 @@ import {
   stampsRequiredSchema,
   termsTextSchema,
 } from "@/lib/domain/business-input";
-import { isValidSlug, slugCandidates } from "@/lib/domain/slug";
+import { slugCandidates } from "@/lib/domain/slug";
 import { t } from "@/lib/i18n";
 import { hashPin } from "@/lib/security/pin";
 import { isAcceptableLogo } from "@/lib/security/upload";
@@ -43,8 +43,9 @@ async function freeSlugs(base: string, ownSlug: string | null): Promise<string[]
 
 /** Step 2 of the wizard: is the slug free? Suggests alternatives when not. */
 export async function checkSlug(rawSlug: string): Promise<SlugCheckResult> {
-  const slug = String(rawSlug ?? "").trim();
-  if (!isValidSlug(slug)) return { status: "invalid" };
+  const parsed = slugSchema.safeParse(rawSlug);
+  if (!parsed.success) return { status: "invalid" };
+  const slug = parsed.data;
   const session = await getOwnerSession();
   if (!session) return { status: "sessionExpired" };
 

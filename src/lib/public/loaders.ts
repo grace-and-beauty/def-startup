@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 
 import {
+  countCustomers,
   getCardByToken,
   getLatestBroadcast,
   getPublicBusinessById,
@@ -13,6 +14,7 @@ import {
   type Message,
   type ProgramPublic,
 } from "@/lib/data";
+import { canAcceptCustomer, canIssueCards, getLimit } from "@/lib/domain/plans";
 import { isValidSlug } from "@/lib/domain/slug";
 import { isValidQrToken } from "@/lib/security/tokens";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -67,3 +69,16 @@ export const loadPublicCard = cache(async (token: string): Promise<Loaded<Public
   if (!business || !program) return { status: "not_found" };
   return { status: "ok", data: { business, program, card, latestMessage } };
 });
+
+/**
+ * /c/[slug] shows the join form only while the business can issue cards
+ * (not canceled / inactive, docs/architecture.md §6.2) and is below its
+ * plan's customer limit. joinProgram re-checks both atomically.
+ */
+export async function isAcceptingCustomers(business: BusinessPublic, now: Date): Promise<boolean> {
+  if (!canIssueCards(business, now)) return false;
+  if (!Number.isFinite(getLimit(business, "customers", now))) return true;
+  const admin = tryCreateSupabaseAdminClient();
+  if (!admin) return false;
+  return canAcceptCustomer(business, await countCustomers(admin, business.id), now);
+}

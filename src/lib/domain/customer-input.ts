@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /**
  * Normalization of the optional customer fields on /c/[slug] (pure).
  * Empty input → null. Invalid input → undefined (caller reports an error).
@@ -25,3 +27,19 @@ export function normalizePhone(raw: unknown): string | null | undefined {
   if (digits.length < 7 || digits.length > 15) return undefined;
   return (trimmed.startsWith("+") ? "+" : "") + digits;
 }
+
+// zod wrappers for Server Actions: FormData values (string | File | null).
+
+function normalized(fn: (raw: unknown) => string | null | undefined, message: string) {
+  return z.unknown().transform((raw, ctx) => {
+    const value = fn(raw);
+    if (value === undefined) {
+      ctx.addIssue({ code: "custom", message });
+      return z.NEVER;
+    }
+    return value;
+  });
+}
+
+export const customerNameSchema = normalized(normalizeCustomerName, "invalidName");
+export const customerPhoneSchema = normalized(normalizePhone, "invalidPhone");

@@ -22,6 +22,7 @@ const FAILURE_KEYS: Record<ScanFailure, TranslationKey> = {
   cooldown: "stamp.status.cooldown",
   no_reward: "stamp.status.no_reward",
   session_expired: "scan.sessionExpired",
+  inactive: "scan.inactive",
   error: "common.error",
 };
 
@@ -279,6 +280,11 @@ function CardScreen({
         </p>
         <StampProgress count={card.stampsCount} total={card.stampsRequired} size="lg" />
       </div>
+      {card.nextStampAt ? (
+        <p className="text-muted-foreground text-sm">
+          {t("scan.retryAfter", { time: formatTime(card.nextStampAt) })}
+        </p>
+      ) : null}
       {card.rewardsAvailable > 0 ? (
         <p className="bg-success text-success-foreground rounded-lg px-4 py-3 font-medium">
           {t("scan.rewardsAvailable", { count: card.rewardsAvailable })}

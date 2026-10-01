@@ -1,7 +1,7 @@
 import type { Db } from "@/lib/supabase/types";
 
 import { unwrap, unwrapRequired } from "./errors";
-import type { Staff, StaffWithPinHash } from "./types";
+import type { BeginStaffLoginResult, Staff, StaffWithPinHash } from "./types";
 
 /** Never select pin_hash outside the PIN check. Owners can't read it anyway (column grant). */
 export const STAFF_SAFE_COLUMNS = "id, business_id, name, is_active, created_at" as const;
@@ -99,31 +99,46 @@ export async function updateStaff(
 // staff_login_attempts (service role only)
 // ---------------------------------------------------------------------------
 
-export async function recordStaffLoginAttempt(
+/**
+ * Reserves a PIN attempt before the comparison (RPC begin_staff_login, see
+ * supabase/migrations/*_security_guards.sql). The attempt is stored as a
+ * failure; call markStaffLoginSucceeded() after a matching PIN.
+ */
+export async function beginStaffLogin(
   admin: Db,
-  input: { businessId: string; ipHash: string; success: boolean },
-): Promise<void> {
-  unwrap(
-    "recordStaffLoginAttempt",
-    await admin.from("staff_login_attempts").insert({
-      business_id: input.businessId,
-      ip_hash: input.ipHash,
-      success: input.success,
+  input: {
+    businessId: string;
+    ipHash: string;
+    windowMinutes: number;
+    maxIpFailures: number;
+    maxBusinessFailures: number;
+  },
+): Promise<BeginStaffLoginResult> {
+  const rows = unwrapRequired(
+    "beginStaffLogin",
+    await admin.rpc("begin_staff_login", {
+      p_business_id: input.businessId,
+      p_ip_hash: input.ipHash,
+      p_window_minutes: input.windowMinutes,
+      p_max_ip_failures: input.maxIpFailures,
+      p_max_business_failures: input.maxBusinessFailures,
     }),
   );
+  const [row] = rows;
+  if (!row) throw new Error("beginStaffLogin: empty result");
+  return row;
 }
 
-export async function countFailedStaffLoginAttempts(
+export async function markStaffLoginSucceeded(
   admin: Db,
-  input: { businessId: string; ipHash: string; since: Date },
-): Promise<number> {
-  const { count, error } = await admin
-    .from("staff_login_attempts")
-    .select("id", { count: "exact", head: true })
-    .eq("business_id", input.businessId)
-    .eq("ip_hash", input.ipHash)
-    .eq("success", false)
-    .gte("created_at", input.since.toISOString());
-  unwrap("countFailedStaffLoginAttempts", { data: null, error });
-  return count ?? 0;
+  input: { businessId: string; attemptId: number },
+): Promise<void> {
+  unwrap(
+    "markStaffLoginSucceeded",
+    await admin
+      .from("staff_login_attempts")
+      .update({ success: true })
+      .eq("business_id", input.businessId)
+      .eq("id", input.attemptId),
+  );
 }

@@ -5,5 +5,6 @@ export * from "./errors";
 export * from "./events";
 export * from "./messages";
 export * from "./programs";
+export * from "./rate-limits";
 export * from "./staff";
 export type * from "./types";

@@ -52,6 +52,14 @@ npm run dev                  # http://localhost:3000
 
 Кабінет (`/dashboard/*`) працює від імені власника (cookie Supabase Auth, RLS); `src/proxy.ts` оновлює сесію і відправляє неавторизованих на `/login`. Поки онбординг не завершено — редірект на майстер. Онбординг створює заклад, програму і працівника «Загальний» однією транзакцією (RPC `onboard_business`). Логотипи — у bucket `logos` (лише PNG/JPEG/WebP ≤ 1 МБ з перевіркою сигнатури файлу); без Supabase Storage завантаження повертає помилку, решта працює. Демо: `/c/avtomyika-demo`, `/card/DemoCard00000001`, `/scan/avtomyika-demo` (PIN 1234).
 
+## Безпека й захист від зловживань
+
+- **Штампи:** чисті правила — `src/lib/domain/stamps.ts` (кулдаун, переповнення → винагорода); запис — RPC `apply_stamp` / `redeem_reward` (блокування рядка картки). Integration-тест перевіряє, що обидві реалізації дають однаковий стан.
+- **Сканер:** PIN (bcrypt) → підписана cookie `staff_session` (HS256, 12 год, `path=/scan`). Кожна дія сканера заново перевіряє сесію, активність працівника і шукає картку лише в закладі із сесії. Спроба входу резервується атомарно (RPC `begin_staff_login`) **до** перевірки PIN: 5 невдалих спроб з IP за 15 хв → блок IP; 30 невдалих спроб на заклад з будь-яких IP → блок нових входів закладу (вже відкриті сесії працюють).
+- **Приєднання (`/c/[slug]`):** ≤ 10 нових карток / хв з одного IP на заклад (RPC `hit_rate_limit`, IP лише як HMAC-хеш), клієнт + картка однією транзакцією з перевіркою ліміту клієнтів тарифу під блокуванням (RPC `issue_card`). Скасований / неактивний заклад або вичерпаний ліміт → «Програма тимчасово недоступна»; неактивний заклад не ставить штампів, веб-картки лишаються для перегляду.
+- **Заголовки:** `src/lib/security/headers.ts` → `next.config.ts` (базова CSP без nonce, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` з камерою лише для свого сайту, HSTS, `nosniff`).
+- Усі входи Server Actions (включно з bound-аргументами) перевіряє zod.
+
 ## База даних
 
 - Міграції: `supabase/migrations/*.sql` (схема, індекси, RLS, тригери, RPC). Сумісні із Supabase CLI.
@@ -94,7 +102,7 @@ npx supabase db push
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | так | Публічні; дані захищає RLS |
 | `SUPABASE_SERVICE_ROLE_KEY` | так | **Лише сервер**, обходить RLS |
 | `STAFF_SESSION_SECRET` | так | ≥ 32 байти, підпис cookie сканера |
-| `IP_HASH_SECRET` | так | Сіль для хешу IP |
+| `IP_HASH_SECRET` | так | Ключ HMAC для хешу IP (блокування PIN, ліміт приєднань); без нього сканер і `/c/[slug]` не працюють |
 | `CRON_SECRET` | для cron | Bearer-токен `/api/cron/reminders` |
 | `STAMP_COOLDOWN_MINUTES` | ні (10) | `0` вимикає кулдаун |
 | `GOOGLE_WALLET_*` | ні | Порожньо → `noop`-провайдер |
@@ -108,8 +116,9 @@ src/app/              сторінки (App Router)
 src/components/ui/    shadcn/ui (нейтральні, лише CSS-змінні)
 src/config/           brand.ts, niches.ts (8 ніш), plans.ts (тарифи)
 src/lib/data/         типи БД і запити по сутностях
-src/lib/domain/       чисті функції: plans (тарифи), analytics, dates, slug, вхідні дані
+src/lib/domain/       чисті функції: stamps, plans (тарифи), analytics, dates, slug, вхідні дані
 src/lib/auth/         owner.ts (сесія власника), staff-session/staff-cookie (сканер)
+src/lib/security/     tokens (qr_token), pin, rate-limit, upload (логотипи), headers
 src/lib/supabase/     server.ts, browser.ts, admin.ts (service role, server-only)
 src/lib/i18n/         t() + locales/uk.json
 src/styles/           globals.css — дизайн-токени

@@ -17,6 +17,7 @@ const fail = (reason: Failure["reason"], limit?: number): StaffActionState => ({
 const ok = (): StaffActionState => ({ status: "ok", nonce: Date.now() });
 
 const staffIdSchema = z.uuid();
+const activeSchema = z.boolean();
 
 /**
  * Two active staff members with the same PIN would make the scanner log in
@@ -75,6 +76,9 @@ export async function setStaffActive(
   if (!ctx) return fail("sessionExpired");
   const id = staffIdSchema.safeParse(staffId);
   if (!id.success) return fail("notFound");
+  const activeParsed = activeSchema.safeParse(active);
+  if (!activeParsed.success) return fail("unknown");
+  active = activeParsed.data;
 
   try {
     const staff = await getStaffById(ctx.supabase, ctx.business.id, id.data);

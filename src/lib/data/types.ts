@@ -20,6 +20,8 @@ export type ProgramType = "stamps";
 export type ApplyStampStatus = "ok" | "not_found" | "staff_inactive" | "cooldown";
 export type RedeemRewardStatus = "ok" | "not_found" | "staff_inactive" | "no_reward";
 export type OnboardBusinessStatus = "ok" | "already_done";
+export type BeginStaffLoginStatus = "ok" | "locked" | "locked_business";
+export type IssueCardStatus = "ok" | "not_found" | "limit_reached";
 
 type Rel<Name extends string, Cols extends string[], Ref extends string, RefCols extends string[]> = {
   foreignKeyName: Name;
@@ -347,9 +349,68 @@ export type Database = {
         };
         Relationships: [Rel<"staff_login_attempts_business_id_fkey", ["business_id"], "businesses", ["id"]>];
       };
+      rate_limit_events: {
+        Row: {
+          id: number;
+          scope: string;
+          business_id: string;
+          key_hash: string;
+          created_at: string;
+        };
+        Insert: {
+          scope: string;
+          business_id: string;
+          key_hash: string;
+          created_at?: string;
+        };
+        Update: {
+          scope?: string;
+          business_id?: string;
+          key_hash?: string;
+          created_at?: string;
+        };
+        Relationships: [Rel<"rate_limit_events_business_id_fkey", ["business_id"], "businesses", ["id"]>];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
+      hit_rate_limit: {
+        Args: {
+          p_scope: string;
+          p_business_id: string;
+          p_key_hash: string;
+          p_max: number;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
+      begin_staff_login: {
+        Args: {
+          p_business_id: string;
+          p_ip_hash: string;
+          p_window_minutes: number;
+          p_max_ip_failures: number;
+          p_max_business_failures: number;
+        };
+        Returns: {
+          status: BeginStaffLoginStatus;
+          attempt_id: number | null;
+          failures: number;
+        }[];
+      };
+      issue_card: {
+        Args: {
+          p_business_id: string;
+          p_name: string | null;
+          p_phone: string | null;
+          p_qr_token: string;
+          p_max_customers: number | null;
+        };
+        Returns: {
+          status: IssueCardStatus;
+          card_id: string | null;
+        }[];
+      };
       is_business_owner: {
         Args: { bid: string };
         Returns: boolean;
@@ -492,6 +553,8 @@ export type StaffLoginAttempt = Tables<"staff_login_attempts">;
 export type ApplyStampResult = RpcReturns<"apply_stamp">[number];
 export type RedeemRewardResult = RpcReturns<"redeem_reward">[number];
 export type OnboardBusinessResult = RpcReturns<"onboard_business">[number];
+export type BeginStaffLoginResult = RpcReturns<"begin_staff_login">[number];
+export type IssueCardResult = RpcReturns<"issue_card">[number];
 export type AnalyticsDailyRow = RpcReturns<"analytics_daily">[number];
 export type AnalyticsHeatmapRow = RpcReturns<"analytics_heatmap">[number];
 export type AnalyticsCardStatsRow = RpcReturns<"analytics_card_stats">[number];
