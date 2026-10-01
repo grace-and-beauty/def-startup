@@ -71,3 +71,21 @@ export async function updateProgram(
       .single(),
   );
 }
+
+/** Service role: remember the Google Wallet class id of the program. */
+export async function updateProgramGoogleClass(
+  admin: Db,
+  businessId: string,
+  programId: string,
+  classId: string | null,
+): Promise<void> {
+  if (!classId) return;
+  unwrap(
+    "updateProgramGoogleClass",
+    await admin
+      .from("programs")
+      .update({ google_class_id: classId })
+      .eq("id", programId)
+      .eq("business_id", businessId),
+  );
+}

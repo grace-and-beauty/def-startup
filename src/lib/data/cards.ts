@@ -196,3 +196,31 @@ export async function redeemReward(
   if (!row) throw new Error("redeemReward: empty result");
   return row;
 }
+
+export type ReminderCandidate = Pick<
+  Card,
+  "id" | "qr_token" | "stamps_count" | "rewards_available" | "wallet_type" | "last_visit_at" | "last_reminder_at"
+>;
+
+/**
+ * Service role (cron): cards whose last visit is at or before `lastVisitBefore`.
+ * domain/reminders.ts makes the final decision.
+ */
+export async function listReminderCandidates(
+  admin: Db,
+  businessId: string,
+  lastVisitBefore: Date,
+): Promise<ReminderCandidate[]> {
+  return (
+    unwrap(
+      "listReminderCandidates",
+      await admin
+        .from("cards")
+        .select("id, qr_token, stamps_count, rewards_available, wallet_type, last_visit_at, last_reminder_at")
+        .eq("business_id", businessId)
+        .not("last_visit_at", "is", null)
+        .lte("last_visit_at", lastVisitBefore.toISOString())
+        .order("last_visit_at", { ascending: true }),
+    ) ?? []
+  );
+}

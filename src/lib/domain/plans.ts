@@ -111,3 +111,30 @@ export function canStamp(business: BillingInfo, now: Date): boolean {
 export function remaining(limit: number, used: number): number {
   return Number.isFinite(limit) ? Math.max(0, limit - used) : Infinity;
 }
+
+/**
+ * How many staff PINs work at the scanner. Without the staff_pins feature
+ * (Basic) only the default «Загальний»; otherwise the plan's staff limit.
+ * At least 1, so an inactive business keeps read-only scanner access (§6.2).
+ */
+export function scannerStaffLimit(business: BillingInfo, now: Date): number {
+  if (!hasFeature(business, "staff_pins", now)) return 1;
+  return Math.max(1, getLimit(business, "staff", now));
+}
+
+/**
+ * Staff members whose PIN works at the scanner: active ones in creation
+ * order (the default «Загальний» is created first), capped by
+ * scannerStaffLimit(). After a downgrade the extra PINs stop working until
+ * the plan allows them again — nothing is deleted.
+ */
+export function usableStaff<T extends { id: string; is_active: boolean; created_at: string }>(
+  staff: readonly T[],
+  business: BillingInfo,
+  now: Date,
+): T[] {
+  return staff
+    .filter((member) => member.is_active)
+    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || a.id.localeCompare(b.id))
+    .slice(0, scannerStaffLimit(business, now));
+}

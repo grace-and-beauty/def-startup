@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { ServiceUnavailable } from "@/components/message-screen";
 import { readStaffSession } from "@/lib/auth/staff-cookie";
-import { getStaffById } from "@/lib/data";
+import { listStaff } from "@/lib/data";
+import { usableStaff } from "@/lib/domain/plans";
 import { t } from "@/lib/i18n";
 import { loadPublicBusiness } from "@/lib/public/loaders";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -26,14 +27,17 @@ export default async function ScanPage({ params }: PageProps<"/scan/[slug]">) {
 
   const session = await readStaffSession();
   const admin = tryCreateSupabaseAdminClient();
+  // The session counts only while the PIN is active and allowed by the plan.
   const staff =
     session && admin && session.businessId === business.id
-      ? await getStaffById(admin, business.id, session.staffId)
+      ? (usableStaff(await listStaff(admin, business.id), business, new Date()).find(
+          (member) => member.id === session.staffId,
+        ) ?? null)
       : null;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-6">
-      {staff?.is_active ? (
+      {staff ? (
         <Scanner
           businessName={business.name}
           staffName={staff.name}

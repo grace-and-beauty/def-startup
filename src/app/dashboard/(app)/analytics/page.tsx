@@ -16,7 +16,7 @@ import { sampleAnalyticsInputs } from "./sample";
 export const metadata: Metadata = { title: t("analytics.title") };
 
 export default async function AnalyticsPage({ searchParams }: PageProps<"/dashboard/analytics">) {
-  const { supabase, business } = await requireOwnerContext();
+  const { supabase, business, program } = await requireOwnerContext();
   const period = parsePeriod((await searchParams).period);
   const now = new Date();
   const today = toLocalDate(now, business.timezone);
@@ -76,6 +76,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/dashbo
     cards,
     staff,
     broadcasts: messages.filter((m) => m.kind === "broadcast"),
+    remindersAvailable: hasFeature(business, "reminders", now),
+    remindersEnabled: program.reminders_enabled,
   });
 
   return (

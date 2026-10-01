@@ -129,14 +129,14 @@ export interface AtRiskCard extends CardStat {
  * Regulars who stopped coming: ≥ 2 visits and no visit for longer than
  * median interval × 1.5 (at least 1 day). Most overdue first.
  */
-export function atRiskCards(
-  cards: readonly CardStat[],
+export function atRiskCards<T extends CardStat>(
+  cards: readonly T[],
   medianIntervalDays: number | null,
   now: Date,
-): AtRiskCard[] {
+): (T & { daysSinceVisit: number })[] {
   if (medianIntervalDays === null) return [];
   const thresholdDays = Math.max(1, medianIntervalDays * AT_RISK_FACTOR);
-  const out: AtRiskCard[] = [];
+  const out: (T & { daysSinceVisit: number })[] = [];
   for (const card of cards) {
     if (card.visits < AT_RISK_MIN_VISITS || !card.last_visit_at) continue;
     const days = (now.getTime() - Date.parse(card.last_visit_at)) / DAY_MS;
@@ -161,6 +161,60 @@ export function topCards<T extends CardStat>(cards: readonly T[], limit = 20): T
 export function activeCards(cards: readonly CardStat[], now: Date, days = 30): number {
   const since = now.getTime() - days * DAY_MS;
   return cards.filter((c) => c.last_visit_at && Date.parse(c.last_visit_at) >= since).length;
+}
+
+export interface ReturnWithin {
+  /** Cards whose first visit was at least `days` ago (the cohort can be judged). */
+  cohort: number;
+  /** Of them: second visit within `days` after the first. */
+  returned: number;
+  /** returned / cohort, % (null for an empty cohort). */
+  rate: number | null;
+}
+
+/**
+ * "% повернулись за 30 днів": among cards whose first visit was ≥ `days`
+ * ago, the share whose second visit came within `days` of the first.
+ * Younger cards are left out — they had no fair chance to come back yet.
+ */
+export function returnedWithin(
+  cards: readonly (CardStat & { second_visit_at?: string | null })[],
+  now: Date,
+  days = 30,
+): ReturnWithin {
+  const windowMs = days * DAY_MS;
+  let cohort = 0;
+  let returned = 0;
+  for (const card of cards) {
+    const first = card.first_visit_at ? Date.parse(card.first_visit_at) : NaN;
+    if (Number.isNaN(first) || now.getTime() - first < windowMs) continue;
+    cohort++;
+    const second = card.second_visit_at ? Date.parse(card.second_visit_at) : NaN;
+    if (!Number.isNaN(second) && second - first <= windowMs) returned++;
+  }
+  return { cohort, returned, rate: cohort === 0 ? null : Math.round((returned / cohort) * 100) };
+}
+
+/** Cards holding rewards that were earned but not handed out yet. */
+export function pendingRewards(cards: readonly { rewards_available: number }[]): { cards: number; rewards: number } {
+  let count = 0;
+  let rewards = 0;
+  for (const card of cards) {
+    if (card.rewards_available > 0) {
+      count++;
+      rewards += card.rewards_available;
+    }
+  }
+  return { cards: count, rewards };
+}
+
+/**
+ * Suggested reminder delay: median interval × 1.5 (the at-risk threshold),
+ * rounded, within 1…365 days. null without enough data.
+ */
+export function suggestedReminderDays(medianIntervalDays: number | null): number | null {
+  if (medianIntervalDays === null) return null;
+  return Math.min(365, Math.max(1, Math.round(medianIntervalDays * AT_RISK_FACTOR)));
 }
 
 // ---------------------------------------------------------------------------
@@ -255,26 +309,88 @@ export function broadcastEffects(
 
 export type Insight =
   | { kind: "atRisk"; count: number }
-  | { kind: "peak"; dow: number; hour: number }
-  | { kind: "growth"; pct: number }
+  | { kind: "remindersOff"; days: number | null }
+  | { kind: "pendingRewards"; count: number }
   | { kind: "decline"; pct: number }
+  | { kind: "growth"; pct: number }
   | { kind: "lowRetention"; rate: number }
+  | { kind: "broadcastWorked"; pct: number }
+  | { kind: "noRecentBroadcast"; days: number | null }
+  | { kind: "peak"; dow: number; hour: number }
   | { kind: "noAvgCheck" };
 
+export type InsightKind = Insight["kind"];
+
+/** Where a hint's action button leads (the UI renders the label). */
+export type InsightAction = "broadcastAtRisk" | "broadcast" | "reminders" | "avgCheck" | null;
+
+export function insightAction(insight: Insight): InsightAction {
+  switch (insight.kind) {
+    case "atRisk":
+      return "broadcastAtRisk";
+    case "remindersOff":
+    case "lowRetention":
+      return "reminders";
+    case "pendingRewards":
+    case "decline":
+    case "noRecentBroadcast":
+    case "broadcastWorked":
+      return "broadcast";
+    case "noAvgCheck":
+      return "avgCheck";
+    case "growth":
+    case "peak":
+      return null;
+  }
+}
+
+/** No broadcast for this many days → suggest one. */
+export const QUIET_BROADCAST_DAYS = 30;
+/** A broadcast "worked" when visits in its 3-day window beat the baseline by this much, %. */
+export const BROADCAST_WORKED_PCT = 20;
+
+/**
+ * Text hints for the analytics screen, most actionable first. Each hint maps
+ * to an action button via insightAction().
+ */
 export function insights(input: {
   atRiskCount: number;
   peak: PeakCell | null;
   stampsChange: Change;
   retentionRate: number | null;
   avgCheck: number | null;
+  /** Program reminders switched on (only checked when the plan has them). */
+  remindersEnabled?: boolean;
+  remindersAvailable?: boolean;
+  suggestedReminderDays?: number | null;
+  pendingRewardCards?: number;
+  effects?: readonly Pick<BroadcastEffect, "liftPct" | "partial">[];
+  /** Days since the last broadcast (null = never). */
+  daysSinceBroadcast?: number | null;
+  totalCards?: number;
 }): Insight[] {
   const out: Insight[] = [];
   if (input.atRiskCount > 0) out.push({ kind: "atRisk", count: input.atRiskCount });
+  if (input.remindersAvailable && input.remindersEnabled === false && input.atRiskCount > 0) {
+    out.push({ kind: "remindersOff", days: input.suggestedReminderDays ?? null });
+  }
+  if ((input.pendingRewardCards ?? 0) > 0) out.push({ kind: "pendingRewards", count: input.pendingRewardCards ?? 0 });
   const delta = input.stampsChange.deltaPct;
-  if (delta !== null && delta >= 10) out.push({ kind: "growth", pct: delta });
   if (delta !== null && delta <= -10) out.push({ kind: "decline", pct: Math.abs(delta) });
+  if (delta !== null && delta >= 10) out.push({ kind: "growth", pct: delta });
   if (input.retentionRate !== null && input.retentionRate < 30) {
     out.push({ kind: "lowRetention", rate: input.retentionRate });
+  }
+  const best = (input.effects ?? [])
+    .filter((e) => !e.partial && e.liftPct !== null)
+    .reduce<number | null>((max, e) => (max === null || (e.liftPct ?? 0) > max ? e.liftPct : max), null);
+  if (best !== null && best >= BROADCAST_WORKED_PCT) out.push({ kind: "broadcastWorked", pct: best });
+  if (
+    (input.totalCards ?? 0) > 0 &&
+    input.daysSinceBroadcast !== undefined &&
+    (input.daysSinceBroadcast === null || input.daysSinceBroadcast >= QUIET_BROADCAST_DAYS)
+  ) {
+    out.push({ kind: "noRecentBroadcast", days: input.daysSinceBroadcast });
   }
   if (input.peak) out.push({ kind: "peak", dow: input.peak.dow, hour: input.peak.hour });
   if (input.avgCheck === null || input.avgCheck <= 0) out.push({ kind: "noAvgCheck" });

@@ -12,15 +12,16 @@ import {
   getCardByToken,
   getPublicBusinessById,
   getPublicProgramByBusinessId,
-  getStaffById,
   listActiveStaffWithPinHashes,
+  listStaff,
   markStaffLoginSucceeded,
   redeemReward as redeemRewardRpc,
   type BusinessPublic,
+  type CardWithCustomer,
   type ProgramPublic,
 } from "@/lib/data";
 import { pinSchema, slugSchema } from "@/lib/domain/business-input";
-import { canStamp } from "@/lib/domain/plans";
+import { canStamp, usableStaff } from "@/lib/domain/plans";
 import { applyStamp, cardStateFromRow, cooldownEndsAt, redeemReward } from "@/lib/domain/stamps";
 import { ipHashSecret, MissingEnvError, stampCooldownMinutes } from "@/lib/env";
 import { loadPublicBusiness } from "@/lib/public/loaders";
@@ -35,6 +36,7 @@ import {
 import { extractQrToken } from "@/lib/security/tokens";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Db } from "@/lib/supabase/types";
+import { scheduleWalletTask } from "@/lib/wallet/background";
 
 import type { LookupResult, PinState, ScanActionResult, ScanCardCounters, ScanFailure } from "./types";
 
@@ -100,7 +102,8 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
       return { status: "error", reason: "locked" };
     }
 
-    const candidates = await listActiveStaffWithPinHashes(admin, business.id);
+    // Only PINs the current plan allows (Basic: just the default «Загальний»).
+    const candidates = usableStaff(await listActiveStaffWithPinHashes(admin, business.id), business, new Date());
     const match = await findStaffByPin(pin, candidates);
     if (!match) {
       return {
@@ -142,13 +145,17 @@ async function requireStaff(): Promise<StaffContext | ScanFailure> {
   const session = await readStaffSession();
   const admin = tryCreateSupabaseAdminClient();
   if (!session || !admin) return "session_expired";
-  const [staff, business, program] = await Promise.all([
-    getStaffById(admin, session.businessId, session.staffId),
+  const [staffList, business, program] = await Promise.all([
+    listStaff(admin, session.businessId),
     getPublicBusinessById(admin, session.businessId),
     getPublicProgramByBusinessId(admin, session.businessId),
   ]);
+  const staff = staffList.find((member) => member.id === session.staffId);
   if (!staff || !business || !program) return "session_expired";
-  if (!staff.is_active) return "staff_inactive";
+  // Deactivated, or beyond the plan's PIN limit after a downgrade.
+  if (!usableStaff(staffList, business, new Date()).some((member) => member.id === staff.id)) {
+    return "staff_inactive";
+  }
   return { admin, business, program, staffId: staff.id };
 }
 
@@ -211,6 +218,24 @@ function toCounters(
 }
 
 /**
+ * Google Wallet pass: refresh the counters after the response is sent.
+ * Errors are logged and never undo the stamp (architecture §5.2).
+ */
+function syncWalletCard(
+  ctx: StaffContext,
+  card: CardWithCustomer,
+  counters: { stamps_count: number | null; rewards_available: number | null },
+): void {
+  if (card.wallet_type !== "google") return;
+  const updated = {
+    ...card,
+    stamps_count: counters.stamps_count ?? card.stamps_count,
+    rewards_available: counters.rewards_available ?? card.rewards_available,
+  };
+  scheduleWalletTask("updateCard", (wallet) => wallet.updateCard(updated, ctx.program, ctx.business));
+}
+
+/**
  * +1 stamp: domain pre-check (cooldown) without taking a lock, then the RPC
  * apply_stamp (row lock, re-checks cooldown and staff, overflow → reward).
  */
@@ -246,7 +271,7 @@ export async function addStamp(cardId: string): Promise<ScanActionResult> {
     if (result.status !== "ok") {
       return { ok: false, reason: result.status, retryAfter: result.retry_after };
     }
-    // TODO(stage 3, plan item 5): wallet.updateCard() for wallet_type = 'google' (errors must not undo the stamp).
+    syncWalletCard(ctx, card, result);
     return {
       ok: true,
       kind: "stamp",
@@ -278,7 +303,7 @@ export async function redeemCardReward(cardId: string): Promise<ScanActionResult
       staffId: ctx.staffId,
     });
     if (result.status !== "ok") return { ok: false, reason: result.status };
-    // TODO(stage 3, plan item 5): wallet.updateCard().
+    syncWalletCard(ctx, card, result);
     return { ok: true, kind: "reward", card: toCounters(result, new Date()), rewardsEarned: 0 };
   } catch (error) {
     console.error("redeemCardReward failed", error instanceof Error ? error.message : error);

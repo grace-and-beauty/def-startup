@@ -22,6 +22,7 @@ export type RedeemRewardStatus = "ok" | "not_found" | "staff_inactive" | "no_rew
 export type OnboardBusinessStatus = "ok" | "already_done";
 export type BeginStaffLoginStatus = "ok" | "locked" | "locked_business";
 export type IssueCardStatus = "ok" | "not_found" | "limit_reached";
+export type SendBroadcastStatus = "ok" | "quota_exhausted" | "no_recipients";
 
 type Rel<Name extends string, Cols extends string[], Ref extends string, RefCols extends string[]> = {
   foreignKeyName: Name;
@@ -327,6 +328,31 @@ export type Database = {
           Rel<"messages_card_id_business_id_fkey", ["card_id", "business_id"], "cards", ["id", "business_id"]>,
         ];
       };
+      message_recipients: {
+        Row: {
+          message_id: string;
+          card_id: string;
+          business_id: string;
+          created_at: string;
+        };
+        Insert: {
+          message_id: string;
+          card_id: string;
+          business_id: string;
+          created_at?: string;
+        };
+        Update: {
+          message_id?: string;
+          card_id?: string;
+          business_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          Rel<"message_recipients_message_id_fkey", ["message_id"], "messages", ["id"]>,
+          Rel<"message_recipients_business_id_fkey", ["business_id"], "businesses", ["id"]>,
+          Rel<"message_recipients_card_id_business_id_fkey", ["card_id", "business_id"], "cards", ["id", "business_id"]>,
+        ];
+      };
       staff_login_attempts: {
         Row: {
           id: number;
@@ -410,6 +436,25 @@ export type Database = {
           status: IssueCardStatus;
           card_id: string | null;
         }[];
+      };
+      send_broadcast: {
+        Args: {
+          p_business_id: string;
+          p_target: "all" | "at_risk";
+          p_text: string;
+          p_card_ids: string[] | null;
+          p_max_per_month: number | null;
+        };
+        Returns: {
+          status: SendBroadcastStatus;
+          message_id: string | null;
+          recipients_count: number;
+          used: number;
+        }[];
+      };
+      record_reminder: {
+        Args: { p_business_id: string; p_text: string; p_card_ids: string[] };
+        Returns: { message_id: string; card_id: string }[];
       };
       is_business_owner: {
         Args: { bid: string };
@@ -512,6 +557,7 @@ export type Database = {
           stamps_count: number;
           rewards_available: number;
           wallet_type: WalletType;
+          second_visit_at: string | null;
         }[];
       };
       analytics_staff: {
@@ -549,12 +595,14 @@ export type Card = Tables<"cards">;
 export type StampEvent = Tables<"stamp_events">;
 export type Message = Tables<"messages">;
 export type StaffLoginAttempt = Tables<"staff_login_attempts">;
+export type MessageRecipient = Tables<"message_recipients">;
 
 export type ApplyStampResult = RpcReturns<"apply_stamp">[number];
 export type RedeemRewardResult = RpcReturns<"redeem_reward">[number];
 export type OnboardBusinessResult = RpcReturns<"onboard_business">[number];
 export type BeginStaffLoginResult = RpcReturns<"begin_staff_login">[number];
 export type IssueCardResult = RpcReturns<"issue_card">[number];
+export type SendBroadcastResult = RpcReturns<"send_broadcast">[number];
 export type AnalyticsDailyRow = RpcReturns<"analytics_daily">[number];
 export type AnalyticsHeatmapRow = RpcReturns<"analytics_heatmap">[number];
 export type AnalyticsCardStatsRow = RpcReturns<"analytics_card_stats">[number];

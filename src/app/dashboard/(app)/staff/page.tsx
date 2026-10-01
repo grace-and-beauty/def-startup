@@ -5,7 +5,7 @@ import { CopyButton } from "@/components/copy-button";
 import { Badge } from "@/components/ui/badge";
 import { requireOwnerContext } from "@/lib/auth/owner";
 import { listStaff } from "@/lib/data";
-import { getLimit, hasFeature } from "@/lib/domain/plans";
+import { getLimit, hasFeature, scannerStaffLimit, usableStaff } from "@/lib/domain/plans";
 import { siteUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -22,6 +22,8 @@ export default async function StaffPage() {
   const pinsAllowed = hasFeature(business, "staff_pins", now);
   const limit = getLimit(business, "staff", now);
   const activeCount = staff.filter((s) => s.is_active).length;
+  const usableIds = new Set(usableStaff(staff, business, now).map((s) => s.id));
+  const outsidePlan = staff.some((s) => s.is_active && !usableIds.has(s.id));
   const scanUrl = `${siteUrl()}/scan/${business.slug}`;
 
   return (
@@ -36,7 +38,10 @@ export default async function StaffPage() {
         </div>
       </div>
 
-      <Section title={t("staff.title")}>
+      <Section
+        title={t("staff.title")}
+        hint={outsidePlan ? t("staff.notInPlanHint", { count: scannerStaffLimit(business, now) }) : undefined}
+      >
         <ul className="flex flex-col divide-y">
           {staff.map((member) => (
             <li
@@ -49,6 +54,9 @@ export default async function StaffPage() {
                   <Badge variant={member.is_active ? "default" : "secondary"}>
                     {member.is_active ? t("staff.active") : t("staff.inactive")}
                   </Badge>
+                  {member.is_active && !usableIds.has(member.id) ? (
+                    <Badge variant="destructive">{t("staff.notInPlan")}</Badge>
+                  ) : null}
                 </div>
                 <span className="text-muted-foreground text-xs">
                   {t("staff.since", { date: formatDate(member.created_at, business.timezone) })}

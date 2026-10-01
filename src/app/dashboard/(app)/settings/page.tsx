@@ -65,20 +65,22 @@ export default async function SettingsPage() {
         />
       </Section>
 
-      <Section title={t("settings.remindersTitle")} hint={t("settings.remindersIntro")}>
-        {remindersAllowed ? (
-          <RemindersForm
-            action={updateReminders}
-            initial={{
-              enabled: program.reminders_enabled,
-              days: program.reminder_days,
-              text: program.reminder_text ?? "",
-            }}
-          />
-        ) : (
-          <LockedFeature title={t("settings.remindersLocked")} />
-        )}
-      </Section>
+      <div id="reminders" className="scroll-mt-6">
+        <Section title={t("settings.remindersTitle")} hint={t("settings.remindersIntro")}>
+          {remindersAllowed ? (
+            <RemindersForm
+              action={updateReminders}
+              initial={{
+                enabled: program.reminders_enabled,
+                days: program.reminder_days,
+                text: program.reminder_text ?? "",
+              }}
+            />
+          ) : (
+            <LockedFeature title={t("settings.remindersLocked")} />
+          )}
+        </Section>
+      </div>
 
       <div id="business" className="scroll-mt-6">
         <Section title={t("settings.businessTitle")}>

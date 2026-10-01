@@ -6,7 +6,7 @@ import { Heatmap } from "@/components/charts/heatmap";
 import { Section, StatCard } from "@/components/dashboard/blocks";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { Insight } from "@/lib/domain/analytics";
+import { insightAction, type Insight } from "@/lib/domain/analytics";
 import { formatDate, formatNumber } from "@/lib/format";
 import { t, type TranslationKey } from "@/lib/i18n";
 
@@ -40,6 +40,37 @@ function insightText(insight: Insight): string {
       return t("analytics.insight.peak", { day: dowLong(insight.dow), hour: insight.hour });
     case "noAvgCheck":
       return t("analytics.insight.noAvgCheck");
+    case "remindersOff":
+      return insight.days === null
+        ? t("analytics.insight.remindersOffNoDays")
+        : t("analytics.insight.remindersOff", { days: insight.days });
+    case "pendingRewards":
+      return t("analytics.insight.pendingRewards", { count: insight.count });
+    case "broadcastWorked":
+      return t("analytics.insight.broadcastWorked", { pct: insight.pct });
+    case "noRecentBroadcast":
+      return insight.days === null
+        ? t("analytics.insight.noBroadcastYet")
+        : t("analytics.insight.noRecentBroadcast", { days: insight.days });
+  }
+}
+
+/** Action button of a hint: target page + label (null = text-only hint). */
+function insightLink(insight: Insight): { href: string; label: string } | null {
+  switch (insightAction(insight)) {
+    case "broadcastAtRisk":
+      return {
+        href: "/dashboard/messages?target=at_risk",
+        label: t("analytics.insightAction.broadcastAtRisk", { count: insight.kind === "atRisk" ? insight.count : 0 }),
+      };
+    case "broadcast":
+      return { href: "/dashboard/messages", label: t("analytics.insightAction.broadcast") };
+    case "reminders":
+      return { href: "/dashboard/settings#reminders", label: t("analytics.insightAction.reminders") };
+    case "avgCheck":
+      return { href: "/dashboard/settings#business", label: t("analytics.insightAction.avgCheck") };
+    case null:
+      return null;
   }
 }
 
@@ -66,13 +97,22 @@ export function AnalyticsView({ model, interactive = true }: { model: AnalyticsM
     <div className="flex flex-col gap-6">
       {model.insights.length > 0 ? (
         <Section title={t("analytics.insightsTitle")}>
-          <ul className="flex flex-col gap-2">
-            {model.insights.map((insight) => (
-              <li key={insight.kind} className="flex gap-2 text-sm">
-                <Lightbulb className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-                <span>{insightText(insight)}</span>
-              </li>
-            ))}
+          <ul className="flex flex-col divide-y">
+            {model.insights.map((insight) => {
+              const link = insightLink(insight);
+              return (
+                <li
+                  key={insight.kind}
+                  className="flex flex-col gap-2 py-2 text-sm first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span className="flex gap-2">
+                    <Lightbulb className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+                    <span>{insightText(insight)}</span>
+                  </span>
+                  {link ? <span className="shrink-0 pl-6 sm:pl-0">{actionLink(link.href, link.label)}</span> : null}
+                </li>
+              );
+            })}
           </ul>
         </Section>
       ) : null}
@@ -106,7 +146,7 @@ export function AnalyticsView({ model, interactive = true }: { model: AnalyticsM
         </p>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard
           label={t("analytics.retention")}
           value={model.retention.rate === null ? "—" : `${model.retention.rate}%`}
@@ -114,6 +154,18 @@ export function AnalyticsView({ model, interactive = true }: { model: AnalyticsM
             returned: model.retention.returned,
             visited: model.retention.visited,
           })}
+        />
+        <StatCard
+          label={t("analytics.returned30")}
+          value={model.returned30.rate === null ? "—" : `${model.returned30.rate}%`}
+          hint={
+            model.returned30.rate === null
+              ? t("analytics.returned30Empty")
+              : t("analytics.returned30Hint", {
+                  returned: model.returned30.returned,
+                  cohort: model.returned30.cohort,
+                })
+          }
         />
         <StatCard
           label={t("analytics.interval")}
@@ -128,6 +180,14 @@ export function AnalyticsView({ model, interactive = true }: { model: AnalyticsM
           label={t("analytics.active")}
           value={formatNumber(model.activeCount)}
           hint={t("analytics.activeHint")}
+        />
+        <StatCard
+          label={t("analytics.pendingRewards")}
+          value={formatNumber(model.pendingRewards.rewards)}
+          hint={t("analytics.pendingRewardsHint", {
+            cards: model.pendingRewards.cards,
+            rewards: model.pendingRewards.rewards,
+          })}
         />
         <StatCard
           label={t("analytics.revenue")}

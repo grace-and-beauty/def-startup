@@ -5,7 +5,7 @@ import { cache } from "react";
 import {
   countCustomers,
   getCardByToken,
-  getLatestBroadcast,
+  getLatestMessageForCard,
   getPublicBusinessById,
   getPublicBusinessBySlug,
   getPublicProgramByBusinessId,
@@ -64,7 +64,7 @@ export const loadPublicCard = cache(async (token: string): Promise<Loaded<Public
   const [business, program, latestMessage] = await Promise.all([
     getPublicBusinessById(admin, card.business_id),
     getPublicProgramByBusinessId(admin, card.business_id),
-    getLatestBroadcast(admin, card.business_id),
+    getLatestMessageForCard(admin, card.business_id, card.id),
   ]);
   if (!business || !program) return { status: "not_found" };
   return { status: "ok", data: { business, program, card, latestMessage } };

@@ -14,8 +14,11 @@ import {
   insights,
   medianVisitIntervalDays,
   peakCell,
+  pendingRewards,
   programRevenue,
   retention,
+  returnedWithin,
+  suggestedReminderDays,
   sumDaily,
   topCards,
   type AtRiskCard,
@@ -25,6 +28,7 @@ import {
   type Insight,
   type PeakCell,
   type Retention,
+  type ReturnWithin,
 } from "@/lib/domain/analytics";
 import { addDays, monthToDateComparison, parseLocalDate, type DateRange, type LocalDate } from "@/lib/domain/dates";
 import { formatShortDay } from "@/lib/format";
@@ -48,6 +52,9 @@ export interface AnalyticsInputs {
   cards: AnalyticsCardStatsRow[];
   staff: AnalyticsStaffRow[];
   broadcasts: Pick<Message, "id" | "text" | "created_at">[];
+  /** Plan has automatic reminders (hasFeature "reminders"). */
+  remindersAvailable: boolean;
+  remindersEnabled: boolean;
 }
 
 export interface AnalyticsModel {
@@ -59,6 +66,9 @@ export interface AnalyticsModel {
   comparison: Record<"stamps" | "newCards" | "repeatVisits" | "rewards", Change>;
   periodTotals: DailyTotals;
   retention: Retention;
+  returned30: ReturnWithin;
+  pendingRewards: { cards: number; rewards: number };
+  suggestedReminderDays: number | null;
   medianInterval: number | null;
   activeCount: number;
   revenue: number | null;
@@ -91,6 +101,13 @@ export function buildAnalyticsModel(input: AnalyticsInputs): AnalyticsModel {
   const atRisk = atRiskCards(input.cards, medianInterval, input.now);
   const peak = peakCell(input.heatmap);
   const stampsChange = change(thisMonth.stamps, lastMonth.stamps);
+  const effects = broadcastEffects(input.daily, input.broadcasts, range, input.timezone);
+  const pending = pendingRewards(input.cards);
+  const suggestedDays = suggestedReminderDays(medianInterval);
+  const lastBroadcast = input.broadcasts.reduce<number | null>((max, m) => {
+    const at = Date.parse(m.created_at);
+    return Number.isNaN(at) || (max !== null && max >= at) ? max : at;
+  }, null);
 
   return {
     period: input.period,
@@ -106,6 +123,9 @@ export function buildAnalyticsModel(input: AnalyticsInputs): AnalyticsModel {
     },
     periodTotals,
     retention: ret,
+    returned30: returnedWithin(input.cards, input.now, 30),
+    pendingRewards: pending,
+    suggestedReminderDays: suggestedDays,
     medianInterval,
     activeCount: activeCards(input.cards, input.now),
     revenue: programRevenue(periodTotals.repeatVisits, input.avgCheck),
@@ -120,7 +140,7 @@ export function buildAnalyticsModel(input: AnalyticsInputs): AnalyticsModel {
     peak,
     atRisk,
     top: topCards(input.cards, 20),
-    effects: broadcastEffects(input.daily, input.broadcasts, range, input.timezone),
+    effects,
     staff: input.staff,
     insights: insights({
       atRiskCount: atRisk.length,
@@ -128,6 +148,14 @@ export function buildAnalyticsModel(input: AnalyticsInputs): AnalyticsModel {
       stampsChange,
       retentionRate: ret.rate,
       avgCheck: input.avgCheck,
+      remindersAvailable: input.remindersAvailable,
+      remindersEnabled: input.remindersEnabled,
+      suggestedReminderDays: suggestedDays,
+      pendingRewardCards: pending.cards,
+      effects,
+      daysSinceBroadcast:
+        lastBroadcast === null ? null : Math.floor((input.now.getTime() - lastBroadcast) / 86_400_000),
+      totalCards: input.cards.length,
     }),
   };
 }

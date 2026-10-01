@@ -50,9 +50,9 @@ function ipHashSecretOrNull(): string | null {
  *  3. rate limit: ≤ 10 new cards per minute per IP (hashed) per business;
  *  4. RPC issue_card: customer + card in one transaction, plan customer
  *     limit checked under a per-business lock; new random qr_token.
- * Returns the card token for /card/[token].
- *
- * TODO(stage 3, plan item 5): Google Wallet save link via the wallet provider.
+ * Returns the card token for /card/[token]. "Add to Google Wallet" is a link
+ * to /api/wallet/google/[token] (shown only when the provider is configured),
+ * which builds the save link on demand.
  */
 export async function joinProgram(
   slug: string,

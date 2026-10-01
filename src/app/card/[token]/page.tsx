@@ -19,8 +19,9 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
-export default async function WebCardPage({ params }: PageProps<"/card/[token]">) {
+export default async function WebCardPage({ params, searchParams }: PageProps<"/card/[token]">) {
   const { token } = await params;
+  const walletError = (await searchParams).wallet === "error";
   const loaded = await loadPublicCard(token);
   if (loaded.status === "unavailable") return <ServiceUnavailable />;
   if (loaded.status === "not_found") notFound();
@@ -28,7 +29,8 @@ export default async function WebCardPage({ params }: PageProps<"/card/[token]">
   const { business, program, card, latestMessage } = loaded.data;
   const required = program.stamps_required;
   const remaining = Math.max(required - card.stamps_count, 0);
-  const showGoogleWallet = isGoogleWalletConfigured() && card.wallet_type !== "google";
+  // Saving again is harmless (same pass id), so the button stays for re-installs.
+  const showGoogleWallet = isGoogleWalletConfigured();
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 py-6">
@@ -82,6 +84,12 @@ export default async function WebCardPage({ params }: PageProps<"/card/[token]">
             }).format(new Date(latestMessage.created_at))}
           </time>
         </section>
+      ) : null}
+
+      {walletError ? (
+        <p role="alert" className="text-destructive text-sm">
+          {t("webCard.walletError")}
+        </p>
       ) : null}
 
       {showGoogleWallet ? (

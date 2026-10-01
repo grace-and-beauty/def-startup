@@ -72,6 +72,10 @@ export function sampleAnalyticsInputs(today: LocalDate, period: Period, now: Dat
       stamps_count: visits % 6,
       rewards_available: 0,
       wallet_type: "web",
+      second_visit_at:
+        visits >= 2
+          ? new Date(Math.min(last.getTime(), first.getTime() + (3 + random() * 20) * 86_400_000)).toISOString()
+          : null,
     };
   });
 
@@ -81,6 +85,8 @@ export function sampleAnalyticsInputs(today: LocalDate, period: Period, now: Dat
   ];
 
   return {
+    remindersAvailable: true,
+    remindersEnabled: false,
     today,
     period,
     timezone: "Europe/Kyiv",

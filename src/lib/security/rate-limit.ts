@@ -13,6 +13,8 @@ export const STAFF_LOGIN_MAX_BUSINESS_FAILURES = 30;
 
 /** New cards on /c/[slug]: ≤ 10 per minute per IP per business (architecture §5.1). */
 export const JOIN_RATE_LIMIT = { scope: "join", max: 10, windowSeconds: 60 } as const;
+/** "Save to Google Wallet" links per IP (hashed) per business: each one signs a JWT and calls Google. */
+export const WALLET_SAVE_RATE_LIMIT = { scope: "wallet_save", max: 10, windowSeconds: 60 } as const;
 
 export function staffLoginWindowStart(now: Date): Date {
   return new Date(now.getTime() - STAFF_LOGIN_WINDOW_MINUTES * 60_000);
