@@ -3,7 +3,7 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/data/types";
-import { supabasePublicEnv, supabaseServiceRoleKey } from "@/lib/env";
+import { isAdminConfigured, supabasePublicEnv, supabaseServiceRoleKey } from "@/lib/env";
 
 /**
  * Service-role client — BYPASSES RLS. Server only.
@@ -22,4 +22,9 @@ export function createSupabaseAdminClient(): SupabaseClient<Database> {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
   return cached;
+}
+
+/** Like createSupabaseAdminClient, but null when the env is not configured (pages show a notice). */
+export function tryCreateSupabaseAdminClient(): SupabaseClient<Database> | null {
+  return isAdminConfigured() ? createSupabaseAdminClient() : null;
 }

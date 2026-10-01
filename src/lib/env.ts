@@ -40,6 +40,11 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
+/** Public pages and the scanner need the service-role client (server only). */
+export function isAdminConfigured(): boolean {
+  return isSupabaseConfigured() && read("SUPABASE_SERVICE_ROLE_KEY") !== undefined;
+}
+
 /** Server only — never expose to the browser. */
 export function supabaseServiceRoleKey(): string {
   return required("SUPABASE_SERVICE_ROLE_KEY", read("SUPABASE_SERVICE_ROLE_KEY"));
