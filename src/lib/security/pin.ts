@@ -1,12 +1,10 @@
 import bcrypt from "bcryptjs";
 
-/** Staff PIN: 4–6 digits (docs/architecture.md §8). */
-export const PIN_PATTERN = /^\d{4,6}$/;
-const BCRYPT_ROUNDS = 10;
+import { isValidPin } from "./pin-format";
 
-export function isValidPin(value: string): boolean {
-  return PIN_PATTERN.test(value);
-}
+export { isValidPin, PIN_PATTERN } from "./pin-format";
+
+const BCRYPT_ROUNDS = 10;
 
 export function hashPin(pin: string): Promise<string> {
   if (!isValidPin(pin)) throw new Error("PIN must be 4–6 digits");

@@ -42,8 +42,15 @@ npm run dev                  # http://localhost:3000
 | `/c/[slug]` | Приєднання клієнта: превʼю картки, імʼя/телефон → картка |
 | `/card/[token]` | Веб-картка клієнта: штампи, QR, винагороди, останнє повідомлення (оновлюється сама) |
 | `/scan/[slug]` | Сканер працівника: PIN → камера або ручний ввід → «+1 штамп» / «Видати винагороду» |
+| `/dashboard/onboarding` | Майстер власника (5 кроків: ніша → назва/адреса → логотип і кольори → правило → PIN), `?niche=` підставляє нішу |
+| `/dashboard` | Кабінет: цифри місяця з порівнянням, банер тріалу, посилання закладу |
+| `/dashboard/analytics` | Аналітика (Плюс); на Базовій — розмите превʼю на демо-даних |
+| `/dashboard/clients`, `/messages`, `/staff` | Клієнти з пошуком; розсилки з лімітом тарифу й історією; працівники і PIN |
+| `/dashboard/poster`, `/settings`, `/billing` | Постер A5 для друку; дизайн, правило, нагадування, середній чек; тариф і використання |
 
-Публічні сторінки і сканер працюють через service-role клієнт на сервері; без змінних Supabase вони показують «Сервіс тимчасово недоступний». Демо: `/c/avtomyika-demo`, `/card/DemoCard00000001`, `/scan/avtomyika-demo` (PIN 1234).
+Публічні сторінки і сканер працюють через service-role клієнт на сервері; без змінних Supabase вони показують «Сервіс тимчасово недоступний».
+
+Кабінет (`/dashboard/*`) працює від імені власника (cookie Supabase Auth, RLS); `src/proxy.ts` оновлює сесію і відправляє неавторизованих на `/login`. Поки онбординг не завершено — редірект на майстер. Онбординг створює заклад, програму і працівника «Загальний» однією транзакцією (RPC `onboard_business`). Логотипи — у bucket `logos` (лише PNG/JPEG/WebP ≤ 1 МБ з перевіркою сигнатури файлу); без Supabase Storage завантаження повертає помилку, решта працює. Демо: `/c/avtomyika-demo`, `/card/DemoCard00000001`, `/scan/avtomyika-demo` (PIN 1234).
 
 ## База даних
 
@@ -101,6 +108,8 @@ src/app/              сторінки (App Router)
 src/components/ui/    shadcn/ui (нейтральні, лише CSS-змінні)
 src/config/           brand.ts, niches.ts (8 ніш), plans.ts (тарифи)
 src/lib/data/         типи БД і запити по сутностях
+src/lib/domain/       чисті функції: plans (тарифи), analytics, dates, slug, вхідні дані
+src/lib/auth/         owner.ts (сесія власника), staff-session/staff-cookie (сканер)
 src/lib/supabase/     server.ts, browser.ts, admin.ts (service role, server-only)
 src/lib/i18n/         t() + locales/uk.json
 src/styles/           globals.css — дизайн-токени

@@ -19,6 +19,7 @@ export type ProgramType = "stamps";
 
 export type ApplyStampStatus = "ok" | "not_found" | "staff_inactive" | "cooldown";
 export type RedeemRewardStatus = "ok" | "not_found" | "staff_inactive" | "no_reward";
+export type OnboardBusinessStatus = "ok" | "already_done";
 
 type Rel<Name extends string, Cols extends string[], Ref extends string, RefCols extends string[]> = {
   foreignKeyName: Name;
@@ -390,6 +391,27 @@ export type Database = {
           last_visit_at: string | null;
         }[];
       };
+      onboard_business: {
+        Args: {
+          p_name: string;
+          p_slug: string;
+          p_niche_slug: string;
+          p_bg_color: string;
+          p_fg_color: string;
+          p_label_color: string;
+          p_stamps_required: number;
+          p_reward_text: string;
+          p_terms_text: string | null;
+          p_reminder_days: number | null;
+          p_reminder_text: string | null;
+          p_staff_name: string;
+          p_staff_pin_hash: string;
+        };
+        Returns: {
+          business_id: string;
+          status: OnboardBusinessStatus;
+        }[];
+      };
       analytics_business_tz: {
         Args: { bid: string };
         Returns: string;
@@ -469,6 +491,7 @@ export type StaffLoginAttempt = Tables<"staff_login_attempts">;
 
 export type ApplyStampResult = RpcReturns<"apply_stamp">[number];
 export type RedeemRewardResult = RpcReturns<"redeem_reward">[number];
+export type OnboardBusinessResult = RpcReturns<"onboard_business">[number];
 export type AnalyticsDailyRow = RpcReturns<"analytics_daily">[number];
 export type AnalyticsHeatmapRow = RpcReturns<"analytics_heatmap">[number];
 export type AnalyticsCardStatsRow = RpcReturns<"analytics_card_stats">[number];

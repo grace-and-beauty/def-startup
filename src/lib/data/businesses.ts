@@ -1,7 +1,7 @@
 import type { Db } from "@/lib/supabase/types";
 
 import { unwrap, unwrapRequired } from "./errors";
-import type { Business, TablesInsert, TablesUpdate } from "./types";
+import type { Business, OnboardBusinessResult, TablesInsert, TablesUpdate } from "./types";
 
 /** Fields safe to show on public pages (/c/[slug], /card/[token], wallet). */
 export const BUSINESS_PUBLIC_COLUMNS =
@@ -135,4 +135,52 @@ export async function listBusinessesWithRemindersEnabled(admin: Db): Promise<Bus
       .eq("programs.reminders_enabled", true),
   );
   return (rows ?? []).map(({ programs: _programs, ...business }) => business);
+}
+
+export interface OnboardBusinessInput {
+  name: string;
+  slug: string;
+  nicheSlug: string;
+  bgColor: string;
+  fgColor: string;
+  labelColor: string;
+  stampsRequired: number;
+  rewardText: string;
+  termsText: string | null;
+  reminderDays: number | null;
+  reminderText: string | null;
+  staffName: string;
+  /** bcrypt hash from src/lib/security/pin.ts — never the raw PIN. */
+  staffPinHash: string;
+}
+
+/**
+ * Owner client: business + program + default staff in one transaction
+ * (RPC onboard_business). A taken slug throws DataError.isUniqueViolation.
+ */
+export async function onboardBusiness(
+  db: Db,
+  input: OnboardBusinessInput,
+): Promise<OnboardBusinessResult> {
+  const rows = unwrapRequired(
+    "onboardBusiness",
+    await db.rpc("onboard_business", {
+      p_name: input.name,
+      p_slug: input.slug,
+      p_niche_slug: input.nicheSlug,
+      p_bg_color: input.bgColor,
+      p_fg_color: input.fgColor,
+      p_label_color: input.labelColor,
+      p_stamps_required: input.stampsRequired,
+      p_reward_text: input.rewardText,
+      p_terms_text: input.termsText,
+      p_reminder_days: input.reminderDays,
+      p_reminder_text: input.reminderText,
+      p_staff_name: input.staffName,
+      p_staff_pin_hash: input.staffPinHash,
+    }),
+  );
+  const [row] = rows;
+  if (!row) throw new Error("onboardBusiness: empty result");
+  return row;
 }
