@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#141414",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uk" className="h-full">
+    <html lang="uk" className="dark h-full">
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster />

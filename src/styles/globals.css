@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 /*
- * Design tokens. Neutral black/white palette and the system font stack.
+ * Design tokens. "Zen Linen" dark palette and the system font stack.
  * Rebranding = change the variables below; components only reference tokens
  * (see docs/architecture.md §9).
  */
@@ -18,32 +18,36 @@
 
   --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Palette: "Zen Linen" (dark). */
+  color-scheme: dark;
+
+  --background: #141414;
+  --foreground: #ededed;
+  --card: #1a1a1a;
+  --card-foreground: #ededed;
+  --popover: #1a1a1a;
+  --popover-foreground: #ededed;
+  --primary: #d9d6cc;
+  --primary-foreground: #141414;
+  --secondary: #262626;
+  --secondary-foreground: #ededed;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #2e2e2e;
+  --accent-foreground: #ededed;
+  --destructive: #e5484d;
   --success: oklch(0.6 0.15 150);
   --success-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #8c897f;
 
-  --chart-1: oklch(0.205 0 0);
-  --chart-2: oklch(0.439 0 0);
-  --chart-3: oklch(0.556 0 0);
-  --chart-4: oklch(0.708 0 0);
-  --chart-5: oklch(0.87 0 0);
+  /* Linen ramp, light → dark, so data stays visible on the dark background. */
+  --chart-1: #d9d6cc;
+  --chart-2: #b3b0a6;
+  --chart-3: #8c897f;
+  --chart-4: #66645d;
+  --chart-5: #45443f;
 }
 
 @theme inline {
