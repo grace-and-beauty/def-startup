@@ -13,7 +13,8 @@
     "test:integration": "vitest run --project integration",
     "test:e2e": "playwright test --pass-with-no-tests",
     "db:test:up": "tsx scripts/db-test.ts up",
-    "db:test:down": "tsx scripts/db-test.ts down"
+    "db:test:down": "tsx scripts/db-test.ts down",
+    "check": "npm run lint && npm run typecheck && npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
