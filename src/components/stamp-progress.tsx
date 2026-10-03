@@ -80,18 +80,16 @@ export function StampProgress({
           );
         }
         const animated = animateFrom !== undefined && i >= animateFrom;
+        // The wrapper plays the landing; the mark inside keeps its own tilt.
         return (
-          <StampMark
+          <span
             key={i}
-            className={cn("shrink-0 opacity-95", SIZES[size], animated && "stamp-land")}
-            style={
-              {
-                "--stamp-r": `${stampAngle(i)}deg`,
-                transform: `rotate(${stampAngle(i)}deg)`,
-                animationDelay: animated ? `${animationDelay + (i - animateFrom) * STAGGER_MS}ms` : undefined,
-              } as CSSProperties
-            }
-          />
+            aria-hidden
+            className={cn("inline-block shrink-0", SIZES[size], animated && "stamp-land")}
+            style={animated ? { animationDelay: `${animationDelay + (i - animateFrom) * STAGGER_MS}ms` } : undefined}
+          >
+            <StampMark className="size-full opacity-95" style={{ transform: `rotate(${stampAngle(i)}deg)` }} />
+          </span>
         );
       })}
     </div>
