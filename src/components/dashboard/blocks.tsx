@@ -21,7 +21,7 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between print:hidden">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
         {description ? <p className="text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -87,7 +87,7 @@ export function StatCard({
     <Card className="gap-2 py-4">
       <CardContent className="flex flex-col gap-1 px-4">
         <span className="text-muted-foreground text-sm">{label}</span>
-        <span className="text-2xl font-semibold tabular-nums">{value}</span>
+        <span className="font-display text-[1.7rem] leading-tight font-bold tabular-nums">{value}</span>
         {delta ? <span className={cn("text-xs", tone)}>{deltaText(delta)}</span> : null}
         {hint ? <span className="text-muted-foreground text-xs">{hint}</span> : null}
       </CardContent>

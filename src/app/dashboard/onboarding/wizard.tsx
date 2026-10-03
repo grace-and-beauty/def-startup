@@ -513,7 +513,7 @@ function StepBlock({ title, hint, children }: { title: string; hint?: string; ch
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+        <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>
         {hint ? <p className="text-muted-foreground text-sm">{hint}</p> : null}
       </div>
       {children}

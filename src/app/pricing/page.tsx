@@ -12,7 +12,7 @@ export default function PricingPage() {
   return (
     <PublicShell>
       <section className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{t("pricing.title")}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">{t("pricing.title")}</h1>
         <p className="text-muted-foreground text-lg">{t("pricing.subtitle")}</p>
       </section>
 

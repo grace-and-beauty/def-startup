@@ -5,7 +5,7 @@ import { Camera, CameraOff, CheckCircle2, Gift, LogOut, XCircle } from "lucide-r
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import { StampProgress } from "@/components/stamp-progress";
+import { StampMark, StampProgress } from "@/components/stamp-progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -269,7 +269,7 @@ function CardScreen({
   return (
     <section className="flex flex-col gap-5 rounded-xl border p-5">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold">{card.customerName ?? t("scan.noName")}</h2>
+        <h2 className="font-display text-2xl font-bold tracking-tight">{card.customerName ?? t("scan.noName")}</h2>
         <p className="text-muted-foreground text-sm">
           {t("scan.visits", { count: card.totalVisits })}
         </p>
@@ -362,8 +362,16 @@ function ResultOverlay({
         result.ok ? "bg-success text-success-foreground" : "bg-destructive text-white",
       )}
     >
-      <Icon className="size-28" aria-hidden />
-      <span className="text-3xl font-bold">{title}</span>
+      {result.ok && result.kind === "stamp" ? (
+        // The stamp is pressed onto the card: the one motion the scanner has.
+        <span className="relative grid size-32 place-items-center" aria-hidden>
+          <span className="ink-ring absolute inset-0 rounded-full border-4 border-current" />
+          <StampMark className="stamp-press size-32" />
+        </span>
+      ) : (
+        <Icon className="size-28" aria-hidden />
+      )}
+      <span className="font-display text-3xl font-bold tracking-tight">{title}</span>
       {card.customerName ? <span className="text-xl">{card.customerName}</span> : null}
       {detail ? <span className="text-lg">{detail}</span> : null}
       <span className="mt-6 text-sm opacity-80">{t("scan.tapToContinue")}</span>

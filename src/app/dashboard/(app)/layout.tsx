@@ -1,8 +1,9 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand-mark";
+
 import { BillingBanner } from "@/components/dashboard/billing-banner";
 import { MobileNav, SidebarNav } from "@/components/dashboard/nav";
-import { brand } from "@/config/brand";
 import { requireOwnerContext } from "@/lib/auth/owner";
 
 import { signOut } from "../actions";
@@ -19,18 +20,18 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
     <div className="flex flex-1">
       <aside className="hidden w-60 shrink-0 flex-col gap-6 border-r p-4 md:flex print:hidden">
         <div className="flex flex-col gap-0.5 px-3">
-          <Link href="/dashboard" className="font-semibold tracking-tight">
-            {brand.name}
+          <Link href="/dashboard" className="w-fit">
+            <BrandMark />
           </Link>
-          <span className="text-muted-foreground truncate text-sm">{business.name}</span>
+          <span className="text-muted-foreground truncate pl-8 text-sm">{business.name}</span>
         </div>
         <SidebarNav logoutAction={signOut} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b px-4 py-3 md:hidden print:hidden">
-          <Link href="/dashboard" className="font-semibold tracking-tight">
-            {brand.name}
+          <Link href="/dashboard">
+            <BrandMark />
           </Link>
           <span className="text-muted-foreground truncate text-sm">{business.name}</span>
         </header>

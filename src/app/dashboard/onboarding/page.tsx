@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/brand-mark";
 
-import { brand } from "@/config/brand";
 import { isNicheSlug, listNiches } from "@/config/niches";
 import { getOwnerBusiness, requireOwnerSession } from "@/lib/auth/owner";
 import { siteUrl } from "@/lib/env";
@@ -31,7 +31,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/dashb
     <div className="flex flex-1 flex-col">
       <header className="border-b">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-3 px-4 py-3">
-          <span className="font-semibold tracking-tight">{brand.name}</span>
+          <BrandMark />
           <form action={signOut}>
             <button type="submit" className="text-muted-foreground hover:text-foreground text-sm">
               {t("dashboard.logout")}
@@ -40,7 +40,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/dashb
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-6 sm:py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("onboarding.title")}</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">{t("onboarding.title")}</h1>
         <OnboardingWizard niches={listNiches()} initialNiche={initialNiche} siteUrl={siteUrl()} />
       </main>
     </div>

@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   referrer: "no-referrer",
 };
 
+const JUST_STAMPED_MS = 90_000;
+
 export default async function WebCardPage({ params, searchParams }: PageProps<"/card/[token]">) {
   const { token } = await params;
   const walletError = (await searchParams).wallet === "error";
@@ -28,6 +30,12 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
 
   const { business, program, card, latestMessage } = loaded.data;
   const required = program.stamps_required;
+  // A stamp from the last minute and a half lands again on this render, so the
+  // customer at the till sees it arrive (AutoRefresh re-renders after a stamp).
+  const justStamped =
+    card.stamps_count > 0 &&
+    card.last_visit_at !== null &&
+    new Date().getTime() - new Date(card.last_visit_at).getTime() < JUST_STAMPED_MS;
   const remaining = Math.max(required - card.stamps_count, 0);
   // Saving again is harmless (same pass id), so the button stays for re-installs.
   const showGoogleWallet = isGoogleWalletConfigured();
@@ -46,6 +54,8 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
         stampsRequired={required}
         stampsCount={card.stamps_count}
         customerName={card.customer?.name}
+        animateStampsFrom={justStamped ? card.stamps_count - 1 : undefined}
+        animationDelay={200}
       >
         <div className="flex flex-col items-center gap-2 pt-1">
           <div className="w-full max-w-56 overflow-hidden rounded-xl bg-white p-2">
@@ -70,7 +80,7 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
 
       {latestMessage ? (
         <section className="bg-muted flex flex-col gap-1 rounded-lg p-4">
-          <h2 className="text-muted-foreground text-xs tracking-wide uppercase">
+          <h2 className="text-muted-foreground text-sm">
             {t("webCard.messageTitle")}
           </h2>
           <p>{latestMessage.text}</p>

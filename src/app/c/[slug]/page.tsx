@@ -38,7 +38,7 @@ export default async function JoinPage({ params }: PageProps<"/c/[slug]">) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("join.title")}</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">{t("join.title")}</h1>
         <p className="text-muted-foreground">{t("join.intro")}</p>
       </header>
 

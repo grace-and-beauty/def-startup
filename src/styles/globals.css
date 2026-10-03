@@ -2,7 +2,8 @@
 @import "tw-animate-css";
 
 /*
- * Design tokens. "Zen Linen" dark palette and the system font stack.
+ * Design tokens. Palette "Печатка" (stamp ink on paper); Unbounded for
+ * display type, Onest for text — both drawn with Ukrainian Cyrillic in mind.
  * Rebranding = change the variables below; components only reference tokens
  * (see docs/architecture.md §9).
  */
@@ -11,47 +12,50 @@
 
 :root {
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    "Noto Sans", sans-serif;
+    var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-sans);
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  --radius: 0.625rem;
+  --radius: 0.875rem;
 
-  /* Palette: "Zen Linen" (dark). */
-  color-scheme: dark;
+  /*
+   * Palette "Печатка": violet office-stamp ink on a cool paper form.
+   *   paper  #f4f3f8   ink    #2e2a8c   ink-deep #1a1838
+   *   line   #dcdae8   wash   #e9e7f7   graphite #5e5b78
+   */
+  --background: #f4f3f8;
+  --foreground: #1a1838;
+  --card: #ffffff;
+  --card-foreground: #1a1838;
+  --popover: #ffffff;
+  --popover-foreground: #1a1838;
+  --primary: #2e2a8c;
+  --primary-foreground: #f7f6fd;
+  --secondary: #e9e7f7;
+  --secondary-foreground: #2e2a8c;
+  --muted: #ecebf3;
+  --muted-foreground: #5e5b78;
+  --accent: #e9e7f7;
+  --accent-foreground: #1a1838;
+  --destructive: #c8323a;
+  --success: #13795b;
+  --success-foreground: #f2fbf7;
+  --border: #dcdae8;
+  --input: #cfcce0;
+  --ring: #2e2a8c;
 
-  --background: #141414;
-  --foreground: #ededed;
-  --card: #1a1a1a;
-  --card-foreground: #ededed;
-  --popover: #1a1a1a;
-  --popover-foreground: #ededed;
-  --primary: #d9d6cc;
-  --primary-foreground: #141414;
-  --secondary: #262626;
-  --secondary-foreground: #ededed;
-  --muted: #262626;
-  --muted-foreground: #a3a3a3;
-  --accent: #2e2e2e;
-  --accent-foreground: #ededed;
-  --destructive: #e5484d;
-  --success: oklch(0.6 0.15 150);
-  --success-foreground: oklch(0.985 0 0);
-  --border: #2a2a2a;
-  --input: #2a2a2a;
-  --ring: #8c897f;
-
-  /* Linen ramp, light → dark, so data stays visible on the dark background. */
-  --chart-1: #d9d6cc;
-  --chart-2: #b3b0a6;
-  --chart-3: #8c897f;
-  --chart-4: #66645d;
-  --chart-5: #45443f;
+  /* Ink ramp for charts: deep → pale. */
+  --chart-1: #2e2a8c;
+  --chart-2: #5b56c4;
+  --chart-3: #8d89dc;
+  --chart-4: #b9b6ec;
+  --chart-5: #dddbf6;
 }
 
 @theme inline {
   --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-mono);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -92,5 +96,77 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion: the stamp. One impression lands with a press — oversized and
+ * faint, then it hits the paper, squashes a little and settles at its angle.
+ * --stamp-r is the impression's own rotation (set per stamp).
+ * ------------------------------------------------------------------------- */
+@keyframes stamp-land {
+  0% {
+    opacity: 0;
+    transform: scale(1.9) rotate(calc(var(--stamp-r, 0deg) - 14deg));
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.9) rotate(var(--stamp-r, 0deg));
+  }
+  75% {
+    transform: scale(1.04) rotate(var(--stamp-r, 0deg));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--stamp-r, 0deg));
+  }
+}
+
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    transform: translateY(-18%) scale(1.5) rotate(-18deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(0.92) rotate(-8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(-8deg);
+  }
+}
+
+@keyframes ink-ring {
+  from {
+    opacity: 0.45;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.stamp-land {
+  animation: stamp-land 520ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.stamp-press {
+  animation: stamp-press 460ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.ink-ring {
+  animation: ink-ring 700ms ease-out 260ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-land,
+  .stamp-press,
+  .ink-ring {
+    animation: none;
+  }
+  .ink-ring {
+    opacity: 0;
   }
 }

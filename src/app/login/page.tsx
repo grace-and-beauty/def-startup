@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <PublicShell>
       <section className="mx-auto flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("login.title")}</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">{t("login.title")}</h1>
           <p className="text-muted-foreground">{t("login.subtitle")}</p>
         </div>
         {callbackError ? (

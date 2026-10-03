@@ -68,7 +68,7 @@ export function JoinForm({ slug, action, googleWalletEnabled }: JoinFormProps) {
     return (
       <section role="status" className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold">{t("join.successTitle")}</h2>
+          <h2 className="font-display text-xl font-bold tracking-tight">{t("join.successTitle")}</h2>
           <p className="text-muted-foreground">{t("join.successText")}</p>
         </div>
         <WalletButtons token={state.token} googleWalletEnabled={googleWalletEnabled} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { t } from "@/lib/i18n";
@@ -11,8 +12,8 @@ export function SiteHeader() {
         aria-label={t("nav.mainLabel")}
         className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3"
       >
-        <Link href="/" className="text-base font-semibold tracking-tight">
-          {brand.name}
+        <Link href="/" className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+          <BrandMark />
         </Link>
         <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="sm">

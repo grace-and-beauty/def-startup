@@ -36,7 +36,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
   return (
     <PublicShell>
       <section className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-4xl">
           {niche.landing.headline}
         </h1>
         <p className="text-muted-foreground text-lg">{niche.landing.subheadline}</p>
@@ -53,7 +53,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
       <div className="grid gap-10 md:grid-cols-2">
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-semibold tracking-tight">{t("niche.painsTitle")}</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight">{t("niche.painsTitle")}</h2>
             <ul className="flex flex-col gap-2">
               {niche.landing.pains.map((pain) => (
                 <li key={pain} className="bg-muted rounded-lg px-4 py-3">
@@ -63,7 +63,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
             </ul>
           </div>
           <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-semibold tracking-tight">{t("niche.solutionTitle")}</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight">{t("niche.solutionTitle")}</h2>
             <ul className="flex flex-col gap-2">
               {solutions.map((item) => (
                 <li key={item} className="flex gap-2">
@@ -76,7 +76,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">{t("niche.exampleTitle")}</h2>
+          <h2 className="font-display text-xl font-bold tracking-tight">{t("niche.exampleTitle")}</h2>
           <CardPreview
             className="max-w-sm"
             businessName={niche.sampleBusinessName}

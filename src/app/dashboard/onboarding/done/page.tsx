@@ -1,12 +1,12 @@
 import { CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
+import { BrandMark } from "@/components/brand-mark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CardPreview } from "@/components/card-preview";
 import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/ui/button";
-import { brand } from "@/config/brand";
 import { getOwnerBusiness, requireOwnerSession } from "@/lib/auth/owner";
 import { siteUrl } from "@/lib/env";
 import { t } from "@/lib/i18n";
@@ -28,14 +28,14 @@ export default async function OnboardingDonePage({ searchParams }: PageProps<"/d
     <div className="flex flex-1 flex-col">
       <header className="border-b">
         <div className="mx-auto flex w-full max-w-3xl items-center px-4 py-3">
-          <span className="font-semibold tracking-tight">{brand.name}</span>
+          <BrandMark />
         </div>
       </header>
       <main className="mx-auto grid w-full max-w-3xl flex-1 gap-8 px-4 py-8 md:grid-cols-[1fr_minmax(0,16rem)]">
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <CheckCircle2 className="text-success size-10" aria-hidden />
-            <h1 className="text-2xl font-semibold tracking-tight">{t("onboarding.doneTitle")}</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight">{t("onboarding.doneTitle")}</h1>
             <p className="text-muted-foreground">{t("onboarding.doneText")}</p>
           </div>
           {logoFailed ? (

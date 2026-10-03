@@ -14,6 +14,9 @@ export interface CardPreviewProps {
   stampsRequired: number;
   stampsCount: number;
   customerName?: string | null;
+  /** Stamps land one by one from this index (landing page hero). */
+  animateStampsFrom?: number;
+  animationDelay?: number;
   /** Extra content at the bottom of the card (e.g. the QR code). */
   children?: ReactNode;
   className?: string;
@@ -34,12 +37,14 @@ export function CardPreview({
   stampsRequired,
   stampsCount,
   customerName,
+  animateStampsFrom,
+  animationDelay,
   children,
   className,
 }: CardPreviewProps) {
   return (
     <article
-      className={cn("flex w-full flex-col gap-5 rounded-2xl p-5 shadow-sm", className)}
+      className={cn("flex w-full flex-col gap-5 rounded-[1.375rem] p-5 shadow-[0_1px_0_rgb(255_255_255/0.08)_inset,0_18px_40px_-24px_rgb(26_24_56/0.55)]", className)}
       style={{ backgroundColor: bgColor, color: fgColor }}
     >
       <header className="flex items-center gap-3">
@@ -54,30 +59,35 @@ export function CardPreview({
         ) : (
           <span
             aria-hidden
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-current text-lg font-semibold opacity-80"
+            className="font-display flex size-11 shrink-0 items-center justify-center rounded-full border border-current text-base font-bold opacity-80"
           >
             {businessName.trim().charAt(0).toUpperCase()}
           </span>
         )}
-        <h2 className="min-w-0 flex-1 truncate text-lg leading-tight font-semibold">
+        <h2 className="font-display min-w-0 flex-1 truncate text-base leading-tight font-bold tracking-tight">
           {businessName}
         </h2>
       </header>
 
       <section className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-xs tracking-wide uppercase" style={{ color: labelColor }}>
+          <span className="text-sm" style={{ color: labelColor }}>
             {t("card.stampsLabel", {
               count: Math.min(stampsCount, stampsRequired),
               total: stampsRequired,
             })}
           </span>
         </div>
-        <StampProgress count={stampsCount} total={stampsRequired} />
+        <StampProgress
+          count={stampsCount}
+          total={stampsRequired}
+          animateFrom={animateStampsFrom}
+          animationDelay={animationDelay}
+        />
       </section>
 
       <section className="flex flex-col gap-1">
-        <span className="text-xs tracking-wide uppercase" style={{ color: labelColor }}>
+        <span className="text-sm" style={{ color: labelColor }}>
           {t("card.rewardLabel")}
         </span>
         <p className="text-base font-medium">{rewardText}</p>
@@ -85,7 +95,7 @@ export function CardPreview({
 
       {customerName ? (
         <section className="flex flex-col gap-1">
-          <span className="text-xs tracking-wide uppercase" style={{ color: labelColor }}>
+          <span className="text-sm" style={{ color: labelColor }}>
             {t("card.customerLabel")}
           </span>
           <p className="text-base">{customerName}</p>

@@ -38,7 +38,7 @@ describe("plans config", () => {
 describe("i18n", () => {
   it("translates and interpolates", () => {
     expect(t("plans.plus.name")).toBe("Плюс");
-    expect(t("home.title", { brand: "X" })).toContain("X");
+    expect(t("pricing.customers", { count: 300 })).toBe("До 300 клієнтів");
     expect(interpolate("{a} {b}", { a: 1 })).toBe("1 {b}");
   });
 });

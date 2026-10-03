@@ -49,7 +49,7 @@ export default async function ScanPage({ params }: PageProps<"/scan/[slug]">) {
         <section className="flex flex-col gap-6 pt-6">
           <div className="flex flex-col gap-1 text-center">
             <p className="text-muted-foreground text-sm">{business.name}</p>
-            <h1 className="text-2xl font-semibold tracking-tight">{t("scan.pinTitle")}</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight">{t("scan.pinTitle")}</h1>
             <p className="text-muted-foreground">{t("scan.pinSubtitle")}</p>
           </div>
           <PinForm action={staffLogin.bind(null, business.slug)} />
