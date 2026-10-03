@@ -5,13 +5,13 @@ import { z } from "zod";
 
 import { getNiche, isNicheSlug } from "@/config/niches";
 import { getOwnerBusiness, getOwnerSession } from "@/lib/auth/owner";
-import { DataError, isSlugTaken, onboardBusiness, updateBusiness } from "@/lib/data";
+import { DataError, isSlugTaken, onboardBusiness, setBusinessLogo } from "@/lib/data";
 import {
   businessNameSchema,
   formFile,
   formString,
   hexColorSchema,
-  pinSchema,
+  newPinSchema,
   rewardTextSchema,
   slugSchema,
   stampsRequiredSchema,
@@ -74,7 +74,7 @@ const schema = z.object({
   stampsRequired: stampsRequiredSchema,
   rewardText: rewardTextSchema,
   termsText: termsTextSchema,
-  pin: pinSchema,
+  pin: newPinSchema,
   pinConfirm: z.string().trim(),
 });
 
@@ -151,8 +151,10 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
   if (logo) {
     try {
       const upload = await uploadBusinessLogo(businessId, logo);
-      if (upload.status === "ok") {
-        await updateBusiness(session.supabase, businessId, { logo_url: upload.url });
+      const admin = tryCreateSupabaseAdminClient();
+      if (upload.status === "ok" && admin) {
+        // businessId comes from onboard_business, which ran as this owner.
+        await setBusinessLogo(admin, businessId, upload.url);
       } else {
         logoFailed = true;
       }

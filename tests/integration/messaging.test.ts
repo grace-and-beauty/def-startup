@@ -1,6 +1,6 @@
 /**
  * supabase/migrations/*_messaging.sql: send_broadcast (quota under parallel
- * sends, owner check, at_risk recipients), record_reminder (idempotent,
+ * sends, service role only, at_risk recipients), record_reminder (idempotent,
  * service role only), message_recipients RLS, analytics_card_stats.second_visit_at.
  */
 import type { Client } from "pg";
@@ -76,8 +76,9 @@ afterAll(async () => {
 
 type BroadcastRow = { status: string; message_id: string | null; recipients_count: number; used: number };
 
-const broadcast = (userId: string, target: string, ids: string[] | null, max: number | null, business = BUSINESS) =>
-  asUser<BroadcastRow>("authenticated", userId, "select * from public.send_broadcast($1, $2, $3, $4, $5)", [
+// The dashboard calls send_broadcast with the service role after checking the owner.
+const broadcast = (target: string, ids: string[] | null, max: number | null, business = BUSINESS) =>
+  asUser<BroadcastRow>("service_role", null, "select * from public.send_broadcast($1, $2, $3, $4, $5)", [
     business,
     target,
     "Тестова розсилка",
@@ -87,24 +88,41 @@ const broadcast = (userId: string, target: string, ids: string[] | null, max: nu
 
 describe("send_broadcast", () => {
   it("parallel sends never exceed the monthly quota", async () => {
-    const results = await Promise.all(Array.from({ length: 6 }, () => broadcast(OWNER, "all", null, 2)));
+    const results = await Promise.all(Array.from({ length: 6 }, () => broadcast("all", null, 2)));
     expect(results.filter((r) => r.status === "ok")).toHaveLength(2);
     expect(results.filter((r) => r.status === "quota_exhausted")).toHaveLength(4);
     expect(results.find((r) => r.status === "ok")?.recipients_count).toBe(3);
     // Unlimited plan (null) still works.
-    expect((await broadcast(OWNER, "all", null, null)).status).toBe("ok");
+    expect((await broadcast("all", null, null)).status).toBe("ok");
   });
 
   it("at_risk stores only the business's own cards as recipients", async () => {
-    const result = await broadcast(OWNER, "at_risk", [cards[0], otherCard, cards[0]], null);
+    const result = await broadcast("at_risk", [cards[0], otherCard, cards[0]], null);
     expect(result).toMatchObject({ status: "ok", recipients_count: 1 });
     const { rows } = await db.query("select card_id from public.message_recipients where message_id = $1", [result.message_id]);
     expect(rows).toEqual([{ card_id: cards[0] }]);
-    expect((await broadcast(OWNER, "at_risk", [otherCard], null)).status).toBe("no_recipients");
+    expect((await broadcast("at_risk", [otherCard], null)).status).toBe("no_recipients");
   });
 
-  it("another owner can't send for the business", async () => {
-    await expect(broadcast(OTHER_OWNER, "all", null, null)).rejects.toThrow(/not allowed/);
+  it("owners can't call it directly — the quota would be theirs to choose", async () => {
+    const direct = (userId: string) =>
+      asUser("authenticated", userId, "select * from public.send_broadcast($1, 'all', 'x', null, null)", [BUSINESS]);
+    await expect(direct(OWNER)).rejects.toThrow(/permission denied/);
+    await expect(direct(OTHER_OWNER)).rejects.toThrow(/permission denied/);
+  });
+
+  it("owners can't write messages or recipients around the quota", async () => {
+    await expect(
+      asUser(
+        "authenticated",
+        OWNER,
+        "insert into public.messages (business_id, kind, target, text) values ($1, 'broadcast', 'all', 'x')",
+        [BUSINESS],
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      asUser("authenticated", OWNER, "delete from public.message_recipients where business_id = $1", [BUSINESS]),
+    ).rejects.toThrow(/permission denied/);
   });
 
   it("owners read only their own message_recipients", async () => {

@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { ownerContextForAction, type OwnerContext } from "@/lib/auth/owner";
 import { countActiveStaff, createStaff, getStaffById, listActiveStaffWithPinHashes, updateStaff } from "@/lib/data";
-import { formString, pinSchema, staffNameSchema } from "@/lib/domain/business-input";
+import { formString, newPinSchema, staffNameSchema } from "@/lib/domain/business-input";
 import { getLimit, hasFeature } from "@/lib/domain/plans";
 import { findStaffByPin, hashPin } from "@/lib/security/pin";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -47,7 +47,7 @@ export async function addStaff(_prev: StaffActionState, formData: FormData): Pro
 
   const name = staffNameSchema.safeParse(formString(formData, "name"));
   if (!name.success) return fail("nameInvalid");
-  const pin = pinSchema.safeParse(formString(formData, "pin"));
+  const pin = newPinSchema.safeParse(formString(formData, "pin"));
   if (!pin.success) return fail("pinInvalid");
 
   try {
@@ -110,7 +110,7 @@ export async function changeStaffPin(
   if (!ctx) return fail("sessionExpired");
   const id = staffIdSchema.safeParse(staffId);
   if (!id.success) return fail("notFound");
-  const pin = pinSchema.safeParse(formString(formData, "pin"));
+  const pin = newPinSchema.safeParse(formString(formData, "pin"));
   if (!pin.success) return fail("pinInvalid");
 
   try {

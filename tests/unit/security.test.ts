@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { safeNextPath } from "@/lib/auth/redirect";
 import { signStaffSession, verifyStaffSession } from "@/lib/auth/staff-session";
-import { findStaffByPin, hashPin, isValidPin, verifyPin } from "@/lib/security/pin";
+import { findStaffByPin, hashPin, isValidNewPin, isValidPin, pinVersion, verifyPin } from "@/lib/security/pin";
 import { clientIpFromHeaders, hashIp, isStaffLoginLocked } from "@/lib/security/rate-limit";
 import { encodeBase62, extractQrToken, generateQrToken, isValidQrToken } from "@/lib/security/tokens";
 
@@ -35,7 +35,7 @@ describe("qr tokens", () => {
 });
 
 describe("staff session", () => {
-  const session = { businessId: "b-1", staffId: "s-1" };
+  const session = { businessId: "b-1", staffId: "s-1", pinVersion: "v1" };
 
   it("round-trips", async () => {
     const token = await signStaffSession(session, SECRET);
@@ -47,12 +47,25 @@ describe("staff session", () => {
     const token = await signStaffSession(session, SECRET, now);
     await expect(verifyStaffSession(token, `${SECRET}x`, now)).resolves.toBeNull();
     const [h, , s] = token.split(".");
-    const forged = Buffer.from(JSON.stringify({ bid: "other", sub: "s-1" })).toString("base64url");
+    const forged = Buffer.from(JSON.stringify({ bid: "other", sub: "s-1", pv: "v1" })).toString("base64url");
     await expect(verifyStaffSession(`${h}.${forged}.${s}`, SECRET, now)).resolves.toBeNull();
     const later = new Date(now.getTime() + 12 * 3600_000 + 1000);
     await expect(verifyStaffSession(token, SECRET, later)).resolves.toBeNull();
     await expect(verifyStaffSession(undefined, SECRET)).resolves.toBeNull();
     await expect(verifyStaffSession("garbage", SECRET)).resolves.toBeNull();
+  });
+
+  it("rejects sessions signed before the PIN version existed", async () => {
+    const { SignJWT } = await import("jose");
+    const legacy = await new SignJWT({ bid: "b-1" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("s-1")
+      .setIssuer("loyalty-app")
+      .setAudience("staff-scanner")
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(new TextEncoder().encode(SECRET));
+    await expect(verifyStaffSession(legacy, SECRET)).resolves.toBeNull();
   });
 });
 
@@ -63,6 +76,21 @@ describe("pin", () => {
     expect(isValidPin("123")).toBe(false);
     expect(isValidPin("1234567")).toBe(false);
     expect(isValidPin("12a4")).toBe(false);
+  });
+
+  it("requires 6 digits for a new PIN", () => {
+    expect(isValidNewPin("123456")).toBe(true);
+    expect(isValidNewPin("1234")).toBe(false);
+    expect(isValidNewPin("12345")).toBe(false);
+    expect(isValidNewPin("1234567")).toBe(false);
+  });
+
+  it("changes the PIN version when the PIN changes", async () => {
+    const first = await hashPin("123456");
+    const second = await hashPin("123456");
+    expect(pinVersion(first)).toBe(pinVersion(first));
+    expect(pinVersion(first)).not.toBe(pinVersion(second));
+    expect(pinVersion(first)).toMatch(/^[A-Za-z0-9_-]{16}$/);
   });
 
   it("hashes and finds the matching staff member", async () => {

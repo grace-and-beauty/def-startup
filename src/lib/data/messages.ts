@@ -62,6 +62,8 @@ export async function getLatestBroadcast(db: Db, businessId: string): Promise<Me
 
 /**
  * Broadcast with the monthly quota checked under a lock (RPC send_broadcast).
+ * Service role only: the quota is the caller's to set, so owners can't call
+ * the RPC themselves — the Server Action checks the owner, then calls this.
  * maxPerMonth: plan limit, Infinity / null = unlimited. cardIds: recipients of
  * an at_risk broadcast (ignored for "all").
  */

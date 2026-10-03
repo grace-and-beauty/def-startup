@@ -2,7 +2,9 @@ import { jwtVerify, SignJWT } from "jose";
 
 /**
  * Staff scanner session (docs/architecture.md §4.3, §8): HS256 JWT with the
- * business and staff ids, valid for 12 hours. Pure functions — the cookie
+ * business and staff ids and the PIN version it was opened with, valid for
+ * 12 hours. The server compares the PIN version with the staff member's
+ * current PIN on every scanner call, so a PIN change ends old sessions. Pure functions — the cookie
  * handling lives in staff-cookie.ts.
  */
 
@@ -15,6 +17,8 @@ const AUDIENCE = "staff-scanner";
 export interface StaffSession {
   businessId: string;
   staffId: string;
+  /** pinVersion() of the PIN hash at login (src/lib/security/pin.ts). */
+  pinVersion: string;
 }
 
 function key(secret: string): Uint8Array {
@@ -27,7 +31,7 @@ export async function signStaffSession(
   now: Date = new Date(),
 ): Promise<string> {
   const iat = Math.floor(now.getTime() / 1000);
-  return new SignJWT({ bid: session.businessId })
+  return new SignJWT({ bid: session.businessId, pv: session.pinVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(session.staffId)
     .setIssuer(ISSUER)
@@ -53,8 +57,11 @@ export async function verifyStaffSession(
     });
     const businessId = payload.bid;
     const staffId = payload.sub;
-    if (typeof businessId !== "string" || typeof staffId !== "string") return null;
-    return { businessId, staffId };
+    const pinVersion = payload.pv;
+    if (typeof businessId !== "string" || typeof staffId !== "string" || typeof pinVersion !== "string") {
+      return null;
+    }
+    return { businessId, staffId, pinVersion };
   } catch {
     return null;
   }

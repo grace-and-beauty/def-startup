@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ServiceUnavailable } from "@/components/message-screen";
+import { isStaffPinChanged } from "@/lib/auth/staff-access";
 import { readStaffSession } from "@/lib/auth/staff-cookie";
 import { listStaff } from "@/lib/data";
 import { usableStaff } from "@/lib/domain/plans";
@@ -27,9 +28,10 @@ export default async function ScanPage({ params }: PageProps<"/scan/[slug]">) {
 
   const session = await readStaffSession();
   const admin = tryCreateSupabaseAdminClient();
-  // The session counts only while the PIN is active and allowed by the plan.
+  // The session counts only while the PIN is active, allowed by the plan and
+  // unchanged since sign-in.
   const staff =
-    session && admin && session.businessId === business.id
+    session && admin && session.businessId === business.id && !(await isStaffPinChanged(admin, session))
       ? (usableStaff(await listStaff(admin, business.id), business, new Date()).find(
           (member) => member.id === session.staffId,
         ) ?? null)

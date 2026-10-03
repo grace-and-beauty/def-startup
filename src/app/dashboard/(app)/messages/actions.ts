@@ -7,6 +7,7 @@ import { ownerContextForAction } from "@/lib/auth/owner";
 import { sendBroadcastRpc } from "@/lib/data";
 import { broadcastTextSchema, formString } from "@/lib/domain/business-input";
 import { getLimit, hasFeature } from "@/lib/domain/plans";
+import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 import { scheduleWalletTask } from "@/lib/wallet/background";
 
 import { listAtRiskCards } from "./recipients";
@@ -24,7 +25,9 @@ const WALLET_BATCH = 5;
  *  1. plan checks — at_risk needs the analytics feature (Plus), the monthly
  *     quota comes from getLimit(broadcastsPerMonth);
  *  2. RPC send_broadcast: quota check + messages row (+ recipients for
- *     at_risk) under one lock, so parallel sends can't exceed the quota;
+ *     at_risk) under one lock, so parallel sends can't exceed the quota.
+ *     Called with the service role after the owner check above — owners
+ *     can't call it directly, because the quota is a parameter;
  *  3. after the response: Google Wallet message to the class (all) or to
  *     each at-risk Google pass. Wallet errors are logged, the broadcast stays.
  * The web card shows the latest message for the card (loaders.ts).
@@ -50,13 +53,15 @@ export async function sendBroadcast(prev: BroadcastState, formData: FormData): P
 
   const limit = getLimit(business, "broadcastsPerMonth", now);
   if (limit <= 0) return fail("quotaExhausted");
+  const admin = tryCreateSupabaseAdminClient();
+  if (!admin) return fail("unknown");
 
   let recipients: number;
   try {
     const atRisk = target === "at_risk" ? await listAtRiskCards(supabase, business.id, now) : [];
     if (target === "at_risk" && atRisk.length === 0) return fail("noRecipients");
 
-    const result = await sendBroadcastRpc(supabase, {
+    const result = await sendBroadcastRpc(admin, {
       businessId: business.id,
       target,
       text: text.data,

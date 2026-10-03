@@ -25,20 +25,14 @@ export type BusinessPublic = Pick<
   | "canceled_at"
 >;
 
-/** Columns an owner may change (billing columns are guarded by a DB trigger). */
+/**
+ * Columns an owner may change — the same list the database grants to
+ * "authenticated" (migration *_owner_write_limits.sql). logo_url is set by the
+ * server only (setBusinessLogo), billing columns are guarded by a trigger.
+ */
 export type BusinessOwnerUpdate = Pick<
   TablesUpdate<"businesses">,
-  | "name"
-  | "slug"
-  | "niche_slug"
-  | "logo_url"
-  | "bg_color"
-  | "fg_color"
-  | "label_color"
-  | "timezone"
-  | "avg_check"
-  | "enabled_modules"
-  | "onboarding_done"
+  "name" | "slug" | "niche_slug" | "bg_color" | "fg_color" | "label_color" | "avg_check" | "onboarding_done"
 >;
 
 /** Billing columns — service role only. */
@@ -111,6 +105,15 @@ export async function updateBusiness(
     "updateBusiness",
     await db.from("businesses").update(patch).eq("id", id).select("*").single(),
   );
+}
+
+/**
+ * Service role only: the logo URL comes from our own Storage upload
+ * (lib/storage/logos.ts), never from the owner's request. The caller must have
+ * verified that the signed-in owner owns businessId.
+ */
+export async function setBusinessLogo(admin: Db, id: string, logoUrl: string | null): Promise<void> {
+  unwrap("setBusinessLogo", await admin.from("businesses").update({ logo_url: logoUrl }).eq("id", id));
 }
 
 /** Service role only (manual plan changes in the MVP). */

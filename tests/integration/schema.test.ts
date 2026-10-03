@@ -21,9 +21,11 @@ beforeAll(async () => {
     "authenticated",
     OTHER_OWNER,
     async (c) => {
+      // Billing columns are not even writable by owners (owner_write_limits);
+      // a new business always starts on the 30-day trial.
       const { rows } = await c.query(
-        `insert into public.businesses (owner_id, name, slug, niche_slug, plan, trial_ends_at)
-         values ($1, 'Other', 'other-biz', 'barbershop', 'pro', now() + interval '10 years')
+        `insert into public.businesses (owner_id, name, slug, niche_slug)
+         values ($1, 'Other', 'other-biz', 'barbershop')
          returning id, plan, trial_ends_at < now() + interval '31 days' as trial_forced`,
         [OTHER_OWNER],
       );
@@ -120,7 +122,7 @@ describe("protect_billing_fields", () => {
         asRole(db, "authenticated", DEMO.ownerId, (c) =>
           c.query(`update public.businesses set ${patch} where id = $1`, [DEMO.businessId]),
         ),
-      ).rejects.toThrow(/service role/);
+      ).rejects.toThrow(/permission denied|service role/);
     }
     const name = await asRole(db, "authenticated", DEMO.ownerId, async (c) => {
       const { rows } = await c.query("update public.businesses set name = 'Нова назва' where id = $1 returning name", [

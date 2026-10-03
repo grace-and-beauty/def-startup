@@ -24,7 +24,7 @@ test.describe.configure({ mode: "serial" });
 test.skip(!supabaseConfigured(), "needs NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in .env.local");
 
 const run = randomUUID().slice(0, 8);
-const business = { name: `E2E Мийка ${run}`, slug: `e2e-${run}`, pin: "4826", stamps: 2 };
+const business = { name: `E2E Мийка ${run}`, slug: `e2e-${run}`, pin: "482615", stamps: 2 };
 const customerName = `Клієнт ${run}`;
 const broadcast = `Знижка 20% цього тижня ${run}`;
 
@@ -197,4 +197,26 @@ test("owner replaces the logo in settings", async () => {
   await owner.locator("#logo").setInputFiles(LOGO_PNG);
   await owner.locator('button[type="submit"]', { hasText: t("settings.logoUpload") }).click();
   await expect(owner.getByText(t("settings.logoSaved"))).toBeVisible();
+});
+
+test("changing the PIN signs out staff who used the old one", async () => {
+  const newPin = "731904";
+  await owner.goto("/dashboard/staff");
+  await owner.getByRole("button", { name: t("staff.changePin") }).click();
+  await owner.getByLabel(t("staff.newPin")).fill(newPin);
+  await owner.getByRole("button", { name: t("staff.savePin") }).click();
+  await expect(owner.getByText(t("staff.pinSaved"))).toBeVisible();
+
+  // The scanner was signed in with the old PIN: its next call is refused.
+  await staff.locator("#manual-code").fill(cardToken);
+  await staff.getByRole("button", { name: t("scan.manualSubmit") }).click();
+  await expect(staff.getByLabel(t("scan.pin"))).toBeVisible();
+
+  await staff.getByLabel(t("scan.pin")).fill(business.pin);
+  await staff.getByRole("button", { name: t("scan.pinSubmit") }).click();
+  await expect(staff.getByText(t("scan.pinInvalid"))).toBeVisible();
+
+  await staff.getByLabel(t("scan.pin")).fill(newPin);
+  await staff.getByRole("button", { name: t("scan.pinSubmit") }).click();
+  await findCard();
 });

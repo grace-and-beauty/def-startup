@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
+
 import bcrypt from "bcryptjs";
 
 import { isValidPin } from "./pin-format";
 
-export { isValidPin, PIN_PATTERN } from "./pin-format";
+export { isValidNewPin, isValidPin, NEW_PIN_PATTERN, PIN_PATTERN } from "./pin-format";
 
 const BCRYPT_ROUNDS = 10;
 
@@ -28,4 +30,13 @@ export async function findStaffByPin<T extends { pin_hash: string }>(
   const results = await Promise.all(candidates.map((c) => verifyPin(pin, c.pin_hash)));
   const index = results.indexOf(true);
   return index === -1 ? null : candidates[index];
+}
+
+/**
+ * Short fingerprint of a staff member's current PIN hash, stored in the
+ * scanner session. Changing the PIN changes the hash, so sessions signed in
+ * with the old PIN stop working at once (a former employee keeps no access).
+ */
+export function pinVersion(pinHash: string): string {
+  return createHash("sha256").update(pinHash).digest("base64url").slice(0, 16);
 }

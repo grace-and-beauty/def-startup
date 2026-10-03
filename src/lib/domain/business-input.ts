@@ -4,7 +4,7 @@
  */
 import { z } from "zod";
 
-import { PIN_PATTERN } from "@/lib/security/pin-format";
+import { NEW_PIN_PATTERN, PIN_PATTERN } from "@/lib/security/pin-format";
 
 import { SLUG_PATTERN } from "./slug";
 
@@ -27,7 +27,10 @@ export const termsTextSchema = optionalText(1000);
 export const reminderDaysSchema = z.coerce.number().int().min(1).max(365);
 export const reminderTextSchema = trimmed(120);
 export const staffNameSchema = trimmed(60);
+/** PIN typed at the scanner login. */
 export const pinSchema = z.string().trim().regex(PIN_PATTERN);
+/** PIN being set (wizard, new staff, PIN change). */
+export const newPinSchema = z.string().trim().regex(NEW_PIN_PATTERN);
 export const broadcastTextSchema = trimmed(120);
 export const BROADCAST_MAX_LENGTH = 120;
 

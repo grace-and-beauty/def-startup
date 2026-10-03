@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { ownerContextForAction, type OwnerContext } from "@/lib/auth/owner";
-import { updateBusiness, updateProgram } from "@/lib/data";
+import { setBusinessLogo, updateBusiness, updateProgram } from "@/lib/data";
 import {
   avgCheckSchema,
   businessNameSchema,
@@ -20,6 +20,7 @@ import {
 import { hasFeature } from "@/lib/domain/plans";
 import { isAcceptableLogo } from "@/lib/security/upload";
 import { removeBusinessLogo, uploadBusinessLogo } from "@/lib/storage/logos";
+import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import type { SettingsErrorReason, SettingsState } from "./types";
 
@@ -67,18 +68,22 @@ export async function updateDesign(_prev: SettingsState, formData: FormData): Pr
 export async function uploadLogo(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
   const file = formFile(formData, "logo");
   if (!file || !isAcceptableLogo(file)) return fail("logoInvalid");
-  return withOwner("uploadLogo", async ({ supabase, business }) => {
+  return withOwner("uploadLogo", async ({ business }) => {
+    const admin = tryCreateSupabaseAdminClient();
+    if (!admin) return fail("logoUnavailable");
     const upload = await uploadBusinessLogo(business.id, file);
     if (upload.status === "invalid") return fail("logoInvalid");
     if (upload.status === "unavailable") return fail("logoUnavailable");
-    await updateBusiness(supabase, business.id, { logo_url: upload.url });
+    await setBusinessLogo(admin, business.id, upload.url);
     await removeBusinessLogo(business.id, business.logo_url);
   });
 }
 
 export async function removeLogo(_prev: SettingsState): Promise<SettingsState> {
-  return withOwner("removeLogo", async ({ supabase, business }) => {
-    await updateBusiness(supabase, business.id, { logo_url: null });
+  return withOwner("removeLogo", async ({ business }) => {
+    const admin = tryCreateSupabaseAdminClient();
+    if (!admin) return fail("logoUnavailable");
+    await setBusinessLogo(admin, business.id, null);
     await removeBusinessLogo(business.id, business.logo_url);
   });
 }

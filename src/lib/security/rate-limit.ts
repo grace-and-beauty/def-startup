@@ -13,6 +13,14 @@ export const STAFF_LOGIN_MAX_BUSINESS_FAILURES = 30;
 
 /** New cards on /c/[slug]: ≤ 10 per minute per IP per business (architecture §5.1). */
 export const JOIN_RATE_LIMIT = { scope: "join", max: 10, windowSeconds: 60 } as const;
+/**
+ * New cards per business per hour from ALL IPs. Without it a script with
+ * rotating IPs fills the plan's customer limit (300 on Basic) in minutes and
+ * real customers get "program unavailable". A queue at the till is far below this.
+ */
+export const JOIN_BUSINESS_RATE_LIMIT = { scope: "join_business", max: 120, windowSeconds: 3600 } as const;
+/** Rate-limit key for limits counted per business, not per IP (key_hash needs ≥ 16 chars). */
+export const BUSINESS_WIDE_KEY = "business-wide-limit";
 /** "Save to Google Wallet" links per IP (hashed) per business: each one signs a JWT and calls Google. */
 export const WALLET_SAVE_RATE_LIMIT = { scope: "wallet_save", max: 10, windowSeconds: 60 } as const;
 

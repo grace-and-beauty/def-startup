@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { isStaffPinChanged } from "@/lib/auth/staff-access";
 import { clearStaffSession, isStaffSessionConfigured, readStaffSession, setStaffSession } from "@/lib/auth/staff-cookie";
 import {
   applyStamp as applyStampRpc,
@@ -25,7 +26,7 @@ import { canStamp, usableStaff } from "@/lib/domain/plans";
 import { applyStamp, cardStateFromRow, cooldownEndsAt, redeemReward } from "@/lib/domain/stamps";
 import { ipHashSecret, MissingEnvError, stampCooldownMinutes } from "@/lib/env";
 import { loadPublicBusiness } from "@/lib/public/loaders";
-import { findStaffByPin } from "@/lib/security/pin";
+import { findStaffByPin, pinVersion } from "@/lib/security/pin";
 import {
   clientIpFromHeaders,
   hashIp,
@@ -89,6 +90,7 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
   }
 
   let staffId: string;
+  let staffPinVersion: string;
   try {
     const ipHash = hashIp(clientIpFromHeaders(await headers()), ipSecret);
     const attempt = await beginStaffLogin(admin, {
@@ -113,12 +115,13 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
     }
     await markStaffLoginSucceeded(admin, { businessId: business.id, attemptId: attempt.attempt_id });
     staffId = match.id;
+    staffPinVersion = pinVersion(match.pin_hash);
   } catch (error) {
     console.error("staffLogin failed", error instanceof Error ? error.message : error);
     return { status: "error", reason: "unknown" };
   }
 
-  await setStaffSession({ businessId: business.id, staffId });
+  await setStaffSession({ businessId: business.id, staffId, pinVersion: staffPinVersion });
   redirect(`/scan/${business.slug}`);
 }
 
@@ -130,8 +133,9 @@ export async function staffLogout(slug: string): Promise<void> {
 
 // ---------------------------------------------------------------------------
 // Scanner actions — every call re-verifies the signed session, that the staff
-// member still exists and is active, and filters every query by the session's
-// business_id, so a card of another business is never found (architecture §8).
+// member still exists, is active and still has the PIN the session was opened
+// with, and filters every query by the session's business_id, so a card of
+// another business is never found (architecture §8).
 // ---------------------------------------------------------------------------
 
 interface StaffContext {
@@ -145,13 +149,14 @@ async function requireStaff(): Promise<StaffContext | ScanFailure> {
   const session = await readStaffSession();
   const admin = tryCreateSupabaseAdminClient();
   if (!session || !admin) return "session_expired";
-  const [staffList, business, program] = await Promise.all([
+  const [staffList, pinChanged, business, program] = await Promise.all([
     listStaff(admin, session.businessId),
+    isStaffPinChanged(admin, session),
     getPublicBusinessById(admin, session.businessId),
     getPublicProgramByBusinessId(admin, session.businessId),
   ]);
   const staff = staffList.find((member) => member.id === session.staffId);
-  if (!staff || !business || !program) return "session_expired";
+  if (!staff || !business || !program || pinChanged) return "session_expired";
   // Deactivated, or beyond the plan's PIN limit after a downgrade.
   if (!usableStaff(staffList, business, new Date()).some((member) => member.id === staff.id)) {
     return "staff_inactive";

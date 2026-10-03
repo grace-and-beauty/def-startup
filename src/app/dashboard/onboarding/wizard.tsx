@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Niche, NicheSlug } from "@/config/niches";
 import { isValidSlug, normalizeSlugInput, slugify } from "@/lib/domain/slug";
 import { t, type TranslationKey } from "@/lib/i18n";
-import { isValidPin } from "@/lib/security/pin-format";
+import { isValidNewPin } from "@/lib/security/pin-format";
 import { isAcceptableLogo } from "@/lib/security/upload";
 import { cn } from "@/lib/utils";
 
@@ -143,7 +143,7 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
       if (form.termsText.trim().length > 1000) e.termsText = t("onboarding.termsInvalid");
     }
     if (index === 4) {
-      if (!isValidPin(form.pin)) e.pin = t("onboarding.pinInvalid");
+      if (!isValidNewPin(form.pin)) e.pin = t("onboarding.pinInvalid");
       else if (form.pin !== form.pinConfirm) e.pinConfirm = t("onboarding.pinMismatch");
     }
     return e;

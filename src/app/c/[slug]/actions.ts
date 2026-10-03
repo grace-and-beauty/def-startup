@@ -9,7 +9,13 @@ import { customerNameSchema, customerPhoneSchema } from "@/lib/domain/customer-i
 import { canIssueCards, getLimit } from "@/lib/domain/plans";
 import { ipHashSecret, MissingEnvError } from "@/lib/env";
 import { loadPublicBusiness } from "@/lib/public/loaders";
-import { clientIpFromHeaders, hashIp, JOIN_RATE_LIMIT } from "@/lib/security/rate-limit";
+import {
+  BUSINESS_WIDE_KEY,
+  clientIpFromHeaders,
+  hashIp,
+  JOIN_BUSINESS_RATE_LIMIT,
+  JOIN_RATE_LIMIT,
+} from "@/lib/security/rate-limit";
 import { generateQrToken } from "@/lib/security/tokens";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -47,7 +53,8 @@ function ipHashSecretOrNull(): string | null {
  * Customer joins the program of /c/[slug] (docs/architecture.md §5.1):
  *  1. validate input (zod);
  *  2. the business must be able to issue cards (not canceled / inactive);
- *  3. rate limit: ≤ 10 new cards per minute per IP (hashed) per business;
+ *  3. rate limits: ≤ 10 new cards per minute per IP (hashed) per business,
+ *     ≤ 120 per hour per business from all IPs;
  *  4. RPC issue_card: customer + card in one transaction, plan customer
  *     limit checked under a per-business lock; new random qr_token.
  * Returns the card token for /card/[token]. "Add to Google Wallet" is a link
@@ -93,6 +100,14 @@ export async function joinProgram(
       windowSeconds: JOIN_RATE_LIMIT.windowSeconds,
     });
     if (!allowed) return { status: "error", reason: "rateLimited" };
+    const businessAllowed = await hitRateLimit(admin, {
+      scope: JOIN_BUSINESS_RATE_LIMIT.scope,
+      businessId: business.id,
+      keyHash: BUSINESS_WIDE_KEY,
+      max: JOIN_BUSINESS_RATE_LIMIT.max,
+      windowSeconds: JOIN_BUSINESS_RATE_LIMIT.windowSeconds,
+    });
+    if (!businessAllowed) return { status: "error", reason: "rateLimited" };
 
     const maxCustomers = getLimit(business, "customers", now);
     // A 128-bit collision is practically impossible; one retry covers it anyway.
