@@ -13,6 +13,5 @@ export const noopWalletProvider: WalletProvider = {
   objectId: () => null,
   classId: () => null,
   updateCard: async () => undefined,
-  broadcast: async () => undefined,
   messageCard: async () => undefined,
 };

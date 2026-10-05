@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { checkLogo } from "@/lib/security/upload";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
+import { logEvent } from "@/lib/log";
 
 export const LOGO_BUCKET = "logos";
 
@@ -32,7 +33,7 @@ export async function uploadBusinessLogo(businessId: string, file: File): Promis
     upsert: false,
   });
   if (error) {
-    console.error("uploadBusinessLogo failed", error.message);
+    logEvent("error", "action_failed", { action: "uploadBusinessLogo", error: error.message });
     return { status: "unavailable" };
   }
   const { data } = admin.storage.from(LOGO_BUCKET).getPublicUrl(path);
@@ -51,5 +52,5 @@ export async function removeBusinessLogo(businessId: string, logoUrl: string | n
   const admin = tryCreateSupabaseAdminClient();
   if (!admin) return;
   const { error } = await admin.storage.from(LOGO_BUCKET).remove([path]);
-  if (error) console.error("removeBusinessLogo failed", error.message);
+  if (error) logEvent("warn", "action_failed", { action: "removeBusinessLogo", error: error.message });
 }

@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import { devices, expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+
+import { devices, expect, test, type Browser, type BrowserContext, type Download, type Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
@@ -36,6 +38,10 @@ let customer: Page;
 let staff: Page;
 let cardToken: string;
 const pageErrors: string[] = [];
+
+async function readDownload(download: Download): Promise<string> {
+  return readFile(await download.path(), "utf8");
+}
 
 async function phone(browser: Browser, baseURL: string | undefined): Promise<Page> {
   const context = await browser.newContext({ ...devices["Pixel 7"], baseURL });
@@ -93,6 +99,10 @@ test("customer joins from the QR page and gets a web card", async () => {
   await customer.goto(`/c/${business.slug}`);
   await expect(customer.getByText(business.name).first()).toBeVisible();
   await customer.locator("#name").fill(customerName);
+  // Messages from the business only with a separate, unticked-by-default opt-in.
+  const consent = customer.getByRole("checkbox", { name: t("join.marketingConsent") });
+  await expect(consent).not.toBeChecked();
+  await consent.check();
   await customer.getByRole("button", { name: t("join.submit") }).click();
 
   await expect(customer.getByRole("heading", { name: t("join.successTitle") })).toBeVisible();
@@ -102,6 +112,7 @@ test("customer joins from the QR page and gets a web card", async () => {
 
   await expect(customer.getByText(t("webCard.remaining", { count: business.stamps }))).toBeVisible();
   await expect(customer.getByText(customerName)).toBeVisible();
+  await expect(customer.getByText(t("webCard.consentOn"))).toBeVisible();
 });
 
 test("staff log in with the PIN, a wrong PIN is refused", async () => {
@@ -147,9 +158,12 @@ test("staff stamp the card to a reward, the customer sees it, staff hand it out"
   await customer.reload();
   await expect(customer.getByText(t("webCard.rewardReady"))).toBeVisible();
 
-  // A freshly filled card stays open so the reward can be handed out right away.
+  // A freshly filled card stays open so the reward can be handed out right away —
+  // after one confirmation, so a reward is never given by a stray tap.
   await expect(staff.getByRole("heading", { name: customerName })).toBeVisible();
   await staff.getByRole("button", { name: t("scan.redeem") }).click();
+  await expect(staff.getByText(t("scan.redeemConfirm"))).toBeVisible();
+  await staff.getByRole("button", { name: t("scan.redeemConfirmYes") }).click();
   await expect(staff.getByText(t("scan.rewardRedeemed"))).toBeVisible();
   await dismissResult();
 
@@ -171,6 +185,42 @@ test("owner sends a broadcast and it shows on the customer's card", async () => 
 
   await customer.reload();
   await expect(customer.getByText(broadcast)).toBeVisible();
+});
+
+test("the customer turns messages off on the card; the next broadcast has nobody to reach", async () => {
+  await customer.getByRole("button", { name: t("webCard.consentDisable") }).click();
+  await expect(customer.getByText(t("webCard.consentOff"))).toBeVisible();
+
+  await owner.goto("/dashboard/messages");
+  await owner.locator("#text").fill(`Друга розсилка ${run}`);
+  await owner.getByRole("button", { name: t("messages.send") }).click();
+  await expect(owner.getByText(t("messages.noRecipients"))).toBeVisible();
+
+  await customer.getByRole("button", { name: t("webCard.consentEnable") }).click();
+  await expect(customer.getByText(t("webCard.consentOn"))).toBeVisible();
+});
+
+test("owner exports customers and visits as CSV and sees the scanner activity log", async () => {
+  await owner.goto("/dashboard/clients");
+  const [customersFile] = await Promise.all([
+    owner.waitForEvent("download"),
+    owner.getByRole("link", { name: t("clients.exportCustomers") }).click(),
+  ]);
+  const customersCsv = await readDownload(customersFile);
+  expect(customersCsv).toContain(customerName);
+  expect(customersCsv).not.toContain(cardToken);
+
+  const [eventsFile] = await Promise.all([
+    owner.waitForEvent("download"),
+    owner.getByRole("link", { name: t("clients.exportEvents") }).click(),
+  ]);
+  const eventsCsv = await readDownload(eventsFile);
+  expect(eventsCsv).toContain(t("clients.csv.reward"));
+  expect(eventsCsv.split("\r\n").filter((line) => line.includes(t("clients.csv.stamp")))).toHaveLength(2);
+
+  await owner.goto("/dashboard/staff");
+  await expect(owner.getByText(t("staff.activityTitle"), { exact: true })).toBeVisible();
+  await expect(owner.getByText(t("staff.activityReward"), { exact: true })).toBeVisible();
 });
 
 test("owner dashboard shows the customer, the analytics and the poster", async () => {
@@ -219,4 +269,14 @@ test("changing the PIN signs out staff who used the old one", async () => {
   await staff.getByLabel(t("scan.pin")).fill(newPin);
   await staff.getByRole("button", { name: t("scan.pinSubmit") }).click();
   await findCard();
+});
+
+test("owner deletes the customer's personal data; the old card link stops working", async () => {
+  await owner.goto(`/dashboard/clients?q=${encodeURIComponent(customerName)}`);
+  await owner.getByRole("button", { name: t("clients.anonymize") }).first().click();
+  await owner.getByRole("button", { name: t("clients.anonymizeConfirm") }).click();
+  await expect(owner.getByText(t("clients.anonymizeDone"))).toBeVisible();
+
+  const response = await customer.goto(`/card/${cardToken}`);
+  expect(response?.status()).toBe(404);
 });

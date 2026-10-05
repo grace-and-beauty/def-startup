@@ -13,7 +13,7 @@ import { t, type TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { addStamp, lookupCard, redeemCardReward } from "./actions";
-import type { ScanActionResult, ScanCard, ScanFailure } from "./types";
+import type { LookupResult, ScanActionResult, ScanCard, ScanFailure } from "./types";
 
 const FAILURE_KEYS: Record<ScanFailure, TranslationKey> = {
   invalid_code: "scan.invalidCode",
@@ -24,6 +24,7 @@ const FAILURE_KEYS: Record<ScanFailure, TranslationKey> = {
   session_expired: "scan.sessionExpired",
   inactive: "scan.inactive",
   error: "common.error",
+  network: "scan.network",
 };
 
 const RESULT_AUTO_CLOSE_MS = 4000;
@@ -54,7 +55,8 @@ export function Scanner({ businessName, staffName, logoutAction }: ScannerProps)
   const lookup = useCallback(
     (code: string) => {
       startTransition(async () => {
-        const result = await lookupCard(code);
+        // A dropped connection rejects the Server Action call itself.
+        const result = await lookupCard(code).catch((): LookupResult => ({ ok: false, reason: "network" }));
         if (result.ok) {
           setScreen({ kind: "card", card: result.card });
         } else {
@@ -68,7 +70,7 @@ export function Scanner({ businessName, staffName, logoutAction }: ScannerProps)
 
   const runCardAction = (card: ScanCard, action: typeof addStamp) => {
     startTransition(async () => {
-      const result = await action(card.id);
+      const result = await action(card.id).catch((): ScanActionResult => ({ ok: false, reason: "network" }));
       const updated = result.ok ? { ...result.card, customerName: card.customerName } : card;
       setScreen({ kind: "result", result, card: updated });
       if (!result.ok) handleFailure(result.reason);
@@ -80,6 +82,10 @@ export function Scanner({ businessName, staffName, logoutAction }: ScannerProps)
       if (current.kind !== "result") return current;
       // A freshly filled card can be redeemed right away; otherwise go to the next customer.
       if (current.result.ok && current.result.kind === "stamp" && current.card.rewardsAvailable > 0) {
+        return { kind: "card", card: current.card };
+      }
+      // Nothing happened on the server: stay on the card so a retry is one tap.
+      if (!current.result.ok && (current.result.reason === "network" || current.result.reason === "error")) {
         return { kind: "card", card: current.card };
       }
       return { kind: "scan" };
@@ -119,6 +125,10 @@ export function Scanner({ businessName, staffName, logoutAction }: ScannerProps)
 
       {screen.kind === "result" ? (
         <ResultOverlay result={screen.result} card={screen.card} onClose={closeResult} />
+      ) : null}
+
+      {screen.kind === "scan" ? (
+        <p className="text-muted-foreground mt-auto text-xs">{t("scan.homeScreenHint")}</p>
       ) : null}
     </div>
   );
@@ -181,7 +191,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
   const controlsRef = useRef<IScannerControls | null>(null);
   const handledRef = useRef(false);
   const [active, setActive] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
+  const [cameraError, setCameraError] = useState<null | "denied" | "failed">(null);
 
   const stop = useCallback(() => {
     controlsRef.current?.stop();
@@ -193,7 +203,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
 
   const start = async () => {
     if (!videoRef.current) return;
-    setCameraError(false);
+    setCameraError(null);
     handledRef.current = false;
     try {
       const { BrowserQRCodeReader } = await import("@zxing/browser");
@@ -209,9 +219,10 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
           onCode(result.getText());
         },
       );
-    } catch {
+    } catch (error) {
       setActive(false);
-      setCameraError(true);
+      const denied = error instanceof Error && (error.name === "NotAllowedError" || error.name === "SecurityError");
+      setCameraError(denied ? "denied" : "failed");
     }
   };
 
@@ -235,7 +246,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
       </div>
       {cameraError ? (
         <p role="alert" className="text-destructive text-sm">
-          {t("scan.cameraError")}
+          {cameraError === "denied" ? t("scan.cameraDenied") : t("scan.cameraError")}
         </p>
       ) : null}
       {active ? (
@@ -266,6 +277,8 @@ function CardScreen({
   onRedeem: () => void;
   onCancel: () => void;
 }) {
+  // Handing out a reward can't be undone: one extra tap to confirm.
+  const [confirmRedeem, setConfirmRedeem] = useState(false);
   return (
     <section className="flex flex-col gap-5 rounded-xl border p-5">
       <div className="flex flex-col gap-1">
@@ -295,17 +308,37 @@ function CardScreen({
         <Button size="lg" className="h-16 text-xl" disabled={pending} onClick={onStamp}>
           {pending ? t("scan.working") : t("scan.addStamp")}
         </Button>
-        {card.rewardsAvailable > 0 ? (
+        {card.rewardsAvailable > 0 && !confirmRedeem ? (
           <Button
             size="lg"
             variant="outline"
             className="h-14 text-lg"
             disabled={pending}
-            onClick={onRedeem}
+            onClick={() => setConfirmRedeem(true)}
           >
             <Gift aria-hidden />
             {t("scan.redeem")}
           </Button>
+        ) : null}
+        {card.rewardsAvailable > 0 && confirmRedeem ? (
+          <div
+            role="group"
+            aria-label={t("scan.redeemConfirm")}
+            className="bg-secondary flex flex-col gap-3 rounded-xl p-4"
+            // Small phones: the confirmation opens below the fold — bring it into view.
+            ref={(node) => node?.scrollIntoView({ block: "nearest", behavior: "smooth" })}
+          >
+            <p className="font-medium">{t("scan.redeemConfirm")}</p>
+            <div className="flex gap-2">
+              <Button size="lg" className="h-12 flex-1" disabled={pending} onClick={onRedeem}>
+                <Gift aria-hidden />
+                {t("scan.redeemConfirmYes")}
+              </Button>
+              <Button size="lg" variant="outline" className="h-12" disabled={pending} onClick={() => setConfirmRedeem(false)}>
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </div>
         ) : null}
         <Button variant="ghost" disabled={pending} onClick={onCancel}>
           {t("common.cancel")}
@@ -374,7 +407,9 @@ function ResultOverlay({
       <span className="font-display text-3xl font-bold tracking-tight">{title}</span>
       {card.customerName ? <span className="text-xl">{card.customerName}</span> : null}
       {detail ? <span className="text-lg">{detail}</span> : null}
-      <span className="mt-6 text-sm opacity-80">{t("scan.tapToContinue")}</span>
+      <span className="mt-6 text-sm opacity-80">
+        {!result.ok && result.reason === "network" ? t("scan.retry") : t("scan.tapToContinue")}
+      </span>
     </button>
   );
 }

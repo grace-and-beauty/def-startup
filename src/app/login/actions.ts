@@ -6,6 +6,7 @@ import { isNicheSlug } from "@/config/niches";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { isSupabaseConfigured, siteUrl } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/log";
 
 export type LoginState =
   | { status: "idle" }
@@ -41,7 +42,7 @@ export async function sendMagicLink(_prev: LoginState, formData: FormData): Prom
 
   if (error) {
     if (error.status === 429) return { status: "error", reason: "rateLimited" };
-    console.error("sendMagicLink failed", { status: error.status, code: error.code });
+    logEvent("error", "action_failed", { action: "sendMagicLink", status: error.status, code: error.code });
     return { status: "error", reason: "unknown" };
   }
   return { status: "sent", email };

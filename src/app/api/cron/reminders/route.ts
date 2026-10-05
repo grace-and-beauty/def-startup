@@ -5,6 +5,7 @@ import { runReminders } from "@/lib/jobs/reminders";
 import { isAuthorizedCronRequest } from "@/lib/security/cron";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWalletProvider } from "@/lib/wallet";
+import { logEvent } from "@/lib/log";
 
 /** Many businesses × Google calls: allow more than the default duration. */
 export const maxDuration = 300;
@@ -26,9 +27,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const summary = await runReminders({ admin, wallet: getWalletProvider(), now: new Date() });
+    logEvent(summary.failedBusinesses > 0 ? "warn" : "info", "reminders_run", { ...summary });
     return json({ ok: true, ...summary }, 200);
   } catch (error) {
-    console.error("cron reminders failed", error instanceof Error ? error.message : error);
+    logEvent("error", "reminders_failed", { error });
     return json({ error: "failed" }, 500);
   }
 }

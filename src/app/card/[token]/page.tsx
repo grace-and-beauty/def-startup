@@ -11,6 +11,7 @@ import { loadPublicCard } from "@/lib/public/loaders";
 import { googleWalletSavePath, isGoogleWalletConfigured } from "@/lib/wallet";
 
 import { AutoRefresh } from "./auto-refresh";
+import { ConsentForm } from "./consent-form";
 
 /** The URL is the customer's credential: keep it out of search engines and Referer headers. */
 export const metadata: Metadata = {
@@ -107,6 +108,8 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
           <a href={googleWalletSavePath(card.qr_token)}>{t("join.addToGoogleWallet")}</a>
         </Button>
       ) : null}
+
+      <ConsentForm token={card.qr_token} granted={card.customer?.marketing_consent_at != null} />
 
       <section className="flex gap-3 rounded-lg border p-4">
         <Smartphone className="mt-0.5 size-5 shrink-0" aria-hidden />

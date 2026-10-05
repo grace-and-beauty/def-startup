@@ -44,21 +44,6 @@ export async function countMessagesSince(
   return count ?? 0;
 }
 
-/** Latest message to everyone — shown on the web card. */
-export async function getLatestBroadcast(db: Db, businessId: string): Promise<Message | null> {
-  return unwrap(
-    "getLatestBroadcast",
-    await db
-      .from("messages")
-      .select("*")
-      .eq("business_id", businessId)
-      .eq("kind", "broadcast")
-      .eq("target", "all")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  );
-}
 
 /**
  * Broadcast with the monthly quota checked under a lock (RPC send_broadcast).
@@ -116,16 +101,16 @@ export async function recordReminder(
 }
 
 /**
- * Latest message this card should show: the latest broadcast to everyone or
- * the latest message addressed to the card (at-risk broadcast, reminder),
- * whichever is newer.
+ * Latest message this card should show: the latest message the card was a
+ * recipient of. Since the consent migration every broadcast and reminder
+ * lists its recipients, and only customers who opted in are among them.
  */
 export async function getLatestMessageForCard(
   db: Db,
   businessId: string,
   cardId: string,
 ): Promise<Message | null> {
-  const personalQuery = db
+  const personalResult = await db
     .from("message_recipients")
     .select("message_id, created_at")
     .eq("business_id", businessId)
@@ -133,10 +118,9 @@ export async function getLatestMessageForCard(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const [toAll, personalResult] = await Promise.all([getLatestBroadcast(db, businessId), personalQuery]);
   const personal = unwrap("getLatestMessageForCard", personalResult);
-  if (!personal || (toAll && Date.parse(toAll.created_at) >= Date.parse(personal.created_at))) return toAll;
-  const message = unwrap(
+  if (!personal) return null;
+  return unwrap(
     "getLatestMessageForCard",
     await db
       .from("messages")
@@ -145,5 +129,28 @@ export async function getLatestMessageForCard(
       .eq("id", personal.message_id)
       .maybeSingle(),
   );
-  return message ?? toAll;
+}
+
+/** Recipients of a message that hold a Google Wallet pass (wallet delivery). */
+export async function listGoogleRecipientCardIds(admin: Db, businessId: string, messageId: string): Promise<string[]> {
+  const recipients =
+    unwrap(
+      "listGoogleRecipientCardIds",
+      await admin.from("message_recipients").select("card_id").eq("business_id", businessId).eq("message_id", messageId),
+    ) ?? [];
+  if (recipients.length === 0) return [];
+  const cards =
+    unwrap(
+      "listGoogleRecipientCardIds",
+      await admin
+        .from("cards")
+        .select("id")
+        .eq("business_id", businessId)
+        .eq("wallet_type", "google")
+        .in(
+          "id",
+          recipients.map((r) => r.card_id),
+        ),
+    ) ?? [];
+  return cards.map((card) => card.id);
 }

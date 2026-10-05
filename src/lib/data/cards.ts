@@ -12,10 +12,10 @@ import type {
 } from "./types";
 
 export type CardWithCustomer = Card & {
-  customer: Pick<Customer, "id" | "name" | "phone"> | null;
+  customer: Pick<Customer, "id" | "name" | "phone" | "marketing_consent_at"> | null;
 };
 
-const CARD_WITH_CUSTOMER = "*, customer:customers(id, name, phone)" as const;
+const CARD_WITH_CUSTOMER = "*, customer:customers(id, name, phone, marketing_consent_at)" as const;
 
 /**
  * Look a card up by its QR token. Pass businessId whenever it is known
@@ -84,6 +84,9 @@ export async function issueCard(
     phone: string | null;
     qrToken: string;
     maxCustomers: number | null;
+    /** Opt-in to messages from the business (separate from getting the card). */
+    marketingConsent: boolean;
+    consentVersion: string;
   },
 ): Promise<IssueCardResult> {
   const max = input.maxCustomers;
@@ -95,6 +98,8 @@ export async function issueCard(
       p_phone: input.phone,
       p_qr_token: input.qrToken,
       p_max_customers: max !== null && Number.isFinite(max) ? Math.max(0, Math.floor(max)) : null,
+      p_marketing_consent: input.marketingConsent,
+      p_consent_version: input.consentVersion,
     }),
   );
   const [row] = rows;
@@ -223,4 +228,36 @@ export async function listReminderCandidates(
         .order("last_visit_at", { ascending: true }),
     ) ?? []
   );
+}
+
+/**
+ * Service role: the customer turns messages from the business on / off on
+ * their web card (the card token is the credential). null = unknown card.
+ */
+export async function setMarketingConsent(
+  admin: Db,
+  input: { qrToken: string; granted: boolean; consentVersion: string },
+): Promise<boolean | null> {
+  return unwrap(
+    "setMarketingConsent",
+    await admin.rpc("set_marketing_consent", {
+      p_qr_token: input.qrToken,
+      p_granted: input.granted,
+      p_consent_version: input.granted ? input.consentVersion : null,
+    }),
+  );
+}
+
+/** Cards whose customer opted in to messages (broadcast recipients). */
+export async function listConsentedCardIds(db: Db, businessId: string): Promise<Set<string>> {
+  const rows =
+    unwrap(
+      "listConsentedCardIds",
+      await db
+        .from("cards")
+        .select("id, customers!inner(marketing_consent_at)")
+        .eq("business_id", businessId)
+        .not("customers.marketing_consent_at", "is", null),
+    ) ?? [];
+  return new Set(rows.map((row) => row.id));
 }

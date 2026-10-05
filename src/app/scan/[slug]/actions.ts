@@ -40,6 +40,7 @@ import type { Db } from "@/lib/supabase/types";
 import { scheduleWalletTask } from "@/lib/wallet/background";
 
 import type { LookupResult, PinState, ScanActionResult, ScanCardCounters, ScanFailure } from "./types";
+import { logEvent } from "@/lib/log";
 
 // ---------------------------------------------------------------------------
 // Input schemas (bound arguments come from the client too — validate them)
@@ -101,6 +102,7 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
       maxBusinessFailures: STAFF_LOGIN_MAX_BUSINESS_FAILURES,
     });
     if (attempt.status !== "ok" || attempt.attempt_id === null) {
+      logEvent("warn", "staff_login_locked", { businessId: business.id, scope: attempt.status });
       return { status: "error", reason: "locked" };
     }
 
@@ -108,6 +110,7 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
     const candidates = usableStaff(await listActiveStaffWithPinHashes(admin, business.id), business, new Date());
     const match = await findStaffByPin(pin, candidates);
     if (!match) {
+      logEvent("warn", "staff_login_failed", { businessId: business.id, failures: attempt.failures + 1 });
       return {
         status: "error",
         reason: attempt.failures + 1 >= STAFF_LOGIN_MAX_FAILURES ? "locked" : "pinInvalid",
@@ -116,8 +119,9 @@ export async function staffLogin(slug: string, _prev: PinState, formData: FormDa
     await markStaffLoginSucceeded(admin, { businessId: business.id, attemptId: attempt.attempt_id });
     staffId = match.id;
     staffPinVersion = pinVersion(match.pin_hash);
+    logEvent("info", "staff_login_succeeded", { businessId: business.id, staffId });
   } catch (error) {
-    console.error("staffLogin failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "staffLogin", error });
     return { status: "error", reason: "unknown" };
   }
 
@@ -191,7 +195,7 @@ export async function lookupCard(input: string): Promise<LookupResult> {
       },
     };
   } catch (error) {
-    console.error("lookupCard failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "lookupCard", error });
     return { ok: false, reason: "error" };
   }
 }
@@ -251,10 +255,14 @@ export async function addStamp(cardId: string): Promise<ScanActionResult> {
     const ctx = await requireStaff();
     if (typeof ctx === "string") return { ok: false, reason: ctx };
     const now = new Date();
-    if (!canStamp(ctx.business, now)) return { ok: false, reason: "inactive" };
+    const reject = (reason: ScanFailure, retryAfter?: string | null): ScanActionResult => {
+      logEvent("info", "stamp_rejected", { businessId: ctx.business.id, cardId: id.data, staffId: ctx.staffId, reason });
+      return { ok: false, reason, retryAfter };
+    };
+    if (!canStamp(ctx.business, now)) return reject("inactive");
 
     const card = await getCardById(ctx.admin, ctx.business.id, id.data);
-    if (!card) return { ok: false, reason: "not_found" };
+    if (!card) return reject("not_found");
 
     const cooldownMinutes = stampCooldownMinutes();
     const preview = applyStamp(
@@ -263,9 +271,7 @@ export async function addStamp(cardId: string): Promise<ScanActionResult> {
       now,
       cooldownMinutes,
     );
-    if (!preview.ok) {
-      return { ok: false, reason: "cooldown", retryAfter: preview.retryAfter.toISOString() };
-    }
+    if (!preview.ok) return reject("cooldown", preview.retryAfter.toISOString());
 
     const result = await applyStampRpc(ctx.admin, {
       businessId: ctx.business.id,
@@ -273,9 +279,13 @@ export async function addStamp(cardId: string): Promise<ScanActionResult> {
       staffId: ctx.staffId,
       cooldownMinutes,
     });
-    if (result.status !== "ok") {
-      return { ok: false, reason: result.status, retryAfter: result.retry_after };
-    }
+    if (result.status !== "ok") return reject(result.status, result.retry_after);
+    logEvent("info", "stamp_added", {
+      businessId: ctx.business.id,
+      cardId: card.id,
+      staffId: ctx.staffId,
+      rewardsEarned: result.rewards_earned,
+    });
     syncWalletCard(ctx, card, result);
     return {
       ok: true,
@@ -284,7 +294,7 @@ export async function addStamp(cardId: string): Promise<ScanActionResult> {
       rewardsEarned: result.rewards_earned,
     };
   } catch (error) {
-    console.error("addStamp failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "addStamp", error });
     return { ok: false, reason: "error" };
   }
 }
@@ -296,22 +306,27 @@ export async function redeemCardReward(cardId: string): Promise<ScanActionResult
   try {
     const ctx = await requireStaff();
     if (typeof ctx === "string") return { ok: false, reason: ctx };
-    if (!canStamp(ctx.business, new Date())) return { ok: false, reason: "inactive" };
+    const reject = (reason: ScanFailure): ScanActionResult => {
+      logEvent("info", "reward_rejected", { businessId: ctx.business.id, cardId: id.data, staffId: ctx.staffId, reason });
+      return { ok: false, reason };
+    };
+    if (!canStamp(ctx.business, new Date())) return reject("inactive");
 
     const card = await getCardById(ctx.admin, ctx.business.id, id.data);
-    if (!card) return { ok: false, reason: "not_found" };
-    if (!redeemReward(cardStateFromRow(card)).ok) return { ok: false, reason: "no_reward" };
+    if (!card) return reject("not_found");
+    if (!redeemReward(cardStateFromRow(card)).ok) return reject("no_reward");
 
     const result = await redeemRewardRpc(ctx.admin, {
       businessId: ctx.business.id,
       cardId: card.id,
       staffId: ctx.staffId,
     });
-    if (result.status !== "ok") return { ok: false, reason: result.status };
+    if (result.status !== "ok") return reject(result.status);
+    logEvent("info", "reward_redeemed", { businessId: ctx.business.id, cardId: card.id, staffId: ctx.staffId });
     syncWalletCard(ctx, card, result);
     return { ok: true, kind: "reward", card: toCounters(result, new Date()), rewardsEarned: 0 };
   } catch (error) {
-    console.error("redeemCardReward failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "redeemCardReward", error });
     return { ok: false, reason: "error" };
   }
 }

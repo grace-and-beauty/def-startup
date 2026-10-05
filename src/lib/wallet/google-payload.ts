@@ -123,6 +123,11 @@ export interface LoyaltyObjectPayload extends ReturnType<typeof buildLoyaltyPoin
   linksModuleData: { uris: { id: string; uri: string; description: string }[] };
 }
 
+/** Short human-readable pass number (from the card id, not the secret token). */
+export function passNumber(cardId: string): string {
+  return cardId.replace(/-/g, "").slice(0, 8).toUpperCase();
+}
+
 export function buildLoyaltyObject(input: {
   issuerId: string;
   card: WalletCard;
@@ -136,9 +141,11 @@ export function buildLoyaltyObject(input: {
     classId: googleClassId(issuerId, program.id),
     state: "ACTIVE",
     // The QR carries the same token as the web card, so the scanner reads both.
-    accountId: card.qr_token.slice(0, 8),
+    // The token is the customer's credential: never print any part of it —
+    // the visible number is derived from the card id instead.
+    accountId: passNumber(card.id),
     accountName: card.customer?.name?.trim() || business.name,
-    barcode: { type: "QR_CODE", value: card.qr_token, alternateText: card.qr_token.slice(0, 8) },
+    barcode: { type: "QR_CODE", value: card.qr_token, alternateText: passNumber(card.id) },
     ...buildLoyaltyPoints(card, program),
     linksModuleData: {
       uris: [

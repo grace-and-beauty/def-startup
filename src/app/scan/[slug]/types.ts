@@ -19,7 +19,9 @@ export type ScanFailure =
   | "no_reward"
   | "session_expired"
   | "inactive"
-  | "error";
+  | "error"
+  /** The request did not reach the server (no internet / timeout) — safe to retry. */
+  | "network";
 
 /** Card state after a stamp / redeem (the UI keeps the customer name from the lookup). */
 export type ScanCardCounters = Omit<ScanCard, "customerName">;

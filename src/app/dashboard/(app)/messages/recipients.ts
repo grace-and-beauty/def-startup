@@ -1,11 +1,11 @@
 import "server-only";
 
-import { analyticsCardStats, countCards, type AnalyticsCardStatsRow } from "@/lib/data";
+import { analyticsCardStats, listConsentedCardIds, type AnalyticsCardStatsRow } from "@/lib/data";
 import { atRiskCards, medianVisitIntervalDays } from "@/lib/domain/analytics";
 import { startOfMonth, toLocalDate, zonedMidnight } from "@/lib/domain/dates";
 import type { Db } from "@/lib/supabase/types";
 
-/** At-risk cards (domain/analytics.ts rule) with the fields a broadcast needs. */
+/** At-risk cards (domain/analytics.ts rule) with the fields a broadcast needs (all, opted in or not). */
 export async function listAtRiskCards(
   db: Db,
   businessId: string,
@@ -18,10 +18,10 @@ export async function listAtRiskCards(
   }));
 }
 
-/** Cards a broadcast to `all` / `at_risk` would reach. */
+/** Cards a broadcast to `all` / `at_risk` would reach: only customers who opted in. */
 export async function countRecipients(db: Db, businessId: string, now: Date) {
-  const [all, atRisk] = await Promise.all([countCards(db, businessId), listAtRiskCards(db, businessId, now)]);
-  return { all, atRisk: atRisk.length };
+  const [consented, atRisk] = await Promise.all([listConsentedCardIds(db, businessId), listAtRiskCards(db, businessId, now)]);
+  return { all: consented.size, atRisk: atRisk.filter((card) => consented.has(card.card_id)).length };
 }
 
 /** Start of the current calendar month in the business timezone (broadcast quota). */

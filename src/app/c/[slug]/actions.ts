@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 
+import { MARKETING_CONSENT_VERSION } from "@/config/consent";
 import { DataError, hitRateLimit, issueCard } from "@/lib/data";
 import { slugSchema } from "@/lib/domain/business-input";
 import { customerNameSchema, customerPhoneSchema } from "@/lib/domain/customer-input";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/security/rate-limit";
 import { generateQrToken } from "@/lib/security/tokens";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
+import { logEvent } from "@/lib/log";
 
 export type JoinState =
   | { status: "idle" }
@@ -38,6 +40,8 @@ const joinSchema = z.object({
   slug: slugSchema,
   name: customerNameSchema,
   phone: customerPhoneSchema,
+  // Checkbox: "on" when ticked, absent otherwise. Never pre-ticked.
+  marketingConsent: z.union([z.literal("on"), z.null()]).transform((value) => value === "on"),
 });
 
 function ipHashSecretOrNull(): string | null {
@@ -70,6 +74,7 @@ export async function joinProgram(
     slug,
     name: formData.get("name"),
     phone: formData.get("phone"),
+    marketingConsent: formData.get("marketingConsent"),
   });
   if (!parsed.success) {
     const field = parsed.error.issues[0]?.path[0];
@@ -77,7 +82,7 @@ export async function joinProgram(
     if (field === "phone") return { status: "error", reason: "invalidPhone" };
     return { status: "error", reason: "notFound" };
   }
-  const { name, phone } = parsed.data;
+  const { name, phone, marketingConsent } = parsed.data;
 
   const loaded = await loadPublicBusiness(parsed.data.slug);
   if (loaded.status === "unavailable") return { status: "error", reason: "unavailable" };
@@ -99,7 +104,10 @@ export async function joinProgram(
       max: JOIN_RATE_LIMIT.max,
       windowSeconds: JOIN_RATE_LIMIT.windowSeconds,
     });
-    if (!allowed) return { status: "error", reason: "rateLimited" };
+    if (!allowed) {
+      logEvent("warn", "card_join_rejected", { businessId: business.id, reason: "rate_limit_ip" });
+      return { status: "error", reason: "rateLimited" };
+    }
     const businessAllowed = await hitRateLimit(admin, {
       scope: JOIN_BUSINESS_RATE_LIMIT.scope,
       businessId: business.id,
@@ -107,7 +115,10 @@ export async function joinProgram(
       max: JOIN_BUSINESS_RATE_LIMIT.max,
       windowSeconds: JOIN_BUSINESS_RATE_LIMIT.windowSeconds,
     });
-    if (!businessAllowed) return { status: "error", reason: "rateLimited" };
+    if (!businessAllowed) {
+      logEvent("warn", "card_join_rejected", { businessId: business.id, reason: "rate_limit_business" });
+      return { status: "error", reason: "rateLimited" };
+    }
 
     const maxCustomers = getLimit(business, "customers", now);
     // A 128-bit collision is practically impossible; one retry covers it anyway.
@@ -120,9 +131,14 @@ export async function joinProgram(
           phone,
           qrToken,
           maxCustomers: Number.isFinite(maxCustomers) ? maxCustomers : null,
+          marketingConsent,
+          consentVersion: MARKETING_CONSENT_VERSION,
         });
-        if (result.status === "limit_reached") return { status: "error", reason: "programUnavailable" };
-        if (result.status === "not_found") return { status: "error", reason: "notFound" };
+        if (result.status !== "ok") {
+          logEvent("warn", "card_join_rejected", { businessId: business.id, reason: result.status });
+          return { status: "error", reason: result.status === "limit_reached" ? "programUnavailable" : "notFound" };
+        }
+        logEvent("info", "card_issued", { businessId: business.id, cardId: result.card_id, marketingConsent });
         return { status: "ok", token: qrToken };
       } catch (error) {
         if (!(error instanceof DataError && error.isUniqueViolation) || attempt > 0) throw error;
@@ -130,7 +146,7 @@ export async function joinProgram(
     }
     return { status: "error", reason: "unknown" };
   } catch (error) {
-    console.error("joinProgram failed", error instanceof Error ? error.message : error);
+    logEvent("error", "card_issue_failed", { error });
     return { status: "error", reason: "unknown" };
   }
 }

@@ -16,6 +16,7 @@ const OTHER_BUSINESS = "00000000-0000-4000-8000-0000000000f4";
 let db: Client;
 const cards: string[] = [];
 let otherCard: string;
+let noConsentCard: string;
 
 async function asUser<T = Record<string, unknown>>(
   role: "authenticated" | "service_role",
@@ -31,14 +32,22 @@ async function asUser<T = Record<string, unknown>>(
   }
 }
 
-async function makeCard(business: string, n: number, lastVisitDaysAgo: number | null): Promise<string> {
+async function makeCard(
+  business: string,
+  n: number,
+  lastVisitDaysAgo: number | null,
+  consent = true,
+): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
-    `with cu as (insert into public.customers (business_id, name) values ($1, $2) returning id)
+    `with cu as (
+       insert into public.customers (business_id, name, marketing_consent_at, marketing_consent_source, marketing_consent_version)
+       values ($1, $2, case when $5 then now() end, case when $5 then 'join_form' end, case when $5 then 'test-v1' end)
+       returning id)
      insert into public.cards (business_id, program_id, customer_id, qr_token, last_visit_at)
      select $1, p.id, cu.id, $3, case when $4::int is null then null else now() - make_interval(days => $4::int) end
        from public.programs p, cu where p.business_id = $1
      returning id`,
-    [business, `Client ${n}`, `MsgTestToken${String(n).padStart(10, "0")}`, lastVisitDaysAgo],
+    [business, `Client ${n}`, `MsgTestToken${String(n).padStart(10, "0")}`, lastVisitDaysAgo, consent],
   );
   return rows[0].id;
 }
@@ -66,6 +75,8 @@ beforeAll(async () => {
   cards.push(await makeCard(BUSINESS, 2, 2));
   cards.push(await makeCard(BUSINESS, 3, null));
   otherCard = await makeCard(OTHER_BUSINESS, 4, 30);
+  // Opted out: never a recipient, even when it would be due / at risk.
+  noConsentCard = await makeCard(BUSINESS, 5, 30, false);
 });
 
 afterAll(async () => {
@@ -91,6 +102,7 @@ describe("send_broadcast", () => {
     const results = await Promise.all(Array.from({ length: 6 }, () => broadcast("all", null, 2)));
     expect(results.filter((r) => r.status === "ok")).toHaveLength(2);
     expect(results.filter((r) => r.status === "quota_exhausted")).toHaveLength(4);
+    // 3 opted-in cards; the opted-out one is not counted.
     expect(results.find((r) => r.status === "ok")?.recipients_count).toBe(3);
     // Unlimited plan (null) still works.
     expect((await broadcast("all", null, null)).status).toBe("ok");
@@ -102,6 +114,16 @@ describe("send_broadcast", () => {
     const { rows } = await db.query("select card_id from public.message_recipients where message_id = $1", [result.message_id]);
     expect(rows).toEqual([{ card_id: cards[0] }]);
     expect((await broadcast("at_risk", [otherCard], null)).status).toBe("no_recipients");
+    expect((await broadcast("at_risk", [noConsentCard], null)).status).toBe("no_recipients");
+  });
+
+  it("a broadcast to all lists its recipients — only customers who opted in", async () => {
+    const result = await broadcast("all", null, null);
+    const { rows } = await db.query<{ card_id: string }>(
+      "select card_id from public.message_recipients where message_id = $1",
+      [result.message_id],
+    );
+    expect(rows.map((r) => r.card_id).sort()).toEqual([...cards].sort());
   });
 
   it("owners can't call it directly — the quota would be theirs to choose", async () => {
@@ -143,7 +165,7 @@ describe("record_reminder", () => {
     );
 
   it("reminds each due card once, skips cards without visits and of other businesses", async () => {
-    const first = await remind([cards[0], cards[2], otherCard]);
+    const first = await remind([cards[0], cards[2], otherCard, noConsentCard]);
     expect(first.map((r) => r.card_id)).toEqual([cards[0]]);
     const { rows } = await db.query(
       "select kind, target, recipients_count from public.messages where id = $1",

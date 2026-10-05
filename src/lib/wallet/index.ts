@@ -13,6 +13,7 @@ import { googleWalletEnv, siteUrl } from "@/lib/env";
 import { GoogleWalletProvider } from "./google";
 import { noopWalletProvider } from "./noop";
 import type { WalletProvider } from "./types";
+import { logEvent } from "@/lib/log";
 
 export type { WalletBusiness, WalletCard, WalletMessage, WalletProgram, WalletProvider } from "./types";
 export { WalletNotConfiguredError } from "./types";
@@ -22,6 +23,12 @@ let cached: { key: string; provider: WalletProvider } | null = null;
 export function getWalletProvider(): WalletProvider {
   const env = googleWalletEnv();
   if (!env) return noopWalletProvider;
+  // Passes link to the web card, show the logo and sign JWT origins with the
+  // site URL: a localhost / http URL would produce broken passes.
+  if (!siteUrl().startsWith("https://")) {
+    warnInsecureSiteUrl();
+    return noopWalletProvider;
+  }
   // Reuse the provider (and its OAuth token cache) while the env is unchanged.
   const key = `${env.issuerId}|${env.serviceAccountEmail}|${siteUrl()}`;
   if (cached?.key !== key) {
@@ -31,7 +38,14 @@ export function getWalletProvider(): WalletProvider {
 }
 
 export function isGoogleWalletConfigured(): boolean {
-  return googleWalletEnv() !== null;
+  return getWalletProvider().isConfigured();
+}
+
+let warned = false;
+function warnInsecureSiteUrl(): void {
+  if (warned) return;
+  warned = true;
+  logEvent("warn", "wallet_task_failed", { task: "config", reason: "NEXT_PUBLIC_SITE_URL must be https — Google Wallet disabled" });
 }
 
 /** Route that redirects to the "Save to Google Wallet" link. */
@@ -50,7 +64,7 @@ export async function runWalletTask(
     await task(wallet);
     return true;
   } catch (error) {
-    console.error(`wallet ${name} failed`, error instanceof Error ? error.message : error);
+    logEvent("error", "wallet_task_failed", { task: name, error });
     return false;
   }
 }
