@@ -19,6 +19,7 @@ import { hasFeature } from "@/lib/domain/plans";
 import { reminderCutoff, reminderSettings, selectCardsToRemind } from "@/lib/domain/reminders";
 import type { Db } from "@/lib/supabase/types";
 import type { WalletProvider } from "@/lib/wallet/types";
+import { logEvent } from "@/lib/log";
 
 export interface RemindersSummary {
   businesses: number;
@@ -79,16 +80,13 @@ export async function runReminders(input: { admin: Db; wallet: WalletProvider; n
           if (result.status === "fulfilled") summary.walletSent++;
           else {
             summary.walletFailed++;
-            console.error(
-              "reminder wallet message failed",
-              result.reason instanceof Error ? result.reason.message : result.reason,
-            );
+            logEvent("error", "wallet_task_failed", { task: "reminderMessage", businessId: business.id, error: result.reason });
           }
         }
       }
     } catch (error) {
       summary.failedBusinesses++;
-      console.error("reminders failed for a business", business.id, error instanceof Error ? error.message : error);
+      logEvent("error", "reminders_failed", { businessId: business.id, error });
     }
   }
   return summary;

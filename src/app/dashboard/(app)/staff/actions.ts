@@ -11,6 +11,7 @@ import { findStaffByPin, hashPin } from "@/lib/security/pin";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import type { StaffActionState } from "./types";
+import { logEvent } from "@/lib/log";
 
 type Failure = Extract<StaffActionState, { status: "error" }>;
 const fail = (reason: Failure["reason"], limit?: number): StaffActionState => ({ status: "error", reason, limit });
@@ -60,7 +61,7 @@ export async function addStaff(_prev: StaffActionState, formData: FormData): Pro
       pinHash: await hashPin(pin.data),
     });
   } catch (error) {
-    console.error("addStaff failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "addStaff", error });
     return fail("unknown");
   }
   revalidatePath("/dashboard/staff");
@@ -94,7 +95,7 @@ export async function setStaffActive(
     }
     await updateStaff(ctx.supabase, ctx.business.id, id.data, { isActive: active });
   } catch (error) {
-    console.error("setStaffActive failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "setStaffActive", error });
     return fail("unknown");
   }
   revalidatePath("/dashboard/staff");
@@ -119,7 +120,7 @@ export async function changeStaffPin(
     if (await isPinTaken(ctx, pin.data, id.data)) return fail("pinTaken");
     await updateStaff(ctx.supabase, ctx.business.id, id.data, { pinHash: await hashPin(pin.data) });
   } catch (error) {
-    console.error("changeStaffPin failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "changeStaffPin", error });
     return fail("unknown");
   }
   revalidatePath("/dashboard/staff");

@@ -4,7 +4,7 @@ import { LockedFeature, PageHeader, Section } from "@/components/dashboard/block
 import { CopyButton } from "@/components/copy-button";
 import { Badge } from "@/components/ui/badge";
 import { requireOwnerContext } from "@/lib/auth/owner";
-import { listStaff } from "@/lib/data";
+import { listActivity, listStaff } from "@/lib/data";
 import { getLimit, hasFeature, scannerStaffLimit, usableStaff } from "@/lib/domain/plans";
 import { siteUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
@@ -15,10 +15,22 @@ import { AddStaffForm, StaffRowActions } from "./staff-forms";
 
 export const metadata: Metadata = { title: t("staff.title") };
 
+/** Last scanner actions shown to the owner (all of them: CSV on the clients page). */
+const ACTIVITY_ROWS = 30;
+
+function activityTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone }).format(
+    new Date(iso),
+  );
+}
+
 export default async function StaffPage() {
   const { supabase, business } = await requireOwnerContext();
   const now = new Date();
-  const staff = await listStaff(supabase, business.id);
+  const [staff, activity] = await Promise.all([
+    listStaff(supabase, business.id),
+    listActivity(supabase, business.id, ACTIVITY_ROWS),
+  ]);
   const pinsAllowed = hasFeature(business, "staff_pins", now);
   const limit = getLimit(business, "staff", now);
   const activeCount = staff.filter((s) => s.is_active).length;
@@ -83,6 +95,27 @@ export default async function StaffPage() {
       ) : (
         <LockedFeature title={t("staff.lockedTitle")} text={t("staff.lockedText")} />
       )}
+
+      <Section title={t("staff.activityTitle")} hint={t("staff.activityHint")}>
+        {activity.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("staff.activityEmpty")}</p>
+        ) : (
+          <ul className="flex flex-col divide-y text-sm">
+            {activity.map((event) => (
+              <li key={event.id} className="grid grid-cols-[auto_1fr] gap-x-3 py-2 first:pt-0 last:pb-0 sm:grid-cols-[9rem_10rem_1fr_auto]">
+                <span className="text-muted-foreground tabular-nums">{activityTime(event.createdAt, business.timezone)}</span>
+                <span className={event.type === "stamp" ? "" : "text-success font-medium"}>
+                  {event.type === "stamp" ? t("staff.activityStamp") : t("staff.activityReward")}
+                </span>
+                <span className="col-span-2 truncate sm:col-span-1">{event.customerName ?? t("clients.noName")}</span>
+                <span className="text-muted-foreground col-span-2 truncate sm:col-span-1 sm:text-right">
+                  {event.staffName ?? t("staff.activityNoStaff")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
     </>
   );
 }

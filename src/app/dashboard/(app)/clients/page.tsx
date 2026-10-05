@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -12,6 +12,8 @@ import { getLimit } from "@/lib/domain/plans";
 import { formatDate, formatNumber } from "@/lib/format";
 import { t } from "@/lib/i18n";
 
+import { AnonymizeButton } from "./anonymize-button";
+
 export const metadata: Metadata = { title: t("clients.title") };
 
 const PAGE_SIZE = 50;
@@ -19,6 +21,11 @@ const PAGE_SIZE = 50;
 function cardOf(customer: CustomerWithCard) {
   // MVP: one program → one card per customer.
   return customer.cards[0] ?? null;
+}
+
+function ConsentLabel({ customer }: { customer: CustomerWithCard }) {
+  if (customer.anonymized_at) return <span>{t("clients.anonymized")}</span>;
+  return <span>{customer.marketing_consent_at ? t("clients.consentYes") : t("clients.consentNo")}</span>;
 }
 
 function pageHref(q: string, page: number): string {
@@ -56,6 +63,23 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
           Number.isFinite(limit)
             ? t("clients.limit", { count: formatNumber(totalCustomers), limit: formatNumber(limit) })
             : t("clients.total", { count: formatNumber(totalCustomers) })
+        }
+        actions={
+          <>
+            {/* Plain links: a file download, not a client-side navigation. */}
+            <Button asChild variant="outline" size="sm">
+              <a href="/dashboard/clients/export?kind=customers">
+                <Download aria-hidden />
+                {t("clients.exportCustomers")}
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <a href="/dashboard/clients/export?kind=events">
+                <Download aria-hidden />
+                {t("clients.exportEvents")}
+              </a>
+            </Button>
+          </>
         }
       />
 
@@ -116,6 +140,10 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
                       {t("clients.rewards", { count: card.rewards_available })}
                     </span>
                   ) : null}
+                  <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
+                    <ConsentLabel customer={customer} />
+                    {customer.anonymized_at ? null : <AnonymizeButton customerId={customer.id} />}
+                  </div>
                 </li>
               );
             })}
@@ -131,6 +159,10 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
                   <TableHead className="text-right">{t("clients.colStamps")}</TableHead>
                   <TableHead className="text-right">{t("clients.colVisits")}</TableHead>
                   <TableHead className="text-right">{t("clients.colLastVisit")}</TableHead>
+                  <TableHead>{t("clients.colConsent")}</TableHead>
+                  <TableHead>
+                    <span className="sr-only">{t("clients.anonymize")}</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -154,6 +186,12 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
                       <TableCell className="text-right tabular-nums">{card?.total_visits ?? 0}</TableCell>
                       <TableCell className="text-right">
                         {card?.last_visit_at ? formatDate(card.last_visit_at, tz) : t("clients.none")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        <ConsentLabel customer={customer} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {customer.anonymized_at ? null : <AnonymizeButton customerId={customer.id} />}
                       </TableCell>
                     </TableRow>
                   );

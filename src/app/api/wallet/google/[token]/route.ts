@@ -7,6 +7,7 @@ import { clientIpFromHeaders, hashIp, WALLET_SAVE_RATE_LIMIT } from "@/lib/secur
 import { isValidQrToken } from "@/lib/security/tokens";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWalletProvider } from "@/lib/wallet";
+import { logEvent } from "@/lib/log";
 
 /**
  * "Add to Google Wallet" (architecture §5.1): upserts the program's
@@ -56,9 +57,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/wallet/g
     ]);
     return noStore(NextResponse.redirect(saveUrl, 303));
   } catch (error) {
-    if (!(error instanceof MissingEnvError)) {
-      console.error("wallet save link failed", error instanceof Error ? error.message : error);
-    }
+    // A missing secret (e.g. IP_HASH_SECRET) is a configuration problem: log it too.
+    logEvent(error instanceof MissingEnvError ? "warn" : "error", "wallet_save_failed", { error });
     return back(true);
   }
 }

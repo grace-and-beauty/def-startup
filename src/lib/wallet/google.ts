@@ -45,12 +45,22 @@ export interface GoogleWalletDeps {
   getAccessToken?: () => Promise<string>;
 }
 
+const TOKEN_TIMEOUT_MS = 8_000;
+
 function defaultTokenSource(env: GoogleWalletEnv): () => Promise<string> {
   const client = new JWT({ email: env.serviceAccountEmail, key: env.privateKey, scopes: [GOOGLE_WALLET_SCOPE] });
   return async () => {
-    const { token } = await client.getAccessToken();
-    if (!token) throw new Error("Google Wallet: empty access token");
-    return token;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Google Wallet: access token timeout")), TOKEN_TIMEOUT_MS);
+    });
+    try {
+      const { token } = await Promise.race([client.getAccessToken(), timeout]);
+      if (!token) throw new Error("Google Wallet: empty access token");
+      return token;
+    } finally {
+      clearTimeout(timer);
+    }
   };
 }
 
@@ -130,12 +140,6 @@ export class GoogleWalletProvider implements WalletProvider {
   async updateCard(card: WalletCard, program: WalletProgram): Promise<void> {
     const id = encodeURIComponent(this.objectId(card));
     await this.call("updateObject", "PATCH", `loyaltyObject/${id}`, buildLoyaltyPoints(card, program), [404]);
-  }
-
-  async broadcast(program: WalletProgram, business: WalletBusiness, message: WalletMessage): Promise<void> {
-    const id = encodeURIComponent(this.classId(program));
-    // 404: nobody saved a pass of this program yet.
-    await this.call("classMessage", "POST", `loyaltyClass/${id}/addMessage`, buildAddMessageBody(message, business), [404]);
   }
 
   async messageCard(

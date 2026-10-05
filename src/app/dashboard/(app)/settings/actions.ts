@@ -23,6 +23,7 @@ import { removeBusinessLogo, uploadBusinessLogo } from "@/lib/storage/logos";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import type { SettingsErrorReason, SettingsState } from "./types";
+import { logEvent } from "@/lib/log";
 
 const fail = (reason: SettingsErrorReason): SettingsState => ({ status: "error", reason });
 
@@ -37,7 +38,7 @@ async function withOwner(
     const result = await fn(ctx);
     if (result) return result;
   } catch (error) {
-    console.error(`${name} failed`, error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: name, error });
     return fail("unknown");
   }
   // Business name / colors also appear in the layout and on the poster.

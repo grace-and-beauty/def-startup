@@ -114,6 +114,10 @@ export function JoinForm({ slug, action, googleWalletEnabled }: JoinFormProps) {
             className="h-11 text-base"
           />
         </div>
+        <label className="flex items-start gap-3 text-sm leading-snug">
+          <input type="checkbox" name="marketingConsent" className="accent-primary mt-0.5 size-5 shrink-0" />
+          <span>{t("join.marketingConsent")}</span>
+        </label>
         {state.status === "error" ? (
           <p role="alert" className="text-destructive text-sm">
             {t(ERROR_KEYS[state.reason])}

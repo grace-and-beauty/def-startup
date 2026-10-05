@@ -160,23 +160,20 @@ describe("GoogleWalletProvider", () => {
     expect(calls[0].body).toMatchObject({ loyaltyPoints: { balance: { string: "4 / 6" } } });
   });
 
-  it("broadcast → class addMessage, messageCard → object addMessage", async () => {
+  it("messageCard → object addMessage (no class-wide messages: consent is per customer)", async () => {
     const { calls, fetchImpl } = mockFetch({});
     const p = provider(fetchImpl);
-    await p.broadcast(program, business, { id: "msg_1", text: "Привіт" });
     await p.messageCard({ id: card.id }, program, business, { id: "rem_1", text: "Скучили" });
-    expect(calls.map((c) => c.url)).toEqual([
-      `loyaltyClass/${encodeURIComponent(`${ISSUER}.prog_${program.id}`)}/addMessage`,
-      `loyaltyObject/${encodeURIComponent(`${ISSUER}.card_${card.id}`)}/addMessage`,
-    ]);
-    expect(calls[0].body).toMatchObject({ message: { body: "Привіт" } });
+    expect(calls.map((c) => c.url)).toEqual([`loyaltyObject/${encodeURIComponent(`${ISSUER}.card_${card.id}`)}/addMessage`]);
+    expect(calls[0].body).toMatchObject({ message: { body: "Скучили" } });
+    expect("broadcast" in p).toBe(false);
   });
 
   it("other HTTP errors are thrown (callers log them)", async () => {
-    const { fetchImpl } = mockFetch({ "POST loyaltyClass/": 500 });
-    await expect(provider(fetchImpl).broadcast(program, business, { id: "m", text: "x" })).rejects.toBeInstanceOf(
-      GoogleWalletApiError,
-    );
+    const { fetchImpl } = mockFetch({ "POST loyaltyObject/": 500 });
+    await expect(
+      provider(fetchImpl).messageCard({ id: card.id }, program, business, { id: "m", text: "x" }),
+    ).rejects.toBeInstanceOf(GoogleWalletApiError);
   });
 
   it("sends the OAuth token", async () => {
@@ -192,7 +189,7 @@ describe("noop wallet provider", () => {
     expect(noopWalletProvider.isConfigured()).toBe(false);
     await expect(noopWalletProvider.getSaveUrl(card, program, business)).rejects.toBeInstanceOf(WalletNotConfiguredError);
     await expect(noopWalletProvider.updateCard(card, program, business)).resolves.toBeUndefined();
-    await expect(noopWalletProvider.broadcast(program, business, { id: "m", text: "x" })).resolves.toBeUndefined();
+    await expect(noopWalletProvider.messageCard(card, program, business, { id: "m", text: "x" })).resolves.toBeUndefined();
     expect(noopWalletProvider.objectId(card)).toBeNull();
   });
 });

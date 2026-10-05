@@ -4,6 +4,7 @@ export * from "./customers";
 export * from "./errors";
 export * from "./events";
 export * from "./messages";
+export * from "./privacy";
 export * from "./programs";
 export * from "./rate-limits";
 export * from "./staff";

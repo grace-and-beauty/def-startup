@@ -25,6 +25,7 @@ import { uploadBusinessLogo } from "@/lib/storage/logos";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import { isOnboardingField, type OnboardingField, type OnboardingResult, type SlugCheckResult } from "./types";
+import { logEvent } from "@/lib/log";
 
 /**
  * Free slug candidates (service role: other owners' slugs are invisible to
@@ -59,7 +60,7 @@ export async function checkSlug(rawSlug: string): Promise<SlugCheckResult> {
     const suggestions = (await freeSlugs(slug, ownSlug)) ?? [];
     return { status: "taken", suggestions: suggestions.filter((s) => s !== slug) };
   } catch (error) {
-    console.error("checkSlug failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "checkSlug", error });
     return { status: "ok" };
   }
 }
@@ -137,12 +138,13 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
     });
     alreadyDone = result.status === "already_done";
     businessId = result.business_id;
+    if (!alreadyDone) logEvent("info", "business_onboarded", { businessId, niche: niche.slug });
   } catch (error) {
     if (error instanceof DataError && error.isUniqueViolation) {
       const suggestions = (await freeSlugs(input.slug, null).catch(() => null)) ?? [];
       return { status: "error", field: "slug", reason: "slugTaken", suggestions };
     }
-    console.error("completeOnboarding failed", error instanceof Error ? error.message : error);
+    logEvent("error", "action_failed", { action: "completeOnboarding", error });
     return { status: "error", reason: "unknown" };
   }
   if (alreadyDone) redirect("/dashboard");
@@ -159,7 +161,7 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
         logoFailed = true;
       }
     } catch (error) {
-      console.error("onboarding logo failed", error instanceof Error ? error.message : error);
+      logEvent("error", "action_failed", { action: "onboarding logo", error });
       logoFailed = true;
     }
   }

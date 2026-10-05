@@ -31,7 +31,14 @@ export default async function MessagesPage({ searchParams }: PageProps<"/dashboa
 
   return (
     <>
-      <PageHeader title={t("messages.title")} description={t("messages.intro")} />
+      <PageHeader
+        title={t("messages.title")}
+        description={
+          <>
+            {t("messages.intro")} {t("messages.consentNote")}
+          </>
+        }
+      />
 
       <Section
         title={t("messages.send")}

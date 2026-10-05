@@ -23,6 +23,9 @@ export type OnboardBusinessStatus = "ok" | "already_done";
 export type BeginStaffLoginStatus = "ok" | "locked" | "locked_business";
 export type IssueCardStatus = "ok" | "not_found" | "limit_reached";
 export type SendBroadcastStatus = "ok" | "quota_exhausted" | "no_recipients";
+export type ConsentSource = "join_form" | "web_card";
+export type ConsentEventSource = ConsentSource | "owner" | "support";
+export type AuditActorType = "owner" | "support" | "system";
 
 type Rel<Name extends string, Cols extends string[], Ref extends string, RefCols extends string[]> = {
   foreignKeyName: Name;
@@ -185,6 +188,12 @@ export type Database = {
           name: string | null;
           phone: string | null;
           created_at: string;
+          /** Opted in to messages from the business (null = not / withdrawn). */
+          marketing_consent_at: string | null;
+          marketing_consent_source: ConsentSource | null;
+          marketing_consent_version: string | null;
+          /** Personal data removed on request; the visit journal stays. */
+          anonymized_at: string | null;
         };
         Insert: {
           id?: string;
@@ -397,6 +406,37 @@ export type Database = {
         };
         Relationships: [Rel<"rate_limit_events_business_id_fkey", ["business_id"], "businesses", ["id"]>];
       };
+      customer_consent_events: {
+        Row: {
+          id: number;
+          business_id: string;
+          customer_id: string;
+          granted: boolean;
+          source: ConsentEventSource;
+          consent_version: string | null;
+          created_at: string;
+        };
+        Insert: { [_ in never]: never };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
+      audit_log: {
+        Row: {
+          id: number;
+          created_at: string;
+          business_id: string | null;
+          actor_type: AuditActorType;
+          actor: string;
+          action: string;
+          target_type: string | null;
+          target_id: string | null;
+          reason: string | null;
+          details: Json;
+        };
+        Insert: { [_ in never]: never };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -431,11 +471,25 @@ export type Database = {
           p_phone: string | null;
           p_qr_token: string;
           p_max_customers: number | null;
+          p_marketing_consent?: boolean;
+          p_consent_version?: string | null;
         };
         Returns: {
           status: IssueCardStatus;
           card_id: string | null;
         }[];
+      };
+      set_marketing_consent: {
+        Args: { p_qr_token: string; p_granted: boolean; p_consent_version: string | null };
+        Returns: boolean | null;
+      };
+      anonymize_customer: {
+        Args: { p_customer_id: string };
+        Returns: boolean;
+      };
+      log_owner_action: {
+        Args: { p_business_id: string; p_action: "export_customers" | "export_events"; p_details?: Json };
+        Returns: undefined;
       };
       send_broadcast: {
         Args: {
@@ -596,6 +650,8 @@ export type StampEvent = Tables<"stamp_events">;
 export type Message = Tables<"messages">;
 export type StaffLoginAttempt = Tables<"staff_login_attempts">;
 export type MessageRecipient = Tables<"message_recipients">;
+export type ConsentEvent = Tables<"customer_consent_events">;
+export type AuditLogEntry = Tables<"audit_log">;
 
 export type ApplyStampResult = RpcReturns<"apply_stamp">[number];
 export type RedeemRewardResult = RpcReturns<"redeem_reward">[number];

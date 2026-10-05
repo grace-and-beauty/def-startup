@@ -42,9 +42,10 @@ export interface WalletProvider {
   classId(program: Pick<WalletProgram, "id">): string | null;
   /** After a stamp / reward: refresh the counters on the pass. */
   updateCard(card: WalletCard, program: WalletProgram, business: WalletBusiness): Promise<void>;
-  /** Message to every pass of the program. */
-  broadcast(program: WalletProgram, business: WalletBusiness, message: WalletMessage): Promise<void>;
-  /** Message to one pass (at-risk broadcast, reminder). */
+  /**
+   * Message to one pass (broadcast recipient, reminder). There is deliberately
+   * no class-wide message: it would reach customers who did not opt in.
+   */
   messageCard(
     card: Pick<WalletCard, "id">,
     program: WalletProgram,
