@@ -25,7 +25,7 @@ export type IssueCardStatus = "ok" | "not_found" | "limit_reached";
 export type SendBroadcastStatus = "ok" | "quota_exhausted" | "no_recipients";
 export type ConsentSource = "join_form" | "web_card";
 export type ConsentEventSource = ConsentSource | "owner" | "support";
-export type AuditActorType = "owner" | "support" | "system";
+export type AuditActorType = "owner" | "support" | "system" | "customer";
 
 type Rel<Name extends string, Cols extends string[], Ref extends string, RefCols extends string[]> = {
   foreignKeyName: Name;

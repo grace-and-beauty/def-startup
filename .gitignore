@@ -28,6 +28,14 @@
 .DS_Store
 *.pem
 
+# Finder / iCloud conflict copies ("file 2.json")
+* 2.*
+* 3.*
+
+# local tooling: editor launch config, Supabase CLI config with dev-only URLs
+/.claude/
+/supabase/config.toml
+
 # debug
 npm-debug.log*
 yarn-debug.log*
