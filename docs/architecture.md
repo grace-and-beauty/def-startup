@@ -24,7 +24,7 @@
                                      ▼                                     ▼
                      ┌──────────── Supabase ───────────┐       ┌──── Google Wallet API ────┐
                      │ Postgres (таблиці + RLS + RPC)  │       │ LoyaltyClass  (програма)  │
-                     │ Auth (magic link)               │       │ LoyaltyObject (картка)    │
+                     │ Auth (код з листа)              │       │ LoyaltyObject (картка)    │
                      │ Storage (логотипи)              │       │ Messages                  │
                      └─────────────────────────────────┘       └───────────────────────────┘
 ```
@@ -48,7 +48,7 @@
 | UI | **Tailwind CSS** + **shadcn/ui** | Нейтральні компоненти, легке перебрендування |
 | Графіки | **Recharts** (через shadcn charts) | Аналітика |
 | Валідація | **zod** | Усі вхідні дані на сервері |
-| БД / Auth / файли | **Supabase** (`@supabase/supabase-js`, `@supabase/ssr`) | Postgres + RLS + magic link + Storage |
+| БД / Auth / файли | **Supabase** (`@supabase/supabase-js`, `@supabase/ssr`) | Postgres + RLS + вхід за кодом з листа + Storage |
 | JWT / сесії | **jose** | Підпис JWT для Google Wallet (RS256), staff-сесія (HS256) |
 | Google API | **google-auth-library** | OAuth-токен сервісного акаунта для Wallet REST API |
 | QR генерація | **qrcode** | QR на постері і веб-картці |
@@ -70,7 +70,7 @@
 │  │  ├─ page.tsx                       головна (вибір ніші)
 │  │  ├─ dlya/[niche]/page.tsx          посадкова сторінка ніші
 │  │  ├─ pricing/page.tsx               тарифи
-│  │  ├─ login/page.tsx                 вхід (magic link)
+│  │  ├─ login/page.tsx                 вхід (код з листа)
 │  │  ├─ auth/callback/route.ts         обмін коду на сесію Supabase
 │  │  ├─ c/[slug]/page.tsx              приєднання клієнта
 │  │  ├─ card/[token]/page.tsx          веб-картка клієнта
@@ -231,7 +231,7 @@ staff_login_attempts
 
 | Хто | Як автентифікується | Що бачить |
 |---|---|---|
-| Власник | Supabase Auth (magic link), cookie | Свій заклад повністю |
+| Власник | Supabase Auth (код з листа), cookie | Свій заклад повністю |
 | Працівник | PIN → підписана cookie `staff_session` (HS256, 12 год: `business_id`, `staff_id`) | Лише сканер свого закладу: імʼя клієнта і прогрес картки |
 | Клієнт закладу | Ніяк; знання `qr_token` = доступ до своєї веб-картки | Лише свою картку |
 

@@ -1,37 +1,52 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { t } from "@/lib/i18n";
 
-import { sendMagicLink, type LoginState } from "./actions";
+import { sendLoginCode, verifyLoginCode, type LoginState, type VerifyState } from "./actions";
 
-const ERROR_KEYS = {
+const SEND_ERROR_KEYS = {
   invalidEmail: "login.invalidEmail",
   notConfigured: "login.notConfigured",
   rateLimited: "login.rateLimited",
   unknown: "common.error",
 } as const;
 
+const VERIFY_ERROR_KEYS = {
+  invalidCode: "login.invalidCode",
+  notConfigured: "login.notConfigured",
+  rateLimited: "login.codeRateLimited",
+  unknown: "common.error",
+} as const;
+
+/** Supabase lets one email get a new code once a minute; the button waits as long. */
+const RESEND_AFTER_MS = 60_000;
+
+/** Owner sign-in in two steps: email → one-time code from the letter. */
 export function LoginForm({ niche }: { niche?: string }) {
-  const [state, action, pending] = useActionState<LoginState, FormData>(sendMagicLink, {
+  const [sendState, sendAction, sending] = useActionState<LoginState, FormData>(sendLoginCode, {
     status: "idle",
   });
+  // "Change email" brings the first step back without losing the sent state.
+  const [changingEmail, setChangingEmail] = useState(false);
 
-  if (state.status === "sent") {
+  if (sendState.status === "sent" && !changingEmail) {
     return (
-      <div role="status" className="bg-muted flex flex-col gap-2 rounded-lg p-4">
-        <p className="font-medium">{t("login.sentTitle")}</p>
-        <p className="text-muted-foreground text-sm">{t("login.sent", { email: state.email })}</p>
-      </div>
+      <CodeStep
+        email={sendState.email}
+        sentAt={sendState.sentAt}
+        niche={niche}
+        onChangeEmail={() => setChangingEmail(true)}
+      />
     );
   }
 
   return (
-    <form action={action} className="flex flex-col gap-4" noValidate>
+    <form action={sendAction} onSubmit={() => setChangingEmail(false)} className="flex flex-col gap-4" noValidate>
       {niche ? <input type="hidden" name="niche" value={niche} /> : null}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">{t("login.email")}</Label>
@@ -42,20 +57,114 @@ export function LoginForm({ niche }: { niche?: string }) {
           inputMode="email"
           autoComplete="email"
           required
+          defaultValue={sendState.status === "sent" ? sendState.email : undefined}
           placeholder={t("login.emailPlaceholder")}
-          aria-invalid={state.status === "error" && state.reason === "invalidEmail"}
-          aria-describedby={state.status === "error" ? "login-error" : undefined}
+          aria-invalid={sendState.status === "error" && sendState.reason === "invalidEmail"}
+          aria-describedby={sendState.status === "error" ? "login-error" : undefined}
           className="h-11 text-base"
         />
       </div>
-      {state.status === "error" ? (
+      {sendState.status === "error" ? (
         <p id="login-error" role="alert" className="text-destructive text-sm">
-          {t(ERROR_KEYS[state.reason])}
+          {t(SEND_ERROR_KEYS[sendState.reason])}
         </p>
       ) : null}
-      <Button type="submit" size="lg" className="h-11" disabled={pending}>
-        {pending ? t("login.sending") : t("login.submit")}
+      <Button type="submit" size="lg" className="h-11" disabled={sending}>
+        {sending ? t("login.sending") : t("login.submit")}
       </Button>
     </form>
   );
+}
+
+function CodeStep({
+  email,
+  sentAt,
+  niche,
+  onChangeEmail,
+}: {
+  email: string;
+  sentAt: number;
+  niche?: string;
+  onChangeEmail: () => void;
+}) {
+  const [verifyState, verifyAction, verifying] = useActionState<VerifyState, FormData>(verifyLoginCode, {
+    status: "idle",
+  });
+  const [resendState, resendAction, resending] = useActionState<LoginState, FormData>(sendLoginCode, {
+    status: "idle",
+  });
+  const lastSentAt = resendState.status === "sent" ? resendState.sentAt : sentAt;
+  const secondsLeft = useSecondsUntil(lastSentAt + RESEND_AFTER_MS);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div role="status" className="flex flex-col gap-1">
+        <p className="font-medium">{t("login.sentTitle")}</p>
+        <p className="text-muted-foreground text-sm">{t("login.sent", { email })}</p>
+      </div>
+
+      <form action={verifyAction} className="flex flex-col gap-4" noValidate>
+        <input type="hidden" name="email" value={email} />
+        {niche ? <input type="hidden" name="niche" value={niche} /> : null}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="code">{t("login.code")}</Label>
+          <Input
+            id="code"
+            name="code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]*"
+            maxLength={12}
+            required
+            autoFocus
+            aria-invalid={verifyState.status === "error"}
+            aria-describedby={verifyState.status === "error" ? "code-error" : undefined}
+            className="h-12 text-center font-mono text-2xl tracking-[0.4em]"
+          />
+        </div>
+        {verifyState.status === "error" ? (
+          <p id="code-error" role="alert" className="text-destructive text-sm">
+            {t(VERIFY_ERROR_KEYS[verifyState.reason])}
+          </p>
+        ) : null}
+        <Button type="submit" size="lg" className="h-11" disabled={verifying}>
+          {verifying ? t("login.verifying") : t("login.codeSubmit")}
+        </Button>
+      </form>
+
+      <div className="flex flex-col items-start gap-1 text-sm">
+        <form action={resendAction}>
+          <input type="hidden" name="email" value={email} />
+          {niche ? <input type="hidden" name="niche" value={niche} /> : null}
+          <Button type="submit" variant="link" className="h-auto px-0" disabled={resending || secondsLeft > 0}>
+            {secondsLeft > 0 ? t("login.resendIn", { seconds: secondsLeft }) : t("login.resend")}
+          </Button>
+        </form>
+        {resendState.status === "sent" ? (
+          <p role="status" className="text-muted-foreground">
+            {t("login.resent")}
+          </p>
+        ) : null}
+        {resendState.status === "error" ? (
+          <p role="alert" className="text-destructive">
+            {t(SEND_ERROR_KEYS[resendState.reason])}
+          </p>
+        ) : null}
+        <Button type="button" variant="link" className="text-muted-foreground h-auto px-0" onClick={onChangeEmail}>
+          {t("login.changeEmail")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Whole seconds until `deadline` (ms), ticking down to 0. */
+function useSecondsUntil(deadline: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [deadline]);
+  return Math.max(0, Math.ceil((deadline - now) / 1000));
 }

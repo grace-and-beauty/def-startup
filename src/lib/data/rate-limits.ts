@@ -23,3 +23,22 @@ export async function hitRateLimit(
     }),
   );
 }
+
+/**
+ * Same sliding window for owner sign-in (RPC hit_login_rate_limit, service
+ * role only): counters keyed by a hashed email or IP, not by business.
+ */
+export async function hitLoginRateLimit(
+  admin: Db,
+  input: { scope: string; keyHash: string; max: number; windowSeconds: number },
+): Promise<boolean> {
+  return unwrapRequired(
+    "hitLoginRateLimit",
+    await admin.rpc("hit_login_rate_limit", {
+      p_scope: input.scope,
+      p_key_hash: input.keyHash,
+      p_max: input.max,
+      p_window_seconds: input.windowSeconds,
+    }),
+  );
+}

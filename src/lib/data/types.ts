@@ -440,6 +440,15 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      hit_login_rate_limit: {
+        Args: {
+          p_scope: string;
+          p_key_hash: string;
+          p_max: number;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
       hit_rate_limit: {
         Args: {
           p_scope: string;

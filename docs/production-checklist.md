@@ -16,7 +16,7 @@ _Складено: 5 жовтня 2026, гілка `pilot-readiness`._
 2. Окремі продакшн-секрети
 3. Змінні середовища — кожна, з продакшн-значенням
 4. Домен і `NEXT_PUBLIC_SITE_URL`
-5. Вхід по magic link: URL-адреси і SMTP
+5. Вхід за кодом з листа: URL-адреси, шаблони листів і SMTP
 6. Storage: bucket `logos`
 7. Міграції бази даних
 8. Демо-дані НЕ йдуть у продакшн
@@ -96,7 +96,7 @@ openssl rand -hex 32
 | `GOOGLE_WALLET_PRIVATE_KEY` | приватний ключ сервісного акаунта, переноси рядків як `\n` | див. §14 | — |
 | `TEST_DATABASE_URL` | **не задавати у Vercel** — лише для локальних тестів | ❌ | ❌ |
 
-¹ Для Preview Google Wallet і magic link потребують точної адреси; простіше залишити Wallet на Preview вимкненим.
+¹ Для Preview Google Wallet потребує точної адреси; простіше залишити Wallet на Preview вимкненим.
 
 **Не з `.env.example`, але теж змінити перед запуском** — у файлі коду `src/config/brand.ts`: `domain: "localhost:3000"` і `supportEmail: "support@example.com"` (цей email показується власникам у футері і на сторінці тарифу). Це зміна коду, а не змінна Vercel — зробити разом з вибором назви.
 
@@ -123,7 +123,7 @@ curl -s -o /dev/null -w "%{http_code}\n" https://<твій-домен>/api/cron/
 
 ---
 
-## 5. Вхід по magic link: URL-адреси і SMTP
+## 5. Вхід за кодом з листа: URL-адреси, шаблони листів і SMTP
 
 ### 5.1 URL-адреси
 
@@ -142,8 +142,15 @@ Supabase (prod) → **Authentication → URL Configuration**:
 1. Зареєструйся в поштовому сервісі (напр. Resend, Postmark, Brevo, Amazon SES), підтверди свій домен (DNS-записи SPF/DKIM, які він покаже).
 2. Supabase (prod) → **Authentication → Emails → SMTP Settings** → Enable custom SMTP → host, port, user, password від сервісу; Sender email — напр. `no-reply@<твій-домен>`, Sender name — назва сервісу.
 3. **Authentication → Rate Limits** → піднім ліміт листів на годину (напр. 30–100), коли SMTP підключено.
-4. **Authentication → Emails → Templates → Magic Link** — переклади текст листа українською (за замовчуванням англійська).
-5. Перевір: увійди на `https://<твій-домен>/login` зі свого email — лист має прийти за хвилину і не в спам, посилання має вести на `https://<твій-домен>/auth/callback...`.
+4. Перевір: увійди на `https://<твій-домен>/login` зі свого email — лист із кодом має прийти за хвилину і не в спам, код має пускати в кабінет.
+
+### 5.3 Код замість посилання (обов'язково)
+
+Власник входить за одноразовим кодом з листа (`src/app/login/actions.ts`). Supabase надсилає код, лише якщо шаблон листа його показує. Зроби на **кожному** проєкті (тестовому й продакшн):
+
+1. **Authentication → Emails → Templates** → шаблони **Magic Link** і **Confirm signup** — встав тему й текст з `docs/auth-email-templates.md` (код `{{ .Token }}`, без посилання).
+2. **Authentication → Providers → Email**: **Email OTP Expiration** = `600` (10 хвилин), **Email OTP Length** = `6`.
+3. Перевір: на `/login` введи свою пошту → у листі шестизначний код → після введення відкривається кабінет. Неправильний код показує помилку; після 5 спроб за 15 хвилин вхід для цієї пошти блокується (таблиця `login_rate_limit_events`).
 
 ---
 
@@ -391,7 +398,7 @@ curl -s -X POST "$URL/rest/v1/rpc/analytics_card_stats" \
 | Нова картка на `/c/[slug]` | 10 за хвилину з одного IP на заклад; 120 за годину на заклад з усіх IP |
 | Посилання «Додати в Google Wallet» | 10 за хвилину з одного IP на заклад |
 | Кулдаун штампа | 10 хв між штампами на одну картку (`STAMP_COOLDOWN_MINUTES`) |
-| Вхід власника (magic link) | ліміти Supabase Auth (Authentication → Rate Limits) |
+| Вхід власника (код з листа) | ліміти Supabase Auth (Authentication → Rate Limits) + 5 перевірок коду на email і 20 на IP за 15 хв (`login_rate_limit_events`) |
 
 IP **не зберігаються** — лише HMAC-хеш з `IP_HASH_SECRET`.
 
@@ -453,7 +460,7 @@ IP **не зберігаються** — лише HMAC-хеш з `IP_HASH_SECRET
 - [ ] Uptime-монітор налаштовано
 
 **Наскрізна перевірка на продакшні (з телефона)**
-- [ ] Реєстрація власника по magic link → майстер онбордингу → свій заклад
+- [ ] Реєстрація власника за кодом з листа → майстер онбордингу → свій заклад
 - [ ] Логотип завантажується і видно на картці
 - [ ] Клієнт: QR з постера → `/c/<slug>` → картка відкривається
 - [ ] Працівник: `/scan/<slug>` → PIN (6 цифр) → +1 штамп → картка клієнта оновилась
