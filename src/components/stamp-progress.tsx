@@ -1,3 +1,4 @@
+import { Gift } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import { t } from "@/lib/i18n";
@@ -10,8 +11,8 @@ interface StampProgressProps {
   total: number;
   size?: "sm" | "md" | "lg";
   /**
-   * Play the "stamp lands" animation for collected stamps from this index on
-   * (staggered). Omit for a still card.
+   * Play the "stamp fills in" animation for collected stamps from this index
+   * on (staggered). Omit for a still card.
    */
   animateFrom?: number;
   /** Delay before the first animated stamp, ms. */
@@ -20,41 +21,40 @@ interface StampProgressProps {
 }
 
 const SIZES = {
-  sm: "size-5",
-  md: "size-8",
-  lg: "size-10",
+  sm: "size-5 rounded-[0.3rem]",
+  md: "size-8 rounded-[0.5rem]",
+  lg: "size-10 rounded-[0.6rem]",
 } as const;
 
-const STAGGER_MS = 260;
-
-const ANGLES = [-9, 6, -3, 11, -7, 4, -12, 8, -5, 10, -2, 7, -10, 3, -6, 9, -4, 12, -8, 5] as const;
-
-/**
- * Hand-stamped look: every impression sits at its own small angle, like a
- * rubber stamp pressed by a person. Deterministic, so server and client agree.
- */
-export function stampAngle(index: number): number {
-  return ANGLES.at(index % ANGLES.length) ?? 0;
-}
+const STAGGER_MS = 220;
+/** The check starts drawing once its square has mostly filled in. */
+const CHECK_AFTER_MS = 180;
 
 /**
- * One ink impression: a double ring with a star, in `currentColor`, so it
- * works on a business-colored card and on the plain UI alike.
+ * The product mark and the scanner's confirmation: a rounded square with a
+ * check, in `currentColor`.
  */
 export function StampMark({ className, style }: { className?: string; style?: CSSProperties }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden className={className} style={style}>
-      <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" strokeWidth="2.2" />
-      <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" strokeWidth="0.9" opacity="0.7" />
+      <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="currentColor" />
       <path
-        d="M16 8.6l2.05 4.6 5 .5-3.75 3.35 1.07 4.92L16 19.45l-4.37 2.52 1.07-4.92-3.75-3.35 5-.5z"
-        fill="currentColor"
+        d="M9.5 16.5l4.5 4.5 8.5-9.5"
+        fill="none"
+        stroke="var(--stamp-check, #fff)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
 }
 
-/** "N of M" ink stamps; empty places are dashed rings. */
+/**
+ * "N of M" stamps as squares: a collected stamp is a filled square with a
+ * check; an empty place is an outlined square; the last place shows the gift.
+ * The check takes `--stamp-check` (the card's background on a business card).
+ */
 export function StampProgress({
   count,
   total,
@@ -71,24 +71,43 @@ export function StampProgress({
     <div role="img" aria-label={label} className={cn("flex flex-wrap gap-2", className)}>
       {Array.from({ length: safeTotal }, (_, i) => {
         if (i >= filled) {
+          const isReward = i === safeTotal - 1;
           return (
             <span
               key={i}
               aria-hidden
-              className={cn("inline-block shrink-0 rounded-full border-[1.5px] border-dashed border-current opacity-35", SIZES[size])}
-            />
+              className={cn(
+                "inline-flex shrink-0 items-center justify-center border-[1.5px] border-current",
+                isReward ? "opacity-70" : "opacity-30",
+                SIZES[size],
+              )}
+            >
+              {isReward ? <Gift className="size-[55%]" strokeWidth={1.75} /> : null}
+            </span>
           );
         }
         const animated = animateFrom !== undefined && i >= animateFrom;
-        // The wrapper plays the landing; the mark inside keeps its own tilt.
+        const delay = animationDelay + (animated ? (i - animateFrom) * STAGGER_MS : 0);
         return (
           <span
             key={i}
             aria-hidden
-            className={cn("inline-block shrink-0", SIZES[size], animated && "stamp-land")}
-            style={animated ? { animationDelay: `${animationDelay + (i - animateFrom) * STAGGER_MS}ms` } : undefined}
+            className={cn("inline-block shrink-0 bg-current", SIZES[size], animated && "stamp-fill")}
+            style={animated ? { animationDelay: `${delay}ms` } : undefined}
           >
-            <StampMark className="size-full opacity-95" style={{ transform: `rotate(${stampAngle(i)}deg)` }} />
+            <svg viewBox="0 0 32 32" className="size-full">
+              <path
+                d="M9.5 16.5l4.5 4.5 8.5-9.5"
+                pathLength={1}
+                fill="none"
+                stroke="var(--stamp-check, #fff)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={animated ? "check-draw" : undefined}
+                style={animated ? { animationDelay: `${delay + CHECK_AFTER_MS}ms` } : undefined}
+              />
+            </svg>
           </span>
         );
       })}
