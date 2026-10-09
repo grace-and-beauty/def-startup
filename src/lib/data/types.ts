@@ -446,6 +446,23 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      admin_business_stats: {
+        Args: { p_from: string; p_to: string; p_prev_from: string; p_prev_to: string };
+        Returns: {
+          business_id: string;
+          owner_email: string | null;
+          cards_total: number;
+          cards_new: number;
+          cards_new_prev: number;
+          stamps: number;
+          stamps_prev: number;
+          last_stamp_at: string | null;
+        }[];
+      };
+      admin_weekly_growth: {
+        Args: { p_from: string; p_to: string };
+        Returns: { week_start: string; new_businesses: number; new_cards: number }[];
+      };
       hit_login_rate_limit: {
         Args: {
           p_scope: string;

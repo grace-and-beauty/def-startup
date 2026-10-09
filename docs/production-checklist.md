@@ -94,6 +94,7 @@ openssl rand -hex 32
 | `GOOGLE_WALLET_ISSUER_ID` | ID issuer-акаунта з Pay & Wallet Console. Порожньо → Wallet вимкнений | за рішенням, див. §14 | порожньо або тестовий |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL` | email сервісного акаунта продакшну | див. §14 | — |
 | `GOOGLE_WALLET_PRIVATE_KEY` | приватний ключ сервісного акаунта, переноси рядків як `\n` | див. §14 | — |
+| `ADMIN_EMAILS` | твоя пошта (кілька — через кому). Лише ці адреси бачать `/admin`; порожньо → `/admin` відповідає 404 усім | ✅ твоя пошта | твоя пошта |
 | `TEST_DATABASE_URL` | **не задавати у Vercel** — лише для локальних тестів | ❌ | ❌ |
 
 ¹ Для Preview Google Wallet потребує точної адреси; простіше залишити Wallet на Preview вимкненим.
