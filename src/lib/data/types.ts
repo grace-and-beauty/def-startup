@@ -51,6 +51,8 @@ export type Database = {
           label_color: string;
           timezone: string;
           avg_check: number | null;
+          contact_phone: string | null;
+          city: string | null;
           plan: StoredPlanValue;
           trial_ends_at: string;
           plan_renews_at: string | null;
@@ -73,6 +75,8 @@ export type Database = {
           label_color?: string;
           timezone?: string;
           avg_check?: number | null;
+          contact_phone?: string | null;
+          city?: string | null;
           /** Forced to defaults for end users by protect_billing_fields. */
           plan?: StoredPlanValue;
           trial_ends_at?: string;
@@ -96,6 +100,8 @@ export type Database = {
           label_color?: string;
           timezone?: string;
           avg_check?: number | null;
+          contact_phone?: string | null;
+          city?: string | null;
           plan?: StoredPlanValue;
           trial_ends_at?: string;
           plan_renews_at?: string | null;
@@ -575,6 +581,9 @@ export type Database = {
           p_reminder_text: string | null;
           p_staff_name: string;
           p_staff_pin_hash: string;
+          /** Only in the 15-argument overload (migration *_owner_contacts.sql). */
+          p_contact_phone?: string;
+          p_city?: string;
         };
         Returns: {
           business_id: string;

@@ -32,7 +32,16 @@ export type BusinessPublic = Pick<
  */
 export type BusinessOwnerUpdate = Pick<
   TablesUpdate<"businesses">,
-  "name" | "slug" | "niche_slug" | "bg_color" | "fg_color" | "label_color" | "avg_check" | "onboarding_done"
+  | "name"
+  | "slug"
+  | "niche_slug"
+  | "bg_color"
+  | "fg_color"
+  | "label_color"
+  | "avg_check"
+  | "onboarding_done"
+  | "contact_phone"
+  | "city"
 >;
 
 /** Billing columns — service role only. */
@@ -155,11 +164,15 @@ export interface OnboardBusinessInput {
   staffName: string;
   /** bcrypt hash from src/lib/security/pin.ts — never the raw PIN. */
   staffPinHash: string;
+  /** "+380XXXXXXXXX" (domain/business-input normalizeOwnerPhone). */
+  contactPhone: string;
+  city: string;
 }
 
 /**
  * Owner client: business + program + default staff in one transaction
- * (RPC onboard_business). A taken slug throws DataError.isUniqueViolation.
+ * (RPC onboard_business, the overload with contacts). A taken slug throws
+ * DataError.isUniqueViolation.
  */
 export async function onboardBusiness(
   db: Db,
@@ -181,6 +194,8 @@ export async function onboardBusiness(
       p_reminder_text: input.reminderText,
       p_staff_name: input.staffName,
       p_staff_pin_hash: input.staffPinHash,
+      p_contact_phone: input.contactPhone,
+      p_city: input.city,
     }),
   );
   const [row] = rows;

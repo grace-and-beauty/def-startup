@@ -9,12 +9,13 @@ import { t } from "@/lib/i18n";
 import {
   removeLogo,
   updateBusinessInfo,
+  updateContacts,
   updateDesign,
   updateReminders,
   updateRule,
   uploadLogo,
 } from "./actions";
-import { BusinessInfoForm, DesignForm, LogoForm, RemindersForm, RuleForm } from "./settings-forms";
+import { BusinessInfoForm, ContactsForm, DesignForm, LogoForm, RemindersForm, RuleForm } from "./settings-forms";
 
 export const metadata: Metadata = { title: t("settings.title") };
 
@@ -85,6 +86,12 @@ export default async function SettingsPage() {
       <div id="business" className="scroll-mt-6">
         <Section title={t("settings.businessTitle")}>
           <BusinessInfoForm action={updateBusinessInfo} avgCheck={business.avg_check} />
+        </Section>
+      </div>
+
+      <div id="contacts" className="scroll-mt-6">
+        <Section title={t("settings.contactsTitle")} hint={t("settings.contactsHint")}>
+          <ContactsForm action={updateContacts} contactPhone={business.contact_phone} city={business.city} />
         </Section>
       </div>
 

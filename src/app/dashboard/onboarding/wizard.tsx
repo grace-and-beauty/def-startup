@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Niche, NicheSlug } from "@/config/niches";
+import { normalizeOwnerPhone } from "@/lib/domain/business-input";
 import { isValidSlug, normalizeSlugInput, slugify } from "@/lib/domain/slug";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { isValidNewPin } from "@/lib/security/pin-format";
@@ -40,6 +41,8 @@ interface FormState {
   name: string;
   slug: string;
   slugTouched: boolean;
+  contactPhone: string;
+  city: string;
   bgColor: string;
   fgColor: string;
   labelColor: string;
@@ -72,6 +75,8 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
     name: "",
     slug: "",
     slugTouched: false,
+    contactPhone: "",
+    city: "",
     bgColor: "#111111",
     fgColor: "#ffffff",
     labelColor: "#bbbbbb",
@@ -128,6 +133,9 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
       const name = form.name.trim();
       if (name.length < 1 || name.length > 80) e.name = t("onboarding.nameInvalid");
       if (!isValidSlug(form.slug)) e.slug = t("onboarding.slugInvalid");
+      if (!normalizeOwnerPhone(form.contactPhone)) e.contactPhone = t("onboarding.contactPhoneInvalid");
+      const city = form.city.trim();
+      if (city.length < 1 || city.length > 60) e.city = t("onboarding.cityInvalid");
     }
     if (index === 2) {
       if (!HEX.test(form.bgColor)) e.bgColor = t("onboarding.colorInvalid");
@@ -184,6 +192,8 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
     data.set("niche", form.niche ?? "");
     data.set("name", form.name);
     data.set("slug", form.slug);
+    data.set("contactPhone", form.contactPhone);
+    data.set("city", form.city);
     data.set("bgColor", form.bgColor);
     data.set("fgColor", form.fgColor);
     data.set("labelColor", form.labelColor);
@@ -331,6 +341,32 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
                   ))}
                 </div>
               ) : null}
+              <Field id="contactPhone" label={t("onboarding.contactPhone")} error={errors.contactPhone} hint={t("onboarding.contactPhoneHint")}>
+                <Input
+                  id="contactPhone"
+                  type="tel"
+                  inputMode="tel"
+                  value={form.contactPhone}
+                  maxLength={20}
+                  autoComplete="tel"
+                  placeholder={t("onboarding.contactPhonePlaceholder")}
+                  onChange={(e) => update({ contactPhone: e.target.value })}
+                  aria-invalid={Boolean(errors.contactPhone)}
+                  className="h-11 text-base"
+                />
+              </Field>
+              <Field id="city" label={t("onboarding.city")} error={errors.city}>
+                <Input
+                  id="city"
+                  value={form.city}
+                  maxLength={60}
+                  autoComplete="address-level2"
+                  placeholder={t("onboarding.cityPlaceholder")}
+                  onChange={(e) => update({ city: e.target.value })}
+                  aria-invalid={Boolean(errors.city)}
+                  className="h-11 text-base"
+                />
+              </Field>
             </StepBlock>
           ) : null}
 

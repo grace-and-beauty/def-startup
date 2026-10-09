@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { citySchema, normalizeOwnerPhone } from "@/lib/domain/business-input";
 import { normalizeCustomerName, normalizePhone } from "@/lib/domain/customer-input";
 import { isValidSlug } from "@/lib/domain/slug";
 
@@ -30,5 +31,30 @@ describe("slug", () => {
     expect(isValidSlug("abc-")).toBe(false);
     expect(isValidSlug("Abc")).toBe(false);
     expect(isValidSlug("a".repeat(41))).toBe(false);
+  });
+});
+
+describe("owner contacts", () => {
+  it.each([
+    ["+380 67 123 45 67", "+380671234567"],
+    ["067-123-45-67", "+380671234567"],
+    ["(067) 123 45 67", "+380671234567"],
+    ["380671234567", "+380671234567"],
+    [" +380671234567 ", "+380671234567"],
+  ])("normalizes %s", (raw, phone) => {
+    expect(normalizeOwnerPhone(raw)).toBe(phone);
+  });
+
+  it.each(["", "12345", "+48 601 234 567", "+380 67 123 45", "067 123 45 678", "phone", "+380-67-abc"])(
+    "rejects %s",
+    (raw) => {
+      expect(normalizeOwnerPhone(raw)).toBeNull();
+    },
+  );
+
+  it("collapses spaces in the city and caps its length", () => {
+    expect(citySchema.parse("  Біла   Церква ")).toBe("Біла Церква");
+    expect(citySchema.safeParse("   ").success).toBe(false);
+    expect(citySchema.safeParse("x".repeat(61)).success).toBe(false);
   });
 });

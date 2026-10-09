@@ -262,3 +262,50 @@ export function BusinessInfoForm({ action, avgCheck }: { action: FormAction; avg
     </form>
   );
 }
+
+/** Owner's phone and city (asked in the wizard; older businesses add them here). */
+export function ContactsForm({
+  action,
+  contactPhone,
+  city,
+}: {
+  action: FormAction;
+  contactPhone: string | null;
+  city: string | null;
+}) {
+  const { formAction, pending, error } = useSettingsAction(action);
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="contactPhone">{t("onboarding.contactPhone")}</Label>
+        <Input
+          id="contactPhone"
+          name="contactPhone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={20}
+          required
+          defaultValue={contactPhone ?? ""}
+          placeholder={t("onboarding.contactPhonePlaceholder")}
+          className="h-10 max-w-xs"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="city">{t("onboarding.city")}</Label>
+        <Input
+          id="city"
+          name="city"
+          autoComplete="address-level2"
+          maxLength={60}
+          required
+          defaultValue={city ?? ""}
+          placeholder={t("onboarding.cityPlaceholder")}
+          className="h-10 max-w-xs"
+        />
+      </div>
+      <ErrorText error={error} />
+      <SaveButton pending={pending} />
+    </form>
+  );
+}

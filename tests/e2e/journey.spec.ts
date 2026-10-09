@@ -79,6 +79,8 @@ test("owner signs in and sets up the business in the wizard", async () => {
 
   await owner.locator("#name").fill(business.name);
   await owner.locator("#slug").fill(business.slug);
+  await owner.locator("#contactPhone").fill("067 123 45 67");
+  await owner.locator("#city").fill("Рівне");
   await next.click();
 
   await owner.locator("#logo").setInputFiles(LOGO_PNG);

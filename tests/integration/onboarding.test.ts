@@ -94,3 +94,53 @@ describe("onboard_business", () => {
     });
   });
 });
+
+describe("owner contacts (migration *_owner_contacts.sql)", () => {
+  const OWNER2 = "00000000-0000-4000-8000-0000000000d2";
+  const CALL15 =
+    "select * from public.onboard_business($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)";
+
+  beforeAll(async () => {
+    await db.query("insert into auth.users (id, email) values ($1, 'contacts@example.com') on conflict do nothing", [
+      OWNER2,
+    ]);
+  });
+
+  afterAll(async () => {
+    await db.query("delete from public.businesses where owner_id = $1", [OWNER2]);
+    await db.query("delete from auth.users where id = $1", [OWNER2]);
+  });
+
+  it("the wizard overload stores phone and city in the same transaction", async () => {
+    await asRole(db, "authenticated", OWNER2, async (c) => {
+      const { rows } = await c.query(CALL15, [...ARGS("contacts-test"), "+380671234567", "  Рівне "]);
+      expect(rows[0].status).toBe("ok");
+      const business = await c.query("select contact_phone, city from public.businesses where id = $1", [
+        rows[0].business_id,
+      ]);
+      expect(business.rows[0]).toEqual({ contact_phone: "+380671234567", city: "Рівне" });
+    });
+  });
+
+  it("rejects a phone that is not +380 and 9 digits, leaving nothing behind", async () => {
+    await asRole(db, "authenticated", OWNER2, async (c) => {
+      await c.query("savepoint s");
+      await expect(c.query(CALL15, [...ARGS("contacts-bad"), "0671234567", "Рівне"])).rejects.toMatchObject({
+        code: "23514",
+      });
+      await c.query("rollback to savepoint s");
+      const { rows } = await c.query("select count(*)::int as n from public.businesses where owner_id = $1", [OWNER2]);
+      expect(rows[0].n).toBe(0);
+    });
+  });
+
+  it("owners can fill in contacts later in settings", async () => {
+    await asRole(db, "authenticated", OWNER2, async (c) => {
+      const { rows } = await c.query(CALL, ARGS("contacts-later"));
+      const id = rows[0].business_id;
+      await c.query("update public.businesses set contact_phone = '+380501112233', city = 'Київ' where id = $1", [id]);
+      const business = await c.query("select contact_phone, city from public.businesses where id = $1", [id]);
+      expect(business.rows[0]).toEqual({ contact_phone: "+380501112233", city: "Київ" });
+    });
+  });
+});

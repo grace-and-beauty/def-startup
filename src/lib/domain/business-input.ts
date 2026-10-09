@@ -34,6 +34,36 @@ export const newPinSchema = z.string().trim().regex(NEW_PIN_PATTERN);
 export const broadcastTextSchema = trimmed(120);
 export const BROADCAST_MAX_LENGTH = 120;
 
+/**
+ * Owner's contact phone: a Ukrainian number typed any common way
+ * ("+380 67 123 45 67", "067-123-45-67", "380671234567") → "+380671234567".
+ * null when it is not a Ukrainian number. Mirrors the CHECK on
+ * businesses.contact_phone.
+ */
+export function normalizeOwnerPhone(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!/^\+?[\d\s()-]+$/.test(trimmed)) return null;
+  const digits = trimmed.replace(/\D/g, "");
+  if (/^380\d{9}$/.test(digits)) return `+${digits}`;
+  if (/^0\d{9}$/.test(digits)) return `+38${digits}`;
+  return null;
+}
+
+export const ownerPhoneSchema = z.string().transform((raw, ctx) => {
+  const phone = normalizeOwnerPhone(raw);
+  if (!phone) {
+    ctx.addIssue({ code: "custom", message: "invalid" });
+    return z.NEVER;
+  }
+  return phone;
+});
+
+/** City of the business: spaces collapsed, 1–60 characters. */
+export const citySchema = z
+  .string()
+  .transform((raw) => raw.replace(/\s+/g, " ").trim())
+  .pipe(z.string().min(1).max(60));
+
 /** "" → null (not set); otherwise an integer 0…1 000 000 (UAH). */
 export const avgCheckSchema = z
   .string()
