@@ -50,6 +50,21 @@ export function supabaseServiceRoleKey(): string {
   return required("SUPABASE_SERVICE_ROLE_KEY", read("SUPABASE_SERVICE_ROLE_KEY"));
 }
 
+/**
+ * Emails allowed into the service admin dashboard (/admin), comma-separated
+ * in ADMIN_EMAILS. Empty → nobody (the page answers 404 to everyone).
+ */
+export function adminEmails(): string[] {
+  return (read("ADMIN_EMAILS") ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return Boolean(email) && adminEmails().includes(email!.trim().toLowerCase());
+}
+
 export function stampCooldownMinutes(): number {
   const raw = read("STAMP_COOLDOWN_MINUTES");
   if (raw === undefined) return 10;

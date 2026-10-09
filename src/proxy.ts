@@ -2,10 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Refreshes the owner's Supabase session cookie before /dashboard renders
- * (Server Components can't write cookies). Access control itself stays in the
- * dashboard pages and Server Actions (src/lib/auth/owner.ts) — this only keeps
- * the session alive and sends signed-out visitors to /login early.
+ * Refreshes the owner's Supabase session cookie before /dashboard and /admin
+ * render (Server Components can't write cookies). Access control itself stays
+ * in the pages and Server Actions (src/lib/auth/owner.ts, admin.ts) — this
+ * only keeps the session alive and sends signed-out visitors of /dashboard to
+ * /login early. /admin is left to answer 404 itself, so it is not revealed.
  */
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,7 +34,7 @@ export async function proxy(request: NextRequest) {
   // Do not run code between createServerClient and getUser (see @supabase/ssr docs).
   const { data } = await supabase.auth.getUser();
 
-  if (!data.user) {
+  if (!data.user && !request.nextUrl.pathname.startsWith("/admin")) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
     login.search = "";
@@ -44,5 +45,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/admin"],
 };

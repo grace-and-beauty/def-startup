@@ -12,6 +12,7 @@
 export type LogLevel = "info" | "warn" | "error";
 
 export type LogEvent =
+  | "admin_viewed"
   | "business_onboarded"
   | "card_issued"
   | "card_issue_failed"

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { isNicheSlug } from "@/config/niches";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { hitLoginRateLimit } from "@/lib/data";
-import { ipHashSecret, isSupabaseConfigured, MissingEnvError, siteUrl } from "@/lib/env";
+import { ipHashSecret, isAdminEmail, isSupabaseConfigured, MissingEnvError, siteUrl } from "@/lib/env";
 import { logEvent } from "@/lib/log";
 import {
   clientIpFromHeaders,
@@ -45,7 +45,9 @@ const verifySchema = z.object({
   niche: z.string().optional(),
 });
 
-function nextPathFor(niche: string | undefined): string {
+/** After sign-in: the service admin goes to /admin, an owner to the dashboard (or the wizard for a niche). */
+function nextPathFor(niche: string | undefined, email: string): string {
+  if (isAdminEmail(email)) return "/admin";
   return safeNextPath(niche && isNicheSlug(niche) ? `/dashboard/onboarding?niche=${niche}` : "/dashboard");
 }
 
@@ -73,7 +75,7 @@ export async function sendLoginCode(_prev: LoginState, formData: FormData): Prom
 
   const { email, niche } = parsed.data;
   const callback = new URL("/auth/callback", siteUrl());
-  callback.searchParams.set("next", nextPathFor(niche));
+  callback.searchParams.set("next", nextPathFor(niche, email));
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithOtp({
@@ -138,5 +140,5 @@ export async function verifyLoginCode(_prev: VerifyState, formData: FormData): P
     return { status: "error", reason: "invalidCode" };
   }
 
-  redirect(nextPathFor(niche));
+  redirect(nextPathFor(niche, email));
 }

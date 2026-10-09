@@ -28,6 +28,8 @@ export default defineConfig({
       NEXT_PUBLIC_SITE_URL: baseURL,
       // A full card in one visit; the cooldown rule itself is covered by unit tests.
       STAMP_COOLDOWN_MINUTES: "0",
+      // The service admin of the E2E run (tests/e2e/admin.spec.ts).
+      ADMIN_EMAILS: "e2e-admin@example.com",
     },
   },
 });
