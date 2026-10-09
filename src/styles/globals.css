@@ -2,55 +2,62 @@
 @import "tw-animate-css";
 
 /*
- * Design tokens. Palette "Печатка" (stamp ink on paper); Unbounded for
- * display type, Onest for text — both drawn with Ukrainian Cyrillic in mind.
- * Rebranding = change the variables below; components only reference tokens
- * (see docs/architecture.md §9).
+ * Design tokens. Palette "Класика": black and white on warm paper with one
+ * blue accent; Playfair Display for display type, Inter for text — both with
+ * Ukrainian Cyrillic. Rebranding = change the variables below; components
+ * only reference tokens (see docs/architecture.md §9).
  */
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --font-sans:
-    var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-display: var(--font-unbounded), var(--font-sans);
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  --radius: 0.875rem;
+  --radius: 1rem;
 
   /*
-   * Palette "Печатка": violet office-stamp ink on a cool paper form.
-   *   paper  #f4f3f8   ink    #2e2a8c   ink-deep #1a1838
-   *   line   #dcdae8   wash   #e9e7f7   graphite #5e5b78
+   * Palette "Класика":
+   *   paper  #f4f2ee   ink   #141414   accent #4f5fd8
+   *   line   #e2ded7   wash  #ebe8e2   graphite #5f5c57
    */
-  --background: #f4f3f8;
-  --foreground: #1a1838;
+  --background: #f4f2ee;
+  --foreground: #141414;
   --card: #ffffff;
-  --card-foreground: #1a1838;
+  --card-foreground: #141414;
   --popover: #ffffff;
-  --popover-foreground: #1a1838;
-  --primary: #2e2a8c;
-  --primary-foreground: #f7f6fd;
-  --secondary: #e9e7f7;
-  --secondary-foreground: #2e2a8c;
-  --muted: #ecebf3;
-  --muted-foreground: #5e5b78;
-  --accent: #e9e7f7;
-  --accent-foreground: #1a1838;
+  --popover-foreground: #141414;
+  --primary: #4f5fd8;
+  --primary-foreground: #ffffff;
+  --secondary: #ebe8e2;
+  --secondary-foreground: #141414;
+  --muted: #ebe8e2;
+  --muted-foreground: #5f5c57;
+  --accent: #ebe8e2;
+  --accent-foreground: #141414;
   --destructive: #c8323a;
   --success: #13795b;
   --success-foreground: #f2fbf7;
-  --border: #dcdae8;
-  --input: #cfcce0;
-  --ring: #2e2a8c;
+  --border: #e2ded7;
+  --input: #d3cec6;
+  --ring: #4f5fd8;
 
-  /* Ink ramp for charts: deep → pale. */
-  --chart-1: #2e2a8c;
-  --chart-2: #5b56c4;
-  --chart-3: #8d89dc;
-  --chart-4: #b9b6ec;
-  --chart-5: #dddbf6;
+  /* The dark blocks (hero, phone frames): ink with paper-white text. */
+  --ink: #141414;
+  --ink-foreground: #faf8f5;
+  --ink-muted: #a8a59f;
+  /* The accent on ink: lighter blue, readable on black. */
+  --accent-on-ink: #8fa0ff;
+
+  /* Blue ramp for charts: deep → pale. */
+  --chart-1: #3442b8;
+  --chart-2: #4f5fd8;
+  --chart-3: #7d8ae4;
+  --chart-4: #aeb6ef;
+  --chart-5: #d9ddf8;
 }
 
 @theme inline {
@@ -83,6 +90,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent-on-ink: var(--accent-on-ink);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -99,60 +110,22 @@
   }
 }
 
+/* Playfair's default old-style figures make 0 read as the letter O. */
+@layer components {
+  .font-display {
+    font-variant-numeric: lining-nums;
+  }
+}
+
 /* ---------------------------------------------------------------------------
- * Motion: the stamp. One impression lands with a press — oversized and
- * faint, then it hits the paper, squashes a little and settles. The element's
- * own tilt lives on its child, so the keyframes stay plain (Safari-safe).
+ * Motion: calm. Things arrive with a short fade and a small lift; a new stamp
+ * fills its square and the check draws itself. No bounce, no rotation.
+ * Keyframes use plain values (no CSS variables) so Safari plays them.
  * ------------------------------------------------------------------------- */
-@keyframes stamp-land {
-  0% {
-    opacity: 0;
-    transform: scale(2) rotate(-16deg);
-  }
-  55% {
-    opacity: 1;
-    transform: scale(0.88) rotate(0deg);
-  }
-  75% {
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes stamp-press {
-  0% {
-    opacity: 0;
-    transform: translateY(-18%) scale(1.5) rotate(-18deg);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(0) scale(0.92) rotate(-8deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(-8deg);
-  }
-}
-
-@keyframes ink-ring {
-  from {
-    opacity: 0.45;
-    transform: scale(0.6);
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.6);
-  }
-}
-
-/* Headline lines on page load. */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(0.45em);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -160,30 +133,80 @@
   }
 }
 
-/* A full card: one soft glow of ink around it. */
+/* A stamp square fills in. */
+@keyframes stamp-fill {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The check inside a fresh stamp draws itself (path has pathLength=1). */
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Scanner: the confirmation mark appears. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-ring {
+  from {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* A full card: one soft blue halo around it. */
 @keyframes reward-glow {
   0% {
-    box-shadow: 0 0 0 0 rgb(46 42 140 / 0.45);
+    box-shadow: 0 0 0 0 rgb(79 95 216 / 0.5);
   }
   100% {
-    box-shadow: 0 0 0 22px rgb(46 42 140 / 0);
+    box-shadow: 0 0 0 20px rgb(79 95 216 / 0);
   }
-}
-
-.stamp-land {
-  animation: stamp-land 520ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
-}
-
-.stamp-press {
-  animation: stamp-press 460ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
-}
-
-.ink-ring {
-  animation: ink-ring 700ms ease-out 260ms both;
 }
 
 .rise {
   animation: rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.stamp-fill {
+  animation: stamp-fill 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.stamp-fill .check-draw {
+  stroke-dasharray: 1;
+  animation: check-draw 320ms ease-out both;
+}
+
+.pop-in {
+  animation: pop-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.pulse-ring {
+  animation: pulse-ring 800ms ease-out 200ms both;
 }
 
 .reward-glow {
@@ -191,14 +214,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stamp-land,
-  .stamp-press,
-  .ink-ring,
   .rise,
+  .stamp-fill,
+  .stamp-fill .check-draw,
+  .pop-in,
+  .pulse-ring,
   .reward-glow {
     animation: none;
   }
-  .ink-ring {
+  .pulse-ring {
     opacity: 0;
   }
 }

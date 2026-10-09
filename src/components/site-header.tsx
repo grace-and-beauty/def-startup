@@ -7,7 +7,7 @@ import { t } from "@/lib/i18n";
 
 export function SiteHeader() {
   return (
-    <header className="border-b">
+    <header>
       <nav
         aria-label={t("nav.mainLabel")}
         className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3"
@@ -19,7 +19,7 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm">
             <Link href="/pricing">{t("nav.pricing")}</Link>
           </Button>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild size="sm" className="bg-ink text-ink-foreground hover:bg-ink/85">
             <Link href="/login">{t("nav.login")}</Link>
           </Button>
         </div>

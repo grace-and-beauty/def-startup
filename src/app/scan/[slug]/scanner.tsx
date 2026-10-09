@@ -3,7 +3,7 @@
 import type { IScannerControls } from "@zxing/browser";
 import { Camera, CameraOff, CheckCircle2, Gift, LogOut, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 
 import { StampMark, StampProgress } from "@/components/stamp-progress";
 import { Button } from "@/components/ui/button";
@@ -230,7 +230,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
     <div className="flex flex-col gap-3">
       <div
         className={cn(
-          "bg-muted relative aspect-square w-full overflow-hidden rounded-xl",
+          "bg-ink relative aspect-square w-full overflow-hidden rounded-[1.5rem]",
           !active && "flex items-center justify-center",
         )}
       >
@@ -241,7 +241,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
           className={cn("size-full object-cover", !active && "hidden")}
         />
         {!active ? (
-          <p className="text-muted-foreground px-6 text-center text-sm">{t("scan.cameraHint")}</p>
+          <p className="text-ink-muted px-6 text-center text-sm">{t("scan.cameraHint")}</p>
         ) : null}
       </div>
       {cameraError ? (
@@ -280,7 +280,7 @@ function CardScreen({
   // Handing out a reward can't be undone: one extra tap to confirm.
   const [confirmRedeem, setConfirmRedeem] = useState(false);
   return (
-    <section className="flex flex-col gap-5 rounded-xl border p-5">
+    <section className="bg-card flex flex-col gap-5 rounded-[1.5rem] border p-5">
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-2xl font-bold tracking-tight">{card.customerName ?? t("scan.noName")}</h2>
         <p className="text-muted-foreground text-sm">
@@ -396,10 +396,10 @@ function ResultOverlay({
       )}
     >
       {result.ok && result.kind === "stamp" ? (
-        // The stamp is pressed onto the card: the one motion the scanner has.
+        // The new stamp appears: the one motion the scanner has.
         <span className="relative grid size-32 place-items-center" aria-hidden>
-          <span className="ink-ring absolute inset-0 rounded-full border-4 border-current" />
-          <StampMark className="stamp-press size-32" />
+          <span className="pulse-ring absolute inset-0 rounded-[2.5rem] border-4 border-current" />
+          <StampMark className="pop-in size-32" style={{ "--stamp-check": "var(--success)" } as CSSProperties} />
         </span>
       ) : (
         <Icon className="size-28" aria-hidden />

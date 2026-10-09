@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
 
   return (
     <div className="flex flex-1">
-      <aside className="hidden w-60 shrink-0 flex-col gap-6 border-r p-4 md:flex print:hidden">
+      <aside className="bg-card hidden w-60 shrink-0 flex-col gap-6 border-r p-4 md:flex print:hidden">
         <div className="flex flex-col gap-0.5 px-3">
           <Link href="/dashboard" className="w-fit">
             <BrandMark />

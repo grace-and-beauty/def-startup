@@ -87,7 +87,7 @@ export function StatCard({
     <Card className="gap-2 py-4">
       <CardContent className="flex flex-col gap-1 px-4">
         <span className="text-muted-foreground text-sm">{label}</span>
-        <span className="font-display text-[1.7rem] leading-tight font-bold tabular-nums">{value}</span>
+        <span className="font-display text-[1.7rem] leading-tight font-bold lining-nums tabular-nums">{value}</span>
         {delta ? <span className={cn("text-xs", tone)}>{deltaText(delta)}</span> : null}
         {hint ? <span className="text-muted-foreground text-xs">{hint}</span> : null}
       </CardContent>

@@ -24,6 +24,13 @@
   },
   "home": {
     "title": "Картка лояльності, яку клієнт не загубить",
+    "titleLead": "Картка лояльності,",
+    "titleAccent": "яку клієнт не загубить",
+    "how1Title": "Картка за 5 хвилин",
+    "how2Title": "QR на касі",
+    "how3Title": "Штамп за 5 секунд",
+    "nichesStripLabel": "Для кого",
+    "photoPlaceholder": "Фото: {niche}",
     "subtitle": "Електронна картка зі штампами живе в телефоні клієнта. Працівник ставить штамп за 5 секунд, а ви бачите, хто повертається і хто зник.",
     "chooseNiche": "Оберіть свою нішу",
     "stageNotice": "Сервіс у розробці.",
@@ -98,6 +105,7 @@
   "card": {
     "stampsOf": "{count} з {total}",
     "stampsLabel": "Штампи: {count} з {total}",
+    "stampsTitle": "Штампи",
     "rewardLabel": "Винагорода",
     "customerLabel": "Клієнт",
     "noLogo": "Логотип"

@@ -68,8 +68,8 @@ export function SidebarNav({ logoutAction }: DashboardNavProps) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "hover:bg-muted flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-              active && "bg-muted font-medium",
+              "flex items-center gap-3 rounded-full px-3 py-2 text-sm transition-colors",
+              active ? "bg-ink text-ink-foreground font-medium" : "hover:bg-muted",
             )}
           >
             <Icon className="size-4 shrink-0" aria-hidden />
@@ -80,7 +80,7 @@ export function SidebarNav({ logoutAction }: DashboardNavProps) {
       <form action={logoutAction} className="mt-4 border-t pt-4">
         <button
           type="submit"
-          className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
+          className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm transition-colors"
         >
           <LogOut className="size-4 shrink-0" aria-hidden />
           {t("dashboard.logout")}
@@ -101,7 +101,7 @@ export function MobileNav({ logoutAction }: DashboardNavProps) {
   const tabClass = (active: boolean) =>
     cn(
       "flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pt-2 pb-1.5 text-[11px] leading-tight",
-      active ? "text-foreground font-medium" : "text-muted-foreground",
+      active ? "text-primary font-medium" : "text-muted-foreground",
     );
 
   return (

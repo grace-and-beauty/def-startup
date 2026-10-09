@@ -58,17 +58,17 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
         animateStampsFrom={justStamped ? card.stamps_count - 1 : undefined}
         animationDelay={200}
       >
-        <div className="flex flex-col items-center gap-2 pt-1">
-          <div className="w-full max-w-56 overflow-hidden rounded-xl bg-white p-2">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-full max-w-52 overflow-hidden">
             <QrCode value={card.qr_token} label={t("webCard.showQr")} />
           </div>
-          <p className="text-sm opacity-80">{t("webCard.showQr")}</p>
+          <p className="text-sm text-[#5f5c57]">{t("webCard.showQr")}</p>
         </div>
       </CardPreview>
 
       <section aria-live="polite" className="flex flex-col gap-2">
         {card.rewards_available > 0 ? (
-          <div className="bg-success text-success-foreground rounded-lg p-4">
+          <div className="bg-primary text-primary-foreground rounded-2xl p-4">
             <p className="font-semibold">{t("webCard.rewardReady")}</p>
             <p className="text-sm">
               {t("webCard.rewardsAvailable", { count: card.rewards_available })}
@@ -80,7 +80,7 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
       </section>
 
       {latestMessage ? (
-        <section className="bg-muted flex flex-col gap-1 rounded-lg p-4">
+        <section className="bg-card flex flex-col gap-1 rounded-2xl border p-4">
           <h2 className="text-muted-foreground text-sm">
             {t("webCard.messageTitle")}
           </h2>
@@ -111,7 +111,7 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
 
       <ConsentForm token={card.qr_token} granted={card.customer?.marketing_consent_at != null} />
 
-      <section className="flex gap-3 rounded-lg border p-4">
+      <section className="bg-card flex gap-3 rounded-2xl border p-4">
         <Smartphone className="mt-0.5 size-5 shrink-0" aria-hidden />
         <div className="flex flex-col gap-1">
           <h2 className="font-medium">{t("webCard.homeScreenTitle")}</h2>
