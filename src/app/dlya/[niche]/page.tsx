@@ -39,7 +39,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
     <PublicShell>
       <InkHero
         visual={
-          <PhoneFrame cropped className="rise">
+          <PhoneFrame cropped className="rise grayscale">
             <CardPreview
               businessName={niche.sampleBusinessName}
               bgColor={niche.colors.bg}
@@ -62,7 +62,7 @@ export default async function NicheLandingPage({ params }: PageProps<"/dlya/[nic
           {niche.landing.subheadline}
         </p>
         <div className="rise flex flex-wrap gap-3" style={{ animationDelay: "220ms" }}>
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="bg-ink-foreground text-ink hover:bg-ink-foreground/90">
             <Link href={`/login?niche=${niche.slug}`}>{t("niche.cta")}</Link>
           </Button>
           <Button

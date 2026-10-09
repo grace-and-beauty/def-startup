@@ -392,14 +392,14 @@ function ResultOverlay({
       onClick={onClose}
       className={cn(
         "fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-8 text-center",
-        result.ok ? "bg-success text-success-foreground" : "bg-destructive text-white",
+        result.ok ? "bg-ink text-ink-foreground" : "bg-destructive text-white",
       )}
     >
       {result.ok && result.kind === "stamp" ? (
         // The new stamp appears: the one motion the scanner has.
         <span className="relative grid size-32 place-items-center" aria-hidden>
           <span className="pulse-ring absolute inset-0 rounded-[2.5rem] border-4 border-current" />
-          <StampMark className="pop-in size-32" style={{ "--stamp-check": "var(--success)" } as CSSProperties} />
+          <StampMark className="pop-in size-32" style={{ "--stamp-check": "var(--ink)" } as CSSProperties} />
         </span>
       ) : (
         <Icon className="size-28" aria-hidden />

@@ -32,7 +32,7 @@ export default function HomePage() {
         <InkHero
           visual={
             barbershop ? (
-              <PhoneFrame cropped className="rise">
+              <PhoneFrame cropped className="rise grayscale">
                 <WalletPeek cards={peek} />
                 <StampingCard
                   className="relative"
@@ -60,7 +60,7 @@ export default function HomePage() {
             {t("home.subtitle")}
           </p>
           <div className="rise flex flex-wrap items-center gap-3" style={{ animationDelay: "220ms" }}>
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="bg-ink-foreground text-ink hover:bg-ink-foreground/90">
               <Link href="/login">
                 {t("nav.start")}
                 <ArrowRight aria-hidden />
@@ -97,7 +97,7 @@ export default function HomePage() {
             ))}
           </ol>
           {barbershop ? (
-            <PhoneFrame className="order-1 mx-auto md:order-2">
+            <PhoneFrame className="order-1 mx-auto grayscale md:order-2">
               <CardPreview
                 businessName={barbershop.sampleBusinessName}
                 bgColor={barbershop.colors.bg}

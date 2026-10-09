@@ -2,8 +2,7 @@
 @import "tw-animate-css";
 
 /*
- * Design tokens. Palette "Класика": black and white on warm paper with one
- * blue accent; Playfair Display for display type, Inter for text — both with
+ * Design tokens. Palette "Класика": black and white on warm paper, no accent color; Playfair Display for display type, Inter for text — both with
  * Ukrainian Cyrillic. Rebranding = change the variables below; components
  * only reference tokens (see docs/architecture.md §9).
  */
@@ -21,7 +20,7 @@
 
   /*
    * Palette "Класика":
-   *   paper  #f4f2ee   ink   #141414   accent #4f5fd8
+   *   paper  #f4f2ee   ink   #141414
    *   line   #e2ded7   wash  #ebe8e2   graphite #5f5c57
    */
   --background: #f4f2ee;
@@ -30,7 +29,7 @@
   --card-foreground: #141414;
   --popover: #ffffff;
   --popover-foreground: #141414;
-  --primary: #4f5fd8;
+  --primary: #141414;
   --primary-foreground: #ffffff;
   --secondary: #ebe8e2;
   --secondary-foreground: #141414;
@@ -43,21 +42,21 @@
   --success-foreground: #f2fbf7;
   --border: #e2ded7;
   --input: #d3cec6;
-  --ring: #4f5fd8;
+  --ring: #141414;
 
   /* The dark blocks (hero, phone frames): ink with paper-white text. */
   --ink: #141414;
   --ink-foreground: #faf8f5;
   --ink-muted: #a8a59f;
-  /* The accent on ink: lighter blue, readable on black. */
-  --accent-on-ink: #8fa0ff;
+  /* The accent on ink: plain paper white. */
+  --accent-on-ink: #faf8f5;
 
-  /* Blue ramp for charts: deep → pale. */
-  --chart-1: #3442b8;
-  --chart-2: #4f5fd8;
-  --chart-3: #7d8ae4;
-  --chart-4: #aeb6ef;
-  --chart-5: #d9ddf8;
+  /* Gray ramp for charts: deep → pale. */
+  --chart-1: #141414;
+  --chart-2: #4a4845;
+  --chart-3: #807d78;
+  --chart-4: #b3b0aa;
+  --chart-5: #dcd9d3;
 }
 
 @theme inline {
@@ -178,13 +177,13 @@
   }
 }
 
-/* A full card: one soft blue halo around it. */
+/* A full card: one soft dark halo around it. */
 @keyframes reward-glow {
   0% {
-    box-shadow: 0 0 0 0 rgb(79 95 216 / 0.5);
+    box-shadow: 0 0 0 0 rgb(20 20 20 / 0.45);
   }
   100% {
-    box-shadow: 0 0 0 20px rgb(79 95 216 / 0);
+    box-shadow: 0 0 0 20px rgb(20 20 20 / 0);
   }
 }
 
