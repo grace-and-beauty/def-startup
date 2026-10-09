@@ -8,9 +8,11 @@ import { setBusinessLogo, updateBusiness, updateProgram } from "@/lib/data";
 import {
   avgCheckSchema,
   businessNameSchema,
+  citySchema,
   formFile,
   formString,
   hexColorSchema,
+  ownerPhoneSchema,
   reminderDaysSchema,
   reminderTextSchema,
   rewardTextSchema,
@@ -138,5 +140,16 @@ export async function updateBusinessInfo(_prev: SettingsState, formData: FormDat
   if (!avgCheck.success) return fail("avgCheckInvalid");
   return withOwner("updateBusinessInfo", async ({ supabase, business }) => {
     await updateBusiness(supabase, business.id, { avg_check: avgCheck.data });
+  });
+}
+
+/** Phone and city — seen only by the service team (admin dashboard). */
+export async function updateContacts(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
+  const phone = ownerPhoneSchema.safeParse(formString(formData, "contactPhone"));
+  if (!phone.success) return fail("phoneInvalid");
+  const city = citySchema.safeParse(formString(formData, "city"));
+  if (!city.success) return fail("cityInvalid");
+  return withOwner("updateContacts", async ({ supabase, business }) => {
+    await updateBusiness(supabase, business.id, { contact_phone: phone.data, city: city.data });
   });
 }

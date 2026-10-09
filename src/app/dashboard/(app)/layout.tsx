@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 
 import { BillingBanner } from "@/components/dashboard/billing-banner";
+import { ContactsBanner } from "@/components/dashboard/contacts-banner";
 import { MobileNav, SidebarNav } from "@/components/dashboard/nav";
 import { requireOwnerContext } from "@/lib/auth/owner";
 
@@ -37,6 +38,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         </header>
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-28 md:pb-10 print:max-w-none print:p-0">
           <BillingBanner business={business} now={now} />
+          <ContactsBanner business={business} />
           {children}
         </main>
       </div>

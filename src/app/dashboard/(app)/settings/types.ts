@@ -10,6 +10,8 @@ export type SettingsErrorReason =
   | "reminderTextInvalid"
   | "remindersLocked"
   | "avgCheckInvalid"
+  | "phoneInvalid"
+  | "cityInvalid"
   | "sessionExpired"
   | "unknown";
 
@@ -30,6 +32,8 @@ export const SETTINGS_ERROR_KEYS = {
   reminderTextInvalid: "settings.reminderTextInvalid",
   remindersLocked: "settings.remindersLocked",
   avgCheckInvalid: "settings.avgCheckInvalid",
+  phoneInvalid: "onboarding.contactPhoneInvalid",
+  cityInvalid: "onboarding.cityInvalid",
   sessionExpired: "dashboard.sessionExpired",
   unknown: "common.error",
 } as const satisfies Record<SettingsErrorReason, string>;

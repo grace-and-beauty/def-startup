@@ -8,10 +8,12 @@ import { getOwnerBusiness, getOwnerSession } from "@/lib/auth/owner";
 import { DataError, isSlugTaken, onboardBusiness, setBusinessLogo } from "@/lib/data";
 import {
   businessNameSchema,
+  citySchema,
   formFile,
   formString,
   hexColorSchema,
   newPinSchema,
+  ownerPhoneSchema,
   rewardTextSchema,
   slugSchema,
   stampsRequiredSchema,
@@ -69,6 +71,8 @@ const schema = z.object({
   niche: z.string().refine(isNicheSlug),
   name: businessNameSchema,
   slug: slugSchema,
+  contactPhone: ownerPhoneSchema,
+  city: citySchema,
   bgColor: hexColorSchema,
   fgColor: hexColorSchema,
   labelColor: hexColorSchema,
@@ -96,6 +100,8 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
     niche: formString(formData, "niche"),
     name: formString(formData, "name"),
     slug: formString(formData, "slug"),
+    contactPhone: formString(formData, "contactPhone"),
+    city: formString(formData, "city"),
     bgColor: formString(formData, "bgColor"),
     fgColor: formString(formData, "fgColor"),
     labelColor: formString(formData, "labelColor"),
@@ -135,6 +141,8 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
       reminderText: niche.reminderText,
       staffName: t("onboarding.defaultStaffName"),
       staffPinHash: await hashPin(input.pin),
+      contactPhone: input.contactPhone,
+      city: input.city,
     });
     alreadyDone = result.status === "already_done";
     businessId = result.business_id;
