@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { signStaffSession, verifyStaffSession } from "@/lib/auth/staff-session";
 import { findStaffByPin, hashPin, isValidNewPin, isValidPin, pinVersion, verifyPin } from "@/lib/security/pin";
-import { clientIpFromHeaders, hashIp, isStaffLoginLocked } from "@/lib/security/rate-limit";
+import { clientIpFromHeaders, hashEmail, hashIp, isStaffLoginLocked } from "@/lib/security/rate-limit";
 import { encodeBase62, extractQrToken, generateQrToken, isValidQrToken } from "@/lib/security/tokens";
 
 const SECRET = "test-secret-test-secret-test-secret-0123";
@@ -113,6 +113,13 @@ describe("rate limit helpers", () => {
     expect(hashIp("1.2.3.4", "s")).not.toBe(hashIp("1.2.3.4", "t"));
     expect(clientIpFromHeaders(new Headers({ "x-forwarded-for": "9.9.9.9, 10.0.0.1" }))).toBe("9.9.9.9");
     expect(clientIpFromHeaders(new Headers())).toBe("unknown");
+  });
+
+  it("hashes emails case- and space-insensitively, apart from IP keys", () => {
+    expect(hashEmail("Owner@Example.com ", "s")).toBe(hashEmail("owner@example.com", "s"));
+    expect(hashEmail("owner@example.com", "s")).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashEmail("owner@example.com", "s")).not.toBe(hashEmail("owner@example.com", "t"));
+    expect(hashEmail("1.2.3.4", "s")).not.toBe(hashIp("1.2.3.4", "s"));
   });
 });
 

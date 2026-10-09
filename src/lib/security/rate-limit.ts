@@ -37,6 +37,20 @@ export function hashIp(ip: string, secret: string): string {
   return createHmac("sha256", secret).update(ip).digest("hex");
 }
 
+/**
+ * Owner sign-in codes: checks of a code per email and per IP within 15 min.
+ * Every check counts (a right code too — it ends the sign-in anyway), so a
+ * 6-digit code gets at most 5 guesses before it expires. The IP cap stops one
+ * client from guessing across many emails.
+ */
+export const LOGIN_CODE_EMAIL_LIMIT = { scope: "login_code_email", max: 5, windowSeconds: 900 } as const;
+export const LOGIN_CODE_IP_LIMIT = { scope: "login_code_ip", max: 20, windowSeconds: 900 } as const;
+
+/** Rate-limit key for an email: HMAC like IPs, so the table holds no addresses. */
+export function hashEmail(email: string, secret: string): string {
+  return createHmac("sha256", secret).update(`email:${email.trim().toLowerCase()}`).digest("hex");
+}
+
 /** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */
 export function clientIpFromHeaders(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");

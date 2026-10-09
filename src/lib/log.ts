@@ -18,6 +18,8 @@ export type LogEvent =
   | "card_join_rejected"
   | "consent_changed"
   | "consent_change_failed"
+  | "login_code_failed"
+  | "login_code_rejected"
   | "staff_login_failed"
   | "staff_login_locked"
   | "staff_login_succeeded"
