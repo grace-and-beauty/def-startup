@@ -4,9 +4,11 @@ import { Mail, MessageCircle, Phone, Send } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { contactLinks, type AdminPlanTag, type AdminRow } from "@/lib/domain/admin-overview";
+import { contactLinks, type AdminRow } from "@/lib/domain/admin-overview";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+
+import { planLabel } from "./plan-label";
 
 type Filter = "all" | "trial" | "paid" | "sleeping";
 
@@ -16,11 +18,6 @@ const FILTERS: { id: Filter; label: Parameters<typeof t>[0] }[] = [
   { id: "paid", label: "admin.filterPaid" },
   { id: "sleeping", label: "admin.filterSleeping" },
 ];
-
-export function planLabel(plan: AdminPlanTag): string {
-  if (plan === "trial" || plan === "trial_over" || plan === "canceled") return t(`admin.planTag.${plan}`);
-  return t(`plans.${plan}.name`);
-}
 
 function lastStamp(row: AdminRow): string {
   if (!row.lastStampAt) return t("admin.neverStamped");

@@ -10,8 +10,9 @@ import { t } from "@/lib/i18n";
 import { logEvent } from "@/lib/log";
 import { tryCreateSupabaseAdminClient } from "@/lib/supabase/admin";
 
-import { BusinessesTable, planLabel } from "./businesses-table";
+import { BusinessesTable } from "./businesses-table";
 import { GrowthChart } from "./growth-chart";
+import { planLabel } from "./plan-label";
 
 /** Months and weeks are counted in Kyiv time, like the businesses' own dashboards. */
 const TIME_ZONE = "Europe/Kyiv";
