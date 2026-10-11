@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { legalPath } from "@/config/legal";
 import { t } from "@/lib/i18n";
 
 export function SiteHeader() {
@@ -31,11 +32,31 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t">
-      <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-col gap-1 px-4 py-6 text-sm">
-        <span>
-          © {brand.name}
-        </span>
-        <span>{t("footer.support", { email: brand.supportEmail })}</span>
+      <div className="text-muted-foreground mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-6 text-sm sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <span>
+            © {brand.name}
+          </span>
+          <span>{t("footer.support", { email: brand.supportEmail })}</span>
+        </div>
+        <nav aria-label={t("footer.legalLabel")} className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href={legalPath("terms")} className="hover:text-foreground underline-offset-4 hover:underline">
+            {t("footer.terms")}
+          </Link>
+          <Link href={legalPath("privacy")} className="hover:text-foreground underline-offset-4 hover:underline">
+            {t("footer.privacy")}
+          </Link>
+          <Link href={legalPath("refund")} className="hover:text-foreground underline-offset-4 hover:underline">
+            {t("footer.refund")}
+          </Link>
+          <Link
+            href={legalPath("terms", "en")}
+            hrefLang="en"
+            className="hover:text-foreground underline-offset-4 hover:underline"
+          >
+            {t("footer.english")}
+          </Link>
+        </nav>
       </div>
     </footer>
   );
