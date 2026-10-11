@@ -326,7 +326,7 @@ interface WalletProvider {
 
 ## 9. Брендування (поки нейтрально)
 
-- `src/config/brand.ts`: `{ name: 'Loyalty App', domain, supportEmail, supportTelegram }` — назва ніде не хардкодиться.
+- `src/config/brand.ts`: `{ name: 'Tickity', domain: 'tickity.app', supportEmail, supportTelegram }` — назва ніде не хардкодиться.
 - `src/styles/globals.css`: CSS-змінні (`--background`, `--foreground`, `--primary`, `--radius`, `--font-sans` …), зараз чорно-біла палітра + системний шрифт; Tailwind/shadcn посилаються лише на них.
 - Тексти — `src/lib/i18n/locales/uk.json` через `t('key')`.
 - Логотип сервісу — текст `brand.name`.

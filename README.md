@@ -1,7 +1,7 @@
-# Loyalty App
+# Tickity
 
 Сервіс електронних карток лояльності (Google Wallet + веб-картка) для малого бізнесу.
-Назва «Loyalty App» — тимчасова (`src/config/brand.ts`).
+Назва й домен — Tickity, `tickity.app` (`src/config/brand.ts`).
 
 Документація: [`docs/prd.md`](docs/prd.md) (що і для кого) · [`docs/architecture.md`](docs/architecture.md) (як влаштовано) · [`docs/plan.md`](docs/plan.md) (етапи).
 
