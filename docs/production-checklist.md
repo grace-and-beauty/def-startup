@@ -147,7 +147,7 @@ Supabase (prod) → **Authentication → URL Configuration**:
 
 ### 5.3 Код замість посилання (обов'язково)
 
-Власник входить за одноразовим кодом з листа (`src/app/login/actions.ts`). Supabase надсилає код, лише якщо шаблон листа його показує. Зроби на **кожному** проєкті (тестовому й продакшн):
+Власник входить за одноразовим кодом з листа (`src/app/login/actions.ts`). Supabase надсилає код, лише якщо шаблон листа його показує, а **шаблони редагуються тільки після підключення власного SMTP (§5.2)**. Доти лист містить посилання — воно теж працює (`/auth/callback`), якщо відкрити його на тому ж пристрої. Після SMTP зроби на **кожному** проєкті (тестовому й продакшн):
 
 1. **Authentication → Emails → Templates** → шаблони **Magic Link** і **Confirm signup** — встав тему й текст з `docs/auth-email-templates.md` (код `{{ .Token }}`, без посилання).
 2. **Authentication → Providers → Email**: **Email OTP Expiration** = `600` (10 хвилин), **Email OTP Length** = `6`.
