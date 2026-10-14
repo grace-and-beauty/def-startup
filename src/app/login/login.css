@@ -1,0 +1,103 @@
+/* Login: a big accent ticket on the right; one hole punches itself on a loop. */
+.lg-art::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(closest-side, rgb(var(--glow) / 0.28), transparent 70%);
+}
+.lg-ticket {
+  position: relative;
+  width: min(400px, 100%);
+  padding: 26px 26px 22px;
+  border-radius: 24px;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  transform: rotate(-6deg);
+}
+.lg-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 34px;
+  line-height: 1;
+}
+.lg-cap {
+  display: block;
+  margin: 6px 0 22px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.lg-perf {
+  position: relative;
+  margin: 0 -26px 18px;
+  border-top: 2px dashed color-mix(in srgb, var(--brand-foreground) 35%, transparent);
+}
+.lg-perf::before,
+.lg-perf::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.lg-perf::before {
+  left: -11px;
+}
+.lg-perf::after {
+  right: -11px;
+}
+.lg-holes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.lg-holes span {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--brand-foreground) 35%, transparent);
+}
+.lg-holes span::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: scale(0);
+}
+.lg-holes span:nth-child(-n + 3)::after {
+  transform: scale(1);
+}
+.lg-holes span:nth-child(4)::after {
+  animation: lg-punch 3s cubic-bezier(0.3, 1.6, 0.5, 1) infinite;
+}
+@keyframes lg-punch {
+  0%,
+  35% {
+    transform: scale(0);
+  }
+  45%,
+  90% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+.lg-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 16px;
+  font-size: 13px;
+}
+.lg-foot b {
+  font-size: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lg-holes span:nth-child(4)::after {
+    animation: none;
+  }
+}

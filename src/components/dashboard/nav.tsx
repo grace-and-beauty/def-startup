@@ -68,11 +68,11 @@ export function SidebarNav({ logoutAction }: DashboardNavProps) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-full px-3 py-2 text-sm transition-colors",
-              active ? "bg-ink text-ink-foreground font-medium" : "hover:bg-muted",
+              "flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-semibold transition-colors",
+              active ? "bg-ink-2 text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
-            <Icon className="size-4 shrink-0" aria-hidden />
+            <Icon className={cn("size-4 shrink-0", active && "text-brand")} aria-hidden />
             {t(item.label)}
           </Link>
         );
@@ -80,7 +80,7 @@ export function SidebarNav({ logoutAction }: DashboardNavProps) {
       <form action={logoutAction} className="mt-4 border-t pt-4">
         <button
           type="submit"
-          className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-full px-3 py-2 text-sm transition-colors"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-semibold transition-colors"
         >
           <LogOut className="size-4 shrink-0" aria-hidden />
           {t("dashboard.logout")}
@@ -101,13 +101,13 @@ export function MobileNav({ logoutAction }: DashboardNavProps) {
   const tabClass = (active: boolean) =>
     cn(
       "flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pt-2 pb-1.5 text-[11px] leading-tight",
-      active ? "text-primary font-medium" : "text-muted-foreground",
+      active ? "text-brand font-bold" : "text-muted-foreground",
     );
 
   return (
     <nav
       aria-label={t("dashboard.menuLabel")}
-      className="bg-background fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
+      className="theme-stage bg-ink text-foreground fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
     >
       <ul className="flex">
         {primary.map((item) => {

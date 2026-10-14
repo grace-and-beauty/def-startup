@@ -19,24 +19,24 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
 
   return (
     <div className="flex flex-1">
-      <aside className="bg-card hidden w-60 shrink-0 flex-col gap-6 border-r p-4 md:flex print:hidden">
-        <div className="flex flex-col gap-0.5 px-3">
+      <aside className="theme-stage bg-ink text-foreground hidden w-64 shrink-0 flex-col gap-7 p-4 md:sticky md:top-0 md:flex md:h-svh print:hidden">
+        <div className="flex flex-col gap-1 px-3 pt-2">
           <Link href="/dashboard" className="w-fit">
             <BrandMark />
           </Link>
-          <span className="text-muted-foreground truncate pl-8 text-sm">{business.name}</span>
+          <span className="text-muted-foreground truncate pl-[42px] text-sm">{business.name}</span>
         </div>
         <SidebarNav logoutAction={signOut} />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b px-4 py-3 md:hidden print:hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
+        <header className="theme-stage bg-ink text-foreground flex items-center justify-between gap-3 px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3 md:hidden print:hidden">
           <Link href="/dashboard">
             <BrandMark />
           </Link>
           <span className="text-muted-foreground truncate text-sm">{business.name}</span>
         </header>
-        <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-28 md:pb-10 print:max-w-none print:p-0">
+        <main className="pt-rise mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-6 pb-28 md:px-8 md:pt-8 md:pb-12 print:max-w-none print:p-0">
           <BillingBanner business={business} now={now} />
           <ContactsBanner business={business} />
           {children}

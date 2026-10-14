@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 
 import { StampMark, StampProgress } from "@/components/stamp-progress";
+import { dropChips } from "@/lib/motion/chips";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -175,7 +176,7 @@ function ScanScreen({
             autoCapitalize="off"
             spellCheck={false}
             maxLength={512}
-            className="h-11 font-mono text-base"
+            className="h-11 text-base"
           />
           <Button type="submit" className="h-11" disabled={pending || !code.trim()}>
             {pending ? t("scan.searching") : t("scan.manualSubmit")}
@@ -230,7 +231,7 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
     <div className="flex flex-col gap-3">
       <div
         className={cn(
-          "bg-ink relative aspect-square w-full overflow-hidden rounded-[1.5rem]",
+          "bg-ink-2 relative aspect-square w-full overflow-hidden rounded-[1.75rem]",
           !active && "flex items-center justify-center",
         )}
       >
@@ -240,8 +241,15 @@ function CameraScanner({ onCode, disabled }: { onCode: (code: string) => void; d
           playsInline
           className={cn("size-full object-cover", !active && "hidden")}
         />
+        <span aria-hidden className="pointer-events-none absolute inset-[14%]">
+          <span className="border-brand absolute top-0 left-0 size-12 rounded-tl-2xl border-t-[5px] border-l-[5px]" />
+          <span className="border-brand absolute top-0 right-0 size-12 rounded-tr-2xl border-t-[5px] border-r-[5px]" />
+          <span className="border-brand absolute bottom-0 left-0 size-12 rounded-bl-2xl border-b-[5px] border-l-[5px]" />
+          <span className="border-brand absolute right-0 bottom-0 size-12 rounded-br-2xl border-r-[5px] border-b-[5px]" />
+          {active ? <span className="scan-sweep bg-brand absolute inset-x-3 h-[3px] rounded-full" /> : null}
+        </span>
         {!active ? (
-          <p className="text-ink-muted px-6 text-center text-sm">{t("scan.cameraHint")}</p>
+          <p className="text-ink-muted relative px-[22%] text-center text-sm">{t("scan.cameraHint")}</p>
         ) : null}
       </div>
       {cameraError ? (
@@ -282,7 +290,7 @@ function CardScreen({
   return (
     <section className="bg-card flex flex-col gap-5 rounded-[1.5rem] border p-5">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-2xl font-bold tracking-tight">{card.customerName ?? t("scan.noName")}</h2>
+        <h2 className="font-display text-3xl">{card.customerName ?? t("scan.noName")}</h2>
         <p className="text-muted-foreground text-sm">
           {t("scan.visits", { count: card.totalVisits })}
         </p>
@@ -299,13 +307,13 @@ function CardScreen({
         </p>
       ) : null}
       {card.rewardsAvailable > 0 ? (
-        <p className="bg-success text-success-foreground rounded-lg px-4 py-3 font-medium">
+        <p className="bg-brand text-brand-foreground rounded-xl px-4 py-3 font-bold">
           {t("scan.rewardsAvailable", { count: card.rewardsAvailable })}
         </p>
       ) : null}
 
       <div className="flex flex-col gap-3">
-        <Button size="lg" className="h-16 text-xl" disabled={pending} onClick={onStamp}>
+        <Button size="lg" className="h-16 rounded-2xl text-xl font-extrabold" disabled={pending} onClick={onStamp}>
           {pending ? t("scan.working") : t("scan.addStamp")}
         </Button>
         {card.rewardsAvailable > 0 && !confirmRedeem ? (
@@ -363,10 +371,15 @@ function ResultOverlay({
   card: ScanCard;
   onClose: () => void;
 }) {
+  const markRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const id = window.setTimeout(onClose, RESULT_AUTO_CLOSE_MS);
     return () => window.clearTimeout(id);
   }, [onClose]);
+  useEffect(() => {
+    if (!result.ok) return;
+    dropChips(markRef.current, result.kind === "reward" ? 12 : 4, { jitter: 80, spread: 420, stagger: 70 });
+  }, [result]);
 
   const Icon = result.ok ? CheckCircle2 : XCircle;
   let title: string;
@@ -392,19 +405,24 @@ function ResultOverlay({
       onClick={onClose}
       className={cn(
         "fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-8 text-center",
-        result.ok ? "bg-ink text-ink-foreground" : "bg-destructive text-white",
+        result.ok ? "bg-ink text-ink-foreground" : "bg-[#b3261e] text-white",
       )}
     >
       {result.ok && result.kind === "stamp" ? (
         // The new stamp appears: the one motion the scanner has.
-        <span className="relative grid size-32 place-items-center" aria-hidden>
-          <span className="pulse-ring absolute inset-0 rounded-[2.5rem] border-4 border-current" />
-          <StampMark className="pop-in size-32" style={{ "--stamp-check": "var(--ink)" } as CSSProperties} />
+        <span ref={markRef} className="relative grid size-36 place-items-center" aria-hidden>
+          <span className="pulse-ring border-brand absolute inset-0 rounded-full border-4" />
+          <StampMark
+            className="pop-in text-brand size-36"
+            style={{ "--stamp-check": "var(--brand-foreground)" } as CSSProperties}
+          />
         </span>
       ) : (
-        <Icon className="size-28" aria-hidden />
+        <span ref={markRef} className="grid place-items-center" aria-hidden>
+          <Icon className={cn("size-28", result.ok && "text-brand pop-in")} />
+        </span>
       )}
-      <span className="font-display text-3xl font-bold tracking-tight">{title}</span>
+      <span className="font-display text-4xl">{title}</span>
       {card.customerName ? <span className="text-xl">{card.customerName}</span> : null}
       {detail ? <span className="text-lg">{detail}</span> : null}
       <span className="mt-6 text-sm opacity-80">

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кабінет · Tickity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Wix+Madefor+Display:wght@700;800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@800;900&family=Sofia+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<script src="shared.js"></script>
+<style>
+  /* the owner's workspace: palette-dark rail, paper work surface */
+  .app { display: flex; flex-wrap: wrap; min-height: 100vh; }
+  .rail { flex: 1 1 250px; min-width: 0; background: var(--bg); color: var(--fg); padding: calc(22px + env(safe-area-inset-top, 0px)) 16px 22px; display: flex; flex-direction: column; gap: 6px; }
+  .rail .me { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; }
+  .rail .me .ava { width: 42px; height: 42px; border-radius: 13px; background: var(--accent); color: var(--on-accent); font-size: 18px; }
+  .rail .me b { display: block; font-family: var(--head); font-weight: var(--head-w); text-transform: var(--head-tt); font-size: calc(17px * var(--head-scale)); line-height: 1.1; }
+  .rail .me span { font-size: 12px; color: var(--mist); }
+  .trial { margin: 0 8px 14px; border-radius: 16px; padding: 12px 14px; background: var(--bg-2); font-size: 13px; color: var(--mist); }
+  .trial b { color: var(--fg); }
+  .trial .bar { height: 6px; border-radius: 6px; background: rgba(var(--fg-rgb), .14); margin-top: 8px; overflow: hidden; }
+  .trial .bar i { display: block; height: 100%; width: 40%; background: var(--accent); border-radius: 6px; }
+  .rail nav { display: flex; flex-direction: column; gap: 2px; }
+  .rail nav a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px; text-decoration: none; font-weight: 700; color: var(--mist); font-size: 15px; }
+  .rail nav a:hover { color: var(--fg); background: rgba(var(--fg-rgb), .06); }
+  .rail nav a[aria-current="page"] { color: var(--fg); background: var(--bg-2); }
+  .rail nav a[aria-current="page"]::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-left: -2px; }
+  .rail .scan { margin-top: 18px; }
+  .work { flex: 999 1 600px; min-width: 0; background: var(--paper); color: var(--ink); color-scheme: light; padding: calc(28px + env(safe-area-inset-top, 0px)) clamp(16px, 3vw, 44px) 120px; display: flex; flex-direction: column; gap: 22px; }
+  .head { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: space-between; }
+  .head h1 { font-size: calc(clamp(34px, 4vw, 52px) * var(--head-scale)); }
+  .head p { margin: 4px 0 0; color: var(--paper-mist); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tile { background: #FFFFFF; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 2px; }
+  .tile span { color: var(--paper-mist); font-size: 13px; font-weight: 600; }
+  .tile b { font-family: var(--head); font-weight: var(--head-w); letter-spacing: var(--head-ls); font-size: calc(40px * var(--head-scale)); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tile small { font-size: 13px; font-weight: 700; }
+  .tile.alert { background: var(--ink); color: #FFFFFF; }
+  .tile.alert span { color: rgba(255, 255, 255, .7); }
+  .tile.alert b { color: var(--accent); }
+  .tile.alert a { color: #FFFFFF; font-weight: 800; font-size: 13px; }
+  .grid2 { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { background: #FFFFFF; border-radius: 22px; padding: 22px; min-width: 0; }
+  .panel h2 { font-size: calc(21px * var(--head-scale)); }
+  .panel .ph { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .panel .ph span { font-size: 13px; color: var(--paper-mist); }
+  .chart { flex: 2 1 420px; }
+  .bars { display: flex; align-items: flex-end; gap: 12px; height: 200px; border-bottom: 1px solid var(--paper-line); }
+  .bars div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; height: 100%; }
+  .bars em { font-style: normal; font-size: 12px; font-weight: 800; }
+  .bars i { width: 100%; max-width: 48px; border-radius: 10px 10px 4px 4px; background: var(--ink); transform-origin: bottom; animation: grow 1s cubic-bezier(.2, .9, .2, 1) both; }
+  .bars i.hot { background: var(--accent); }
+  @keyframes grow { from { transform: scaleY(0); } }
+  .days { display: flex; gap: 12px; margin-top: 8px; }
+  .days span { flex: 1; text-align: center; font-size: 12px; color: var(--paper-mist); }
+  .lost { flex: 1 1 300px; }
+  .person { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--paper-line); }
+  .person .av { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--paper); display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+  .person div { flex: 1; min-width: 0; }
+  .person b { display: block; font-size: 15px; }
+  .person small { font-size: 12.5px; color: var(--paper-mist); }
+  .ping { min-height: 38px; padding: 0 14px; border-radius: 12px; font-size: 13px; background: var(--ink); color: #FFFFFF; }
+  .ping[aria-pressed="true"] { background: var(--paper); color: var(--paper-mist); }
+  .tablebox { overflow-x: auto; }
+  table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 700; color: var(--paper-mist); font-size: 12.5px; padding: 10px 8px; border-bottom: 1px solid var(--paper-line); }
+  td { white-space: nowrap; padding: 13px 8px; border-bottom: 1px solid var(--paper); font-variant-numeric: tabular-nums; }
+  td b { font-weight: 700; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 800; border-radius: 99px; padding: 3px 10px; background: var(--accent); color: var(--on-accent); }
+  .late { font-weight: 700; }
+  .mini8 { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 8px; }
+  .mini8 i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--paper-line); }
+  .mini8 i.on { background: var(--ink); border-color: var(--ink); }
+  /* broadcast composer */
+  .composer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s cubic-bezier(.2, .8, .2, 1); }
+  .composer.open { grid-template-rows: 1fr; }
+  .composer > div { overflow: hidden; }
+  .composer .panel { margin-top: 2px; display: flex; flex-direction: column; gap: 12px; }
+  .composer label { font-weight: 700; font-size: 14px; }
+  .composer textarea { font: 500 16px var(--body); color: var(--ink); border: 1.5px solid var(--paper-line); border-radius: 14px; padding: 12px 14px; min-height: 96px; resize: vertical; }
+  .composer .meta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; font-size: 13px; color: var(--paper-mist); }
+  .toast { position: fixed; left: 50%; top: calc(20px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -160%); background: var(--ink); color: #FFFFFF; border-radius: 16px; padding: 14px 18px; font-weight: 700; box-shadow: 0 20px 40px -16px rgba(0, 0, 0, .5); opacity: 0; transition: transform .5s cubic-bezier(.2, 1.2, .3, 1), opacity .3s; z-index: 80; display: flex; gap: 10px; align-items: center; }
+  .toast.on { transform: translate(-50%, 0); opacity: 1; }
+  .toast i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  @media (max-width: 860px) {
+    .rail { flex-basis: 100%; padding-bottom: 12px; }
+    .rail nav { flex-direction: row; overflow-x: auto; padding-bottom: 6px; max-width: 100%; scrollbar-width: none; }
+    .rail nav a { flex: none; }
+    .rail .scan, .trial { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="me"><span class="ava">Л</span><div><b>Barber «Лезо»</b><span>Рівне · тариф Плюс</span></div></div>
+    <div class="trial"><b>Тріал Плюс: ще 18 днів</b><div class="bar"><i></i></div></div>
+    <nav aria-label="Кабінет">
+      <a href="dashboard.html" aria-current="page">Огляд</a>
+      <a href="#clients">Клієнти</a>
+      <a href="#chart">Аналітика</a>
+      <a href="#" id="navMsg">Розсилки</a>
+      <a href="#">Працівники</a>
+      <a href="#">QR-постер</a>
+      <a href="pricing.html">Тариф</a>
+      <a href="#">Налаштування</a>
+    </nav>
+    <a class="btn btn-light scan" href="scanner.html">Відкрити сканер</a>
+  </aside>
+
+  <main class="work pt-rise">
+    <div class="head">
+      <div><h1 class="h">Огляд</h1><p>7–13 жовтня · Рівне</p></div>
+      <button type="button" class="btn btn-accent" id="newMsg" aria-expanded="false" aria-controls="composer">Нова розсилка</button>
+    </div>
+
+    <div class="composer" id="composer"><div>
+      <form class="panel" id="msgForm">
+        <label for="msgText">Текст розсилки</label>
+        <textarea id="msgText">У п'ятницю −20% на оформлення бороди. Запис: 067 123 45 67.</textarea>
+        <div class="meta"><span>Отримають 214 клієнтів, які погодилися на повідомлення</span><button type="submit" class="btn btn-ink">Надіслати 214 клієнтам</button></div>
+      </form>
+    </div></div>
+
+    <div class="tiles">
+      <div class="tile"><span>Клієнтів з карткою</span><b data-count="248">248</b><small>+17 за тиждень</small></div>
+      <div class="tile"><span>Візитів</span><b data-count="63">63</b><small>+8 до минулого тижня</small></div>
+      <div class="tile"><span>Повернулися вдруге</span><b data-count="71" data-suffix="%">71%</b><small>з тих, хто прийшов 30+ днів тому</small></div>
+      <div class="tile alert"><span>Давно не приходили</span><b data-count="19">19</b><a href="#lost">Нагадати їм</a></div>
+    </div>
+
+    <div class="grid2">
+      <section class="panel chart" id="chart" aria-labelledby="chartH">
+        <div class="ph"><h2 class="h" id="chartH">Візити по днях</h2><span>штампи за день</span></div>
+        <div class="bars" id="bars"></div>
+        <div class="days" id="days"></div>
+      </section>
+      <section class="panel lost" id="lost" aria-labelledby="lostH">
+        <div class="ph"><h2 class="h" id="lostH">Давно не приходили</h2><span>30+ днів</span></div>
+        <div class="person"><span class="av">ІТ</span><div><b>Ігор Ткаченко</b><small>43 дні тому · 1 з 8</small></div><button type="button" class="btn ping" aria-pressed="false">Нагадати</button></div>
+        <div class="person"><span class="av">МК</span><div><b>Марина Коваль</b><small>38 днів тому · 5 з 8</small></div><button type="button" class="btn ping" aria-pressed="false">Нагадати</button></div>
+        <div class="person"><span class="av">ДП</span><div><b>Денис Петренко</b><small>31 день тому · 3 з 8</small></div><button type="button" class="btn ping" aria-pressed="false">Нагадати</button></div>
+      </section>
+    </div>
+
+    <section class="panel" id="clients" aria-labelledby="clientsH">
+      <div class="ph"><h2 class="h" id="clientsH">Клієнти</h2><a href="#" style="font-weight:800;font-size:14px">Експорт CSV</a></div>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Клієнт</th><th>Телефон</th><th>Штампи</th><th>Останній візит</th><th>Повідомлення</th></tr></thead>
+          <tbody>
+            <tr><td><b>Олена Коваль</b></td><td>+380 67 123 45 67</td><td><span class="mini8"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>6 з 8</td><td>сьогодні, 14:05</td><td>Отримує</td></tr>
+            <tr><td><b>Андрій Шевчук</b></td><td>+380 93 765 43 21</td><td><span class="pill">подарунок</span></td><td>сьогодні, 11:40</td><td>Отримує</td></tr>
+            <tr><td><b>Без імені</b></td><td>—</td><td><span class="mini8"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>2 з 8</td><td>вчора</td><td>Без повідомлень</td></tr>
+            <tr><td><b>Ігор Ткаченко</b></td><td>—</td><td><span class="mini8"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>1 з 8</td><td class="late">43 дні тому</td><td>Отримує</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"><i></i><span id="toastText">Розсилку надіслано 214 клієнтам</span></div>
+
+<script>
+(function () {
+  var data = [['Пн', 7], ['Вт', 9], ['Ср', 6], ['Чт', 11], ['Пт', 14], ['Сб', 12], ['Нд', 4]];
+  var max = 14, bars = '', days = '';
+  data.forEach(function (d, i) {
+    bars += '<div><em>' + d[1] + '</em><i class="' + (d[1] === max ? 'hot' : '') + '" style="height:' + Math.round(d[1] / max * 160) + 'px;animation-delay:' + (i * 0.06 + 0.2) + 's"></i></div>';
+    days += '<span>' + d[0] + '</span>';
+  });
+  document.getElementById('bars').innerHTML = bars;
+  document.getElementById('days').innerHTML = days;
+  document.querySelectorAll('[data-count]').forEach(function (el) { window.TK.countUp(el, +el.getAttribute('data-count'), 1300, el.getAttribute('data-suffix') || ''); });
+
+  var toastTimer;
+  function toast(text) {
+    var t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2600);
+  }
+  var comp = document.getElementById('composer'), btn = document.getElementById('newMsg');
+  function openComposer(open) { comp.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); if (open) document.getElementById('msgText').focus({ preventScroll: true }); }
+  btn.addEventListener('click', function () { openComposer(!comp.classList.contains('open')); });
+  document.getElementById('navMsg').addEventListener('click', function (e) { e.preventDefault(); openComposer(true); });
+  document.getElementById('msgForm').addEventListener('submit', function (e) { e.preventDefault(); openComposer(false); toast('Розсилку надіслано 214 клієнтам'); });
+  document.querySelectorAll('.ping').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.getAttribute('aria-pressed') === 'true') return;
+      b.setAttribute('aria-pressed', 'true'); b.textContent = 'Нагадано';
+      toast('Нагадування надіслано');
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -16,6 +16,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "retain-on-failure",
+    // Deterministic runs: no home intro, no page transitions, no marquee drift.
+    // tests/e2e/motion.spec.ts turns motion back on to cover the transitions.
+    reducedMotion: "reduce",
   },
   projects: [{ name: "mobile-chrome", use: { ...devices["Pixel 7"] } }],
   webServer: {

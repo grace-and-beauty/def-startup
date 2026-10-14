@@ -2,16 +2,20 @@ import { expect, test } from "@playwright/test";
 
 import { t } from "./support";
 
-test("home page shows the pitch and the niches", async ({ page }) => {
+/** Dictionary text without the "*accent*" markers, as it reads on the page. */
+const plain = (text: string) => text.replaceAll("*", "");
+
+test("home page tells the story and lists the niches", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: t("home.chooseNiche") })).toBeVisible();
-  await expect(page.getByRole("link", { name: t("nav.start") }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: t("story.cue") })).toBeVisible();
+  await expect(page.getByRole("heading", { name: plain(t("story.whoTitle")) })).toBeVisible();
+  await expect(page.getByRole("link", { name: t("story.finalCta") })).toBeVisible();
 });
 
 test("pricing lists the three plans", async ({ page }) => {
   await page.goto("/pricing");
-  await expect(page.getByRole("heading", { name: t("pricing.title"), level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: plain(t("pricing.heroTitle")), level: 1 })).toBeVisible();
   for (const plan of ["plans.basic.name", "plans.plus.name", "plans.pro.name"] as const) {
     await expect(page.getByText(t(plan), { exact: true }).first()).toBeVisible();
   }

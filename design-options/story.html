@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tickity — історія одного клієнта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0E0F12; --ink:#15171C; --paper:#F3F4F6; --red:#E5452D; --red-d:#C9361F;
+    --mist:#9AA1AC; --line:rgba(255,255,255,.12);
+    --glow: 229,69,45;
+  }
+  *{box-sizing:border-box;margin:0}
+  html{background:var(--night)}
+  body{background:var(--night);color:#fff;font-family:"Manrope",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .disp{font-family:"Russo One",sans-serif;font-weight:400}
+
+  /* header */
+  .top{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px clamp(16px,3vw,36px)}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-size:20px}
+  .top nav{display:flex;gap:6px;align-items:center}
+  .top nav a{text-decoration:none;font-weight:700;font-size:14px;padding:10px 14px;border-radius:12px}
+  .top nav a.in{background:#fff;color:var(--ink)}
+  .top nav a:focus-visible,.cta:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+  /* story */
+  .story{position:relative;height:820vh}
+  .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+  .glow{position:absolute;left:50%;top:52%;width:120vmax;height:120vmax;transform:translate(-50%,-50%);
+    background:radial-gradient(closest-side,rgba(var(--glow),.34),rgba(var(--glow),.08) 45%,transparent 70%);transition:background .8s ease}
+  .grain{position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .big{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .big span{position:absolute;font-family:"Russo One";font-size:clamp(84px,19vw,300px);line-height:.85;letter-spacing:-.02em;white-space:nowrap;
+    color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.22);opacity:0;transform:translateY(40px) scale(.97);transition:opacity .6s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
+  .big span.on{opacity:1;transform:none}
+  .big span.fill{color:rgba(255,255,255,.07)}
+  .big span.huge{font-size:clamp(150px,36vw,560px)}
+
+  .clock{position:absolute;left:clamp(16px,3vw,36px);top:86px;font-weight:700;font-size:14px;letter-spacing:.02em;color:var(--mist);display:flex;align-items:center;gap:10px}
+  .clock i{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(229,69,45,.6);animation:beat 2s infinite}
+  @keyframes beat{0%{box-shadow:0 0 0 0 rgba(229,69,45,.6)}70%,100%{box-shadow:0 0 0 12px rgba(229,69,45,0)}}
+
+  .copy{position:absolute;left:clamp(16px,3vw,36px);bottom:clamp(28px,6vh,64px);width:min(420px,calc(50vw - 200px))}
+  .copy div{position:absolute;bottom:0;left:0;right:0;opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+  .copy div.on{opacity:1;transform:none}
+  .copy h2{font-family:"Russo One";font-weight:400;font-size:clamp(28px,3vw,42px);line-height:1.05}
+  .copy p{margin-top:12px;font-size:16px;line-height:1.55;color:#C6CBD3}
+
+  /* visit timeline on the right: 8 visits */
+  .visits{position:absolute;right:clamp(16px,3vw,36px);bottom:clamp(28px,6vh,64px);display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+  .visits small{font-size:12px;font-weight:700;color:var(--mist);letter-spacing:.06em;text-transform:uppercase}
+  .visits .row{display:flex;gap:8px}
+  .visits b{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);transition:background .3s,border-color .3s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+  .visits b.on{background:#fff;border-color:#fff}
+  .visits b.gift{background:var(--red);border-color:var(--red);transform:scale(1.25)}
+
+  /* phone */
+  .phone-wrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-46%);will-change:transform}
+  .phone{width:300px;height:620px;border-radius:50px;background:#1C1E23;padding:11px;position:relative;
+    box-shadow:0 0 0 1.5px #2C2F36,0 40px 90px -20px rgba(0,0,0,.8),0 0 120px -30px rgba(var(--glow),.55);transition:box-shadow .8s}
+  .phone::before{content:"";position:absolute;right:-3px;top:150px;width:3px;height:64px;border-radius:2px;background:#2C2F36}
+  .screen{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;background:var(--paper);color:var(--ink)}
+  .notch{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:90px;height:26px;border-radius:20px;background:#0B0C0E;z-index:9}
+  .scr{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;padding:52px 16px 18px;display:flex;flex-direction:column;gap:12px}
+  .scr.on{opacity:1}
+
+  /* s0 lock */
+  .s0{background:linear-gradient(160deg,#2A2D35,#121317 70%);color:#fff;align-items:center;text-align:center;padding-top:96px}
+  .s0 .t{font-family:"Russo One";font-size:76px;line-height:1}
+  .s0 .d{font-size:15px;color:#C6CBD3;margin-top:6px}
+  .s0 .hint{margin-top:auto;font-size:13px;color:#9AA1AC;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .s0 .hint span{width:22px;height:34px;border:2px solid #9AA1AC;border-radius:12px;position:relative}
+  .s0 .hint span::after{content:"";position:absolute;left:50%;top:6px;width:4px;height:7px;border-radius:2px;background:#fff;transform:translateX(-50%);animation:wheel 1.6s infinite}
+  @keyframes wheel{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,10px)}}
+
+  /* s1 camera */
+  .s1{background:radial-gradient(circle at 30% 20%,#3B3F48,#16181D 70%);color:#fff;align-items:center;justify-content:center}
+  .qrbox{position:relative;width:170px;height:170px;background:#fff;border-radius:14px;display:grid;place-items:center}
+  .qrbox svg{width:130px;height:130px}
+  .corner{position:absolute;width:34px;height:34px;border:4px solid #fff}
+  .c1{left:-18px;top:-18px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+  .c2{right:-18px;top:-18px;border-left:0;border-bottom:0;border-radius:0 12px 0 0}
+  .c3{left:-18px;bottom:-18px;border-right:0;border-top:0;border-radius:0 0 0 12px}
+  .c4{right:-18px;bottom:-18px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+  .scan{position:absolute;left:-10px;right:-10px;height:3px;background:var(--red);box-shadow:0 0 18px 4px rgba(229,69,45,.6);top:0;animation:scan 1.8s ease-in-out infinite alternate}
+  @keyframes scan{to{top:100%}}
+  .s1 .pill{position:absolute;left:16px;right:16px;bottom:22px;background:#fff;color:var(--ink);border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13px;transform:translateY(120%);transition:transform .6s cubic-bezier(.2,.9,.2,1) .35s}
+  .s1.on .pill{transform:none}
+  .ava{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--ink);color:#fff;font-family:"Russo One";font-size:16px}
+  .s1 .pill b{display:block;font-size:14px}
+
+  /* s2 join */
+  .s2 h4{font-family:"Russo One";font-weight:400;font-size:24px;line-height:1.05;margin-top:6px}
+  .s2 .biz{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+  .s2 p{font-size:13px;color:#5B616C;line-height:1.45}
+  .field{background:#fff;border:1px solid #D9DCE2;border-radius:12px;padding:10px 12px;font-size:14px}
+  .field small{display:block;font-size:11px;color:#5B616C;font-weight:600}
+  .chk{display:flex;gap:9px;font-size:12px;color:#4F5560;line-height:1.4;align-items:flex-start}
+  .chk i{flex:none;width:18px;height:18px;border-radius:5px;background:var(--ink);display:grid;place-items:center}
+  .btnr{margin-top:auto;background:var(--red-d);color:#fff;border-radius:14px;padding:14px;text-align:center;font-weight:800;font-size:15px}
+  .s2.on .btnr{animation:press 1.6s .9s ease-in-out infinite}
+  @keyframes press{0%,70%,100%{transform:none}78%{transform:scale(.96)}}
+
+  /* s3..s5 card */
+  .ticket{position:relative;background:var(--ink);color:#fff;border-radius:20px;padding:18px 18px 14px}
+  .ticket .nt{position:absolute;top:92px;width:20px;height:20px;border-radius:50%;background:var(--paper)}
+  .ticket .nl{left:-10px}.ticket .nr{right:-10px}
+  .ticket .nm{font-family:"Russo One";font-size:21px;line-height:1.1}
+  .ticket .rw{font-size:12px;color:#B8BDC6;margin:4px 0 22px}
+  .ticket .perf{border-top:2px dashed rgba(255,255,255,.22);margin:0 -18px 16px}
+  .holes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .hole{position:relative;aspect-ratio:1;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
+  .hole::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:var(--paper);transform:scale(0);transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+  .hole.on::after{transform:scale(1)}
+  .hole.last::after{background:var(--red)}
+  .ticket .ft{display:flex;justify-content:space-between;margin-top:14px;font-size:12px;color:#B8BDC6}
+  .ticket .ft b{font-family:"Russo One";font-weight:400;font-size:17px;color:#fff}
+  .ticket.thunk{animation:thunk .22s ease-out}
+  @keyframes thunk{50%{transform:translateY(4px) scale(.985)}}
+  .qrline{background:#fff;border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center;font-size:12px;color:#5B616C}
+  .qrline svg{flex:none}
+  .qrline b{display:block;color:var(--ink);font-size:13px}
+  .notif{position:absolute;left:10px;right:10px;top:46px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-radius:20px;padding:12px;display:flex;gap:10px;
+    box-shadow:0 18px 40px -12px rgba(0,0,0,.35);transform:translateY(-140%);transition:transform .7s cubic-bezier(.2,1.2,.3,1);z-index:5;font-size:12.5px;line-height:1.4}
+  .notif.on{transform:none}
+  .notif b{display:block;font-size:13px}
+  .notif small{color:#6A707C}
+  .giftbar{display:none;background:var(--red-d);color:#fff;border-radius:16px;padding:14px}
+  .giftbar.on{display:block;animation:giftIn .6s cubic-bezier(.3,1.6,.5,1) both}
+  @keyframes giftIn{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+  .giftbar b{display:block;font-family:"Russo One";font-weight:400;font-size:19px}
+  .giftbar span{font-size:12.5px}
+
+  /* s6 owner */
+  .s6 h4{font-family:"Russo One";font-weight:400;font-size:22px}
+  .s6 .who{font-size:12px;color:#5B616C;margin-top:-8px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .st{background:#fff;border-radius:14px;padding:12px}
+  .st b{display:block;font-family:"Russo One";font-weight:400;font-size:26px;line-height:1.1}
+  .st span{font-size:11.5px;color:#5B616C}
+  .st.dark{background:var(--ink);color:#fff}.st.dark span{color:#B8BDC6}.st.dark b{color:#FF8A75}
+  .bars{background:#fff;border-radius:14px;padding:12px;display:flex;align-items:flex-end;gap:7px;height:120px}
+  .bars i{flex:1;border-radius:5px 5px 0 0;background:var(--ink);transform:scaleY(0);transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+  .s6.on .bars i{transform:scaleY(1)}
+  .bars i.hot{background:var(--red)}
+  .row2{background:#fff;border-radius:14px;padding:10px 12px;font-size:12.5px;display:flex;justify-content:space-between}
+
+  .chipfx{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--red);pointer-events:none;z-index:4}
+
+  /* ending */
+  .end{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px clamp(16px,5vw,72px) 0;background:var(--night);overflow:hidden}
+  .end h2{font-family:"Russo One";font-weight:400;font-size:clamp(44px,8vw,128px);line-height:.95;max-width:12ch}
+  .end h2 em{font-style:normal;color:var(--red)}
+  .end p{font-size:clamp(17px,1.6vw,20px);color:#C6CBD3;margin:26px 0 34px;max-width:34rem;line-height:1.55}
+  .ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .cta{display:inline-flex;align-items:center;gap:10px;background:var(--red-d);color:#fff;text-decoration:none;font-weight:800;font-size:18px;padding:19px 28px;border-radius:16px;transition:transform .2s}
+  .cta:hover{transform:translateY(-2px)}
+  .cta.ghost{background:transparent;border:1.5px solid rgba(255,255,255,.3)}
+  .end small{display:block;margin-top:16px;color:var(--mist);font-size:14px}
+  .foot{margin-top:auto;padding:40px 0 28px;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;border-top:1px solid var(--line);margin-top:120px;font-size:14px;color:var(--mist)}
+  .foot nav{display:flex;flex-wrap:wrap;gap:8px 22px}
+
+  /* phones */
+  @media (max-width:860px){
+    .phone-wrap{transform:translate(-50%,-58%) scale(.72)}
+    .copy{width:auto;right:16px;bottom:22px}
+    .copy h2{font-size:26px}
+    .copy p{font-size:14.5px}
+    .visits{top:84px;bottom:auto}
+    .visits small{display:none}
+    .visits b{width:11px;height:11px}
+    .clock{top:88px;font-size:12.5px}
+    .big span{top:16%}
+  }
+  @media (max-height:700px) and (min-width:861px){.phone-wrap{transform:translate(-50%,-46%) scale(.85)}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo disp" href="#">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M3 1h24a2 2 0 0 1 2 2v5a3 3 0 0 0 0 6v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-5a3 3 0 0 0 0-6V3a2 2 0 0 1 2-2z" fill="#fff"/><circle cx="11" cy="11" r="2.6" fill="#0E0F12"/><circle cx="19" cy="11" r="2.6" fill="#E5452D"/></svg>
+    Tickity
+  </a>
+  <nav aria-label="Головне меню"><a href="#end">Тарифи</a><a class="in" href="#end">Увійти</a></nav>
+</header>
+
+<main>
+<section class="story" id="story" aria-label="Історія одного клієнта">
+  <div class="stage">
+    <div class="glow" id="glow"></div>
+    <div class="grain"></div>
+
+    <div class="big" aria-hidden="true">
+      <span data-s="0">АНДРІЙ</span>
+      <span data-s="1" class="huge">QR</span>
+      <span data-s="2">3 СЕК</span>
+      <span data-s="3" class="huge" id="bigCount">1/8</span>
+      <span data-s="4">ДЗИНЬ</span>
+      <span data-s="5" class="fill huge">8/8</span>
+      <span data-s="6" class="huge">71%</span>
+    </div>
+
+    <div class="clock"><i></i><span id="clock">Понеділок · 09:14</span></div>
+
+    <div class="phone-wrap" id="phoneWrap">
+      <div class="phone"><div class="screen">
+        <span class="notch"></span>
+
+        <div class="scr s0" data-s="0">
+          <div class="t">09:14</div>
+          <div class="d">понеділок, 7 жовтня</div>
+          <div class="hint"><span></span>гортайте</div>
+        </div>
+
+        <div class="scr s1" data-s="1">
+          <div class="qrbox">
+            <svg viewBox="0 0 23 23" aria-hidden="true"><path d="M1 1h7v7H1zM15 1h7v7h-7zM1 15h7v7H1z" fill="none" stroke="#15171C" stroke-width="1.6"/><path d="M3 3h3v3H3zM17 3h3v3h-3zM3 17h3v3H3zM10 1h2v2h-2zM10 5h3v2h-3zM10 10h2v3h-2zM14 10h3v2h-3zM19 10h3v2h-3zM10 15h2v2h-2zM14 14h2v3h-2zM18 14h4v2h-4zM13 19h3v3h-3zM18 18h2v4h-2zM1 10h3v2H1zM6 10h2v3H6z" fill="#15171C"/></svg>
+            <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+            <span class="scan"></span>
+          </div>
+          <div class="pill"><span class="ava">Л</span><div><b>Barber «Лезо»</b>Отримати картку лояльності</div></div>
+        </div>
+
+        <div class="scr s2" data-s="2">
+          <div class="biz"><span class="ava">Л</span>Barber «Лезо»</div>
+          <h4>Ваша картка лояльності</h4>
+          <p>8-ма стрижка безкоштовно. Відкриється в браузері.</p>
+          <div class="field"><small>Ім'я · необов'язково</small>Андрій</div>
+          <div class="field"><small>Телефон · необов'язково</small>+380 93 765 43 21</div>
+          <div class="chk"><i><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Хочу отримувати акції від закладу</div>
+          <div class="btnr">Отримати картку</div>
+        </div>
+
+        <div class="scr s3" data-s="3">
+          <div class="notif" id="notif"><span class="ava">Л</span><div><b>Barber «Лезо»</b>Андрію, давно не бачились! Цього тижня −20% на стрижку.<br><small>зараз</small></div></div>
+          <div class="ticket" id="ticket">
+            <span class="nt nl"></span><span class="nt nr"></span>
+            <div class="nm">Barber «Лезо»</div>
+            <div class="rw">8-ма стрижка безкоштовно</div>
+            <div class="perf"></div>
+            <div class="holes" id="holes"></div>
+            <div class="ft"><span><b id="cnt">1</b> з 8 візитів</span><span id="left">ще 7</span></div>
+          </div>
+          <div class="giftbar" id="gift"><b>Подарунок ваш!</b><span>Покажіть картку майстру.</span></div>
+          <div class="qrline" id="qrline">
+            <svg width="54" height="54" viewBox="0 0 23 23" aria-hidden="true"><path d="M1 1h7v7H1zM15 1h7v7h-7zM1 15h7v7H1z" fill="none" stroke="#15171C" stroke-width="1.6"/><path d="M3 3h3v3H3zM17 3h3v3h-3zM3 17h3v3H3zM10 1h2v2h-2zM10 5h3v2h-3zM10 10h2v3h-2zM14 10h3v2h-3zM19 10h3v2h-3zM14 14h2v3h-2zM18 14h4v2h-4zM13 19h3v3h-3z" fill="#15171C"/></svg>
+            <div><b>Покажіть код майстру</b>Штамп з'явиться за секунду</div>
+          </div>
+        </div>
+
+        <div class="scr s6" data-s="6">
+          <h4>Огляд</h4>
+          <div class="who">Barber «Лезо» · кабінет власника</div>
+          <div class="stats">
+            <div class="st"><b>248</b><span>клієнтів з карткою</span></div>
+            <div class="st"><b>71%</b><span>повернулися</span></div>
+            <div class="st"><b>63</b><span>візити за тиждень</span></div>
+            <div class="st dark"><b>19</b><span>давно не були</span></div>
+          </div>
+          <div class="bars"><i style="height:50%"></i><i style="height:64%;transition-delay:.05s"></i><i style="height:43%;transition-delay:.1s"></i><i style="height:79%;transition-delay:.15s"></i><i class="hot" style="height:100%;transition-delay:.2s"></i><i style="height:86%;transition-delay:.25s"></i><i style="height:29%;transition-delay:.3s"></i></div>
+          <div class="row2"><span><b>Андрій</b> · подарунок</span><span style="color:#5B616C">11:40 · Максим</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="copy">
+      <div data-s="0"><h2>Як випадковий клієнт стає постійним</h2><p>Гортайте вниз — за пів хвилини покажемо історію Андрія і барбершопу «Лезо».</p></div>
+      <div data-s="1"><h2>Він бачить QR на дзеркалі</h2><p>Постер з вашим QR друкуєте з кабінету за хвилину й ставите біля каси.</p></div>
+      <div data-s="2"><h2>Картка — без застосунку</h2><p>Відкривається в браузері. Ім'я й телефон — лише за бажанням клієнта.</p></div>
+      <div data-s="3"><h2>Кожен візит — пробита дірочка</h2><p>Майстер сканує картку своїм телефоном. Штамп — за 5 секунд.</p></div>
+      <div data-s="4"><h2>Зник? Tickity нагадає</h2><p>Автонагадування тим, хто давно не приходив. Лише якщо клієнт сам погодився.</p></div>
+      <div data-s="5"><h2>Восьма стрижка — у подарунок</h2><p>Андрій більше не «випадковий». Тепер він ваш.</p></div>
+      <div data-s="6"><h2>А ви бачите, хто повертається</h2><p>Хто прийшов, хто зник і хто з майстрів ставив штампи — в одному кабінеті.</p></div>
+    </div>
+
+    <div class="visits" aria-hidden="true"><small>Візити Андрія</small><div class="row" id="visits"></div></div>
+  </div>
+</section>
+
+<section class="end" id="end">
+  <h2>Ваш Андрій уже стоїть <em>на касі</em></h2>
+  <p>Картка закладу — за 5 хвилин. Перші 30 днів тарифу Плюс безкоштовно, далі від 199 ₴ на місяць.</p>
+  <div class="ctas">
+    <a class="cta" href="#">Створити картку закладу
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="cta ghost" href="#">Подивитися тарифи</a>
+  </div>
+  <small>Без картки оплати. Без застосунку для клієнтів.</small>
+  <footer class="foot">
+    <span>Tickity · support@tickity.app</span>
+    <nav aria-label="Юридична інформація"><a href="#">Умови використання</a><a href="#">Конфіденційність</a><a href="#">Повернення коштів</a><a href="#">English</a></nav>
+  </footer>
+</section>
+</main>
+
+<script>
+(() => {
+  const STEPS = 7, TOTAL = 8;
+  const story = document.getElementById('story');
+  const bigs = [...document.querySelectorAll('.big span')];
+  const copies = [...document.querySelectorAll('.copy div')];
+  const scrs = [...document.querySelectorAll('.scr')];
+  const holesBox = document.getElementById('holes');
+  const visitsBox = document.getElementById('visits');
+  const ticket = document.getElementById('ticket');
+  const stage = document.querySelector('.stage');
+  const holes = [], dots = [];
+  for (let i = 0; i < TOTAL; i++) {
+    const h = document.createElement('span'); h.className = 'hole'; holesBox.appendChild(h); holes.push(h);
+    const d = document.createElement('b'); visitsBox.appendChild(d); dots.push(d);
+  }
+  const clocks = ['Понеділок · 09:14', 'Понеділок · 09:20', 'Понеділок · 09:21', 'Жовтень — листопад', 'Через 5 тижнів · 18:02', 'Субота · 11:40', 'А тим часом у кабінеті'];
+  const glows = ['120,130,150', '229,69,45', '120,130,150', '229,69,45', '255,170,90', '229,69,45', '120,140,190'];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let step = -1, count = -1;
+
+  function setStep(s) {
+    if (s === step) return;
+    step = s;
+    bigs.forEach(b => b.classList.toggle('on', +b.dataset.s === s));
+    copies.forEach(c => c.classList.toggle('on', +c.dataset.s === s));
+    // card screen serves steps 3–5
+    const screen = s >= 3 && s <= 5 ? 3 : s;
+    scrs.forEach(x => x.classList.toggle('on', +x.dataset.s === screen));
+    document.getElementById('clock').textContent = clocks[s];
+    document.documentElement.style.setProperty('--glow', glows[s]);
+    document.getElementById('notif').classList.toggle('on', s === 4);
+    document.getElementById('gift').classList.toggle('on', s === 5);
+    document.getElementById('qrline').style.display = s === 5 ? 'none' : '';
+  }
+
+  function chip(fromEl) {
+    if (reduce) return;
+    const r = fromEl.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+    const c = document.createElement('span'); c.className = 'chipfx';
+    c.style.left = (r.left - sr.left + r.width / 2 - 9) + 'px';
+    c.style.top = (r.top - sr.top + r.height / 2 - 9) + 'px';
+    stage.appendChild(c);
+    const dx = (Math.random() - .5) * 260, dy = 280 + Math.random() * 260;
+    c.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 },
+               { transform: `translate(${dx}px,${dy}px) rotate(${dx > 0 ? 220 : -220}deg) scale(.6)`, opacity: 0 }],
+              { duration: 1100 + Math.random() * 400, easing: 'cubic-bezier(.35,.1,.7,1)' }).onfinish = () => c.remove();
+    ticket.classList.remove('thunk'); void ticket.offsetWidth; ticket.classList.add('thunk');
+  }
+
+  function setCount(n) {
+    if (n === count) return;
+    const grew = n > count && count >= 0;
+    count = n;
+    holes.forEach((h, i) => { h.classList.toggle('on', i < n); h.classList.toggle('last', n === TOTAL && i === TOTAL - 1); });
+    dots.forEach((d, i) => { d.classList.toggle('on', i < n); d.classList.toggle('gift', n === TOTAL && i === TOTAL - 1); });
+    document.getElementById('cnt').textContent = n;
+    document.getElementById('left').textContent = n >= TOTAL ? 'подарунок' : 'ще ' + (TOTAL - n);
+    document.getElementById('bigCount').textContent = n + '/8';
+    if (grew && n > 0) {
+      setTimeout(() => chip(holes[n - 1]), 60);
+      if (n === TOTAL) for (let k = 0; k < 10; k++) setTimeout(() => chip(holes[k % TOTAL]), 150 + k * 70);
+    }
+  }
+
+  function frame() {
+    const r = story.getBoundingClientRect();
+    const total = story.offsetHeight - innerHeight;
+    const p = Math.min(1, Math.max(0, -r.top / total));
+    const pos = p * STEPS;
+    const s = Math.min(STEPS - 1, Math.floor(pos));
+    setStep(s);
+    const local = pos - s;
+    // visits: 0 until card exists, then 1..7 scrubbed through step 3, 7 in step 4, 8 from step 5
+    let n = 0;
+    if (s === 2) n = 0;
+    if (s === 3) n = 1 + Math.min(5, Math.floor(local * 6));
+    if (s === 4) n = 7;
+    if (s >= 5) n = 8;
+    setCount(n);
+    // the phone breathes slightly with scroll inside each scene
+    if (!reduce) {
+      const wrap = document.getElementById('phoneWrap');
+      const tilt = (local - .5) * 6;
+      wrap.style.rotate = (s === 0 ? 0 : tilt * .4) + 'deg';
+    }
+  }
+  let ticking = false;
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { frame(); ticking = false; }); } }, { passive: true });
+  addEventListener('resize', frame);
+  frame();
+})();
+</script>
+</body>
+</html>

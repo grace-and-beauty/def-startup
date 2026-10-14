@@ -1,0 +1,153 @@
+/* Pricing: plans as tickets with a tear-off stub; Plus gets the trial stamp. */
+.pr-plan {
+  --pbg: var(--ink-2);
+  --pfg: var(--ink-foreground);
+  --pmist: var(--ink-muted);
+  --pline: var(--ink-line);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 26px;
+  background: var(--pbg);
+  color: var(--pfg);
+  animation: pr-deal 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  animation-delay: calc(var(--i) * 0.12s + 0.1s);
+}
+@keyframes pr-deal {
+  from {
+    opacity: 0;
+    transform: translateY(80px) rotate(var(--r0, 3deg));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pr-plan-hot {
+  --pbg: var(--brand);
+  --pfg: var(--brand-foreground);
+  --pmist: color-mix(in srgb, var(--brand-foreground) 72%, transparent);
+  --pline: color-mix(in srgb, var(--brand-foreground) 30%, transparent);
+}
+.pr-plan-soon {
+  --pbg: transparent;
+  --pfg: var(--ink-muted);
+  box-shadow: inset 0 0 0 2px var(--ink-line);
+}
+.pr-plan-mist {
+  color: var(--pmist);
+}
+.pr-plan-perf {
+  position: relative;
+  margin: 0 18px;
+  border-top: 2px dashed var(--pline);
+}
+.pr-plan-perf::before,
+.pr-plan-perf::after {
+  content: "";
+  position: absolute;
+  top: -13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.pr-plan-perf::before {
+  left: -30px;
+}
+.pr-plan-perf::after {
+  right: -30px;
+}
+.pr-plan-soon .pr-plan-perf::before,
+.pr-plan-soon .pr-plan-perf::after {
+  display: none;
+}
+.pr-plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: inset 0 0 0 1.5px var(--pline);
+  transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pr-plan-btn:hover {
+  transform: translateY(-2px);
+}
+.pr-plan-btn:focus-visible {
+  outline: 3px solid var(--pfg);
+  outline-offset: 3px;
+}
+.pr-plan-hot .pr-plan-btn {
+  min-height: 62px;
+  font-size: 18px;
+  background: var(--brand-foreground);
+  color: var(--brand);
+  box-shadow: none;
+}
+.pr-plan-soon .pr-plan-btn {
+  cursor: default;
+}
+.pr-plan-soon .pr-plan-btn:hover {
+  transform: none;
+}
+.pr-plan-stamp {
+  position: absolute;
+  top: -40px;
+  right: -12px;
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 118px;
+  border: 3px solid var(--brand-foreground);
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  text-align: center;
+  font-weight: 800;
+  font-size: 11.5px;
+  line-height: 1.15;
+  box-shadow: 0 0 0 6px var(--brand);
+  transform: rotate(-14deg);
+  animation: pr-slam 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 1s both;
+}
+.pr-plan-stamp > span {
+  max-width: 84px;
+}
+.pr-plan-stamp b {
+  display: block;
+  font-size: 30px;
+}
+@keyframes pr-slam {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(2.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-14deg) scale(1);
+  }
+}
+.pr-faq {
+  border-top: 1px solid var(--ink-line);
+}
+.pr-faq:last-child {
+  border-bottom: 1px solid var(--ink-line);
+}
+@media (max-width: 760px) {
+  .pr-plan-stamp {
+    top: -34px;
+    right: 10px;
+    width: 104px;
+    height: 104px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pr-plan,
+  .pr-plan-stamp {
+    animation: none;
+  }
+}

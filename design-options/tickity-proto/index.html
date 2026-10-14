@@ -1,0 +1,535 @@
+<title>Tickity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Wix+Madefor+Display:wght@700;800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@800;900&family=Sofia+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<script src="shared.js"></script>
+<style>
+  /* ---------- story stage ---------- */
+  .story { position: relative; height: 820vh; }
+  .stage { position: sticky; top: 0; height: 100vh; height: 100lvh; overflow: hidden; overflow: clip; }
+  .floor-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--bg) 90%); pointer-events: none; }
+  .glow {
+    position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(var(--glow), var(--gi, .3)), rgba(var(--glow), .07) 45%, transparent 70%);
+    transition: opacity .8s ease;
+  }
+  .grain {
+    position: absolute; inset: 0; opacity: .07; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* giant word: the floor the phone stands on */
+  .giant { position: absolute; left: 0; right: 0; bottom: 0; height: 0; pointer-events: none; }
+  .giant span {
+    position: absolute; left: 50%; bottom: 2px; font-family: var(--brand); font-size: var(--gfs, 18vw);
+    line-height: 1; white-space: nowrap; color: transparent;
+    background: linear-gradient(to bottom, rgba(var(--fg-rgb), .15), rgba(var(--fg-rgb), .02) 80%); -webkit-background-clip: text; background-clip: text;
+    opacity: 0; transform: translate(-50%, .25em); transition: opacity .6s ease, transform .9s cubic-bezier(.2, .8, .2, 1), letter-spacing 1.2s cubic-bezier(.2, .8, .2, 1);
+  }
+  .giant span.on { opacity: 1; transform: translate(-50%, 0); }
+  .giant span.fill { background-image: linear-gradient(to bottom, rgba(var(--glow), .34), rgba(var(--glow), .03) 80%); }
+
+  .clock {
+    position: absolute; left: var(--gut); top: calc(84px + env(safe-area-inset-top, 0px)); font-weight: 700; font-size: 14px;
+    color: var(--mist); display: flex; align-items: center; gap: 10px;
+  }
+  .clock i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: beat 2s infinite; }
+  @keyframes beat { 0% { box-shadow: 0 0 0 0 rgba(var(--glow), .6); } 70%, 100% { box-shadow: 0 0 0 12px rgba(var(--glow), 0); } }
+  .visits { position: absolute; right: var(--gut); top: calc(84px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 12px; }
+  .visits small { font-size: 12px; font-weight: 700; color: var(--mist); letter-spacing: .06em; text-transform: uppercase; }
+  .visits .row { display: flex; gap: 7px; }
+  .visits b { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(var(--fg-rgb), .35); transition: background .3s, border-color .3s, transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+  .visits b.on { background: var(--fg); border-color: var(--fg); }
+  .visits b.gift { background: var(--accent); border-color: var(--accent); transform: scale(1.3); }
+
+  /* headlines split around the phone */
+  .scene { position: absolute; top: 0; left: 0; right: 0; height: 100vh; height: 100svh; pointer-events: none; --side: calc(50% - 150px - clamp(28px, 4vw, 64px) - var(--gut)); }
+  .scene .l, .scene .r { position: absolute; top: 50%; width: var(--side); transform: translateY(-50%); }
+  .scene .l { left: var(--gut); text-align: right; }
+  .scene .r { right: var(--gut); }
+  .hl { font-size: calc(clamp(34px, 4.5vw, 78px) * var(--head-scale)); }
+  .ln { display: block; overflow: hidden; padding-bottom: .1em; margin-bottom: -.1em; }
+  .ln > span { display: inline-block; transform: translateY(110%); transition: transform .5s cubic-bezier(.6, 0, .8, .4); }
+  .scene.on .ln > span { transform: none; transition: transform .8s cubic-bezier(.2, .8, .2, 1); }
+  .scene.on .l .ln:nth-child(2) > span, .scene.on .r .ln:nth-child(1) > span { transition-delay: .08s; }
+  .scene.on .r .ln:nth-child(2) > span { transition-delay: .16s; }
+  .sub { position: absolute; left: 0; top: 100%; margin: 22px 0 0; width: min(310px, 100%); font-family: var(--body); font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 16px; line-height: 1.55; color: var(--mist); opacity: 0; transform: translateY(10px); transition: opacity .4s, transform .5s; }
+  .scene.on .sub { opacity: 1; transform: none; transition-delay: .3s; }
+
+  /* phone on the stage */
+  .phone-wrap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--ps, 1)); transition: top .5s cubic-bezier(.2, .8, .2, 1), transform .5s cubic-bezier(.2, .8, .2, 1); }
+  .phone-in { transition: transform .4s ease; }
+  .scr { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease; padding: 52px 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .scr.on { opacity: 1; }
+  .s0 { background: linear-gradient(160deg, color-mix(in srgb, var(--ink) 78%, #FFFFFF), var(--ink) 75%); color: #FFFFFF; align-items: center; text-align: center; padding-top: 96px; }
+  .s0 .t { font-family: var(--brand); font-size: 76px; line-height: 1; }
+  .s0 .d { font-size: 15px; color: rgba(255, 255, 255, .72); margin-top: 6px; }
+  .scr { pointer-events: none; }
+  .scr.on { pointer-events: auto; }
+  .go-cue {
+    margin-top: auto; width: 100%; position: relative; border: 0; cursor: pointer; border-radius: 30px; padding: 20px 14px 18px;
+    background: var(--accent); color: var(--on-accent); font-family: var(--body); display: flex; flex-direction: column; align-items: center; gap: 12px;
+    box-shadow: 0 18px 44px -12px rgba(var(--glow), .85); transition: transform .3s cubic-bezier(.3, 1.6, .5, 1);
+  }
+  .go-cue::before { content: ""; position: absolute; inset: 0; border-radius: inherit; animation: cuePulse 2s ease-out infinite; }
+  @keyframes cuePulse { 0% { box-shadow: 0 0 0 0 rgba(var(--glow), .6); } 80%, 100% { box-shadow: 0 0 0 18px rgba(var(--glow), 0); } }
+  .go-cue:hover { transform: translateY(-3px); }
+  .go-cue:active { transform: scale(.97); }
+  .go-cue .arr { width: 62px; height: 62px; border-radius: 50%; background: var(--on-accent); color: var(--accent); display: grid; place-items: center; overflow: hidden; }
+  .go-cue .arr svg { animation: cueDrop 1.4s cubic-bezier(.5, 0, .5, 1) infinite; }
+  @keyframes cueDrop { 0% { transform: translateY(-18px); opacity: 0; } 30%, 60% { transform: none; opacity: 1; } 100% { transform: translateY(18px); opacity: 0; } }
+  .go-cue b { font-size: 25px; font-weight: 800; line-height: 1.05; }
+  .go-cue small { font-size: 14px; font-weight: 600; opacity: .78; margin-top: -6px; }
+  .go-cue.nudge { animation: nudge .8s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes nudge { 0%, 100% { translate: 0 0; } 25% { translate: 0 -14px; } 50% { translate: 0 0; } 70% { translate: 0 -6px; } }
+  .s0 { padding-bottom: 20px; }
+  .s1 { background: radial-gradient(circle at 30% 20%, #3B3F48, #16181D 70%); color: #FFFFFF; align-items: center; justify-content: center; }
+  .qrbox { position: relative; width: 170px; height: 170px; background: #FFFFFF; border-radius: 14px; display: grid; place-items: center; }
+  .qrbox svg { width: 130px; height: 130px; }
+  .corner { position: absolute; width: 34px; height: 34px; border: 4px solid var(--accent); }
+  .c1 { left: -18px; top: -18px; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
+  .c2 { right: -18px; top: -18px; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
+  .c3 { left: -18px; bottom: -18px; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
+  .c4 { right: -18px; bottom: -18px; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
+  .scan { position: absolute; left: -10px; right: -10px; height: 3px; background: var(--accent); box-shadow: 0 0 18px 4px rgba(var(--glow), .6); top: 0; animation: scan 1.8s ease-in-out infinite alternate; }
+  @keyframes scan { to { top: 100%; } }
+  .s1 .pill { position: absolute; left: 16px; right: 16px; bottom: 22px; background: #FFFFFF; color: var(--ink); border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; transform: translateY(130%); transition: transform .6s cubic-bezier(.2, .9, .2, 1) .35s; }
+  .s1.on .pill { transform: none; }
+  .s1 .pill b { display: block; font-size: 14px; }
+  .s2 .biz { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; }
+  .s2 h4 { margin: 6px 0 0; font-family: var(--head); font-weight: var(--head-w); letter-spacing: var(--head-ls); text-transform: var(--head-tt); font-size: calc(24px * var(--head-scale)); line-height: 1.05; }
+  .s2 p { margin: 0; font-size: 13px; color: var(--paper-mist); line-height: 1.45; }
+  .field { background: #FFFFFF; border: 1px solid var(--paper-line); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
+  .field small { display: block; font-size: 11px; color: var(--paper-mist); font-weight: 600; }
+  .chk { display: flex; gap: 9px; font-size: 12px; color: var(--paper-mist); line-height: 1.4; align-items: flex-start; }
+  .chk i { flex: none; width: 18px; height: 18px; border-radius: 5px; background: var(--ink); display: grid; place-items: center; }
+  .s2 .go { margin-top: auto; background: var(--accent); color: var(--on-accent); border-radius: 14px; padding: 14px; text-align: center; font-weight: 800; font-size: 15px; }
+  .s2.on .go { animation: press 1.6s .9s ease-in-out infinite; }
+  @keyframes press { 0%, 70%, 100% { transform: none; } 78% { transform: scale(.96); } }
+  .qrline { background: #FFFFFF; border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--paper-mist); }
+  .qrline svg { flex: none; }
+  .qrline b { display: block; color: var(--ink); font-size: 13px; }
+  .notif {
+    position: absolute; left: 10px; right: 10px; top: 46px; background: rgba(255, 255, 255, .97); color: var(--ink); border-radius: 20px; padding: 12px; display: flex; gap: 10px;
+    box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .35); transform: translateY(-150%); transition: transform .7s cubic-bezier(.2, 1.2, .3, 1); z-index: 5; font-size: 12.5px; line-height: 1.4;
+  }
+  .notif.on { transform: none; }
+  .s3 { transition: padding-top .6s cubic-bezier(.2, .9, .2, 1); }
+  .s3.shift { padding-top: 150px; }
+  .notif b { display: block; font-size: 13px; }
+  .notif small { color: var(--paper-mist); }
+  .giftbar { display: none; background: var(--accent); color: var(--on-accent); border-radius: 16px; padding: 14px; }
+  .giftbar.on { display: block; animation: giftIn .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+  @keyframes giftIn { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+  .giftbar b { display: block; font-family: var(--head); font-weight: var(--head-w); text-transform: var(--head-tt); font-size: calc(19px * var(--head-scale)); }
+  .giftbar span { font-size: 12.5px; }
+  .s6 h4 { margin: 0; font-family: var(--head); font-weight: var(--head-w); letter-spacing: var(--head-ls); text-transform: var(--head-tt); font-size: calc(22px * var(--head-scale)); }
+  .s6 .owner { font-size: 12px; color: var(--paper-mist); margin-top: -8px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .st { background: #FFFFFF; border-radius: 14px; padding: 12px; }
+  .st b { display: block; font-family: var(--head); font-weight: var(--head-w); font-size: 26px; line-height: 1.1; }
+  .st span { font-size: 11.5px; color: var(--paper-mist); }
+  .st.dark { background: var(--ink); color: #FFFFFF; }
+  .st.dark span { color: rgba(255, 255, 255, .7); }
+  .st.dark b { color: var(--accent); }
+  .bars { background: #FFFFFF; border-radius: 14px; padding: 12px; display: flex; align-items: flex-end; gap: 7px; height: 120px; }
+  .bars i { flex: 1; border-radius: 5px 5px 0 0; background: var(--ink); transform: scaleY(0); transform-origin: bottom; transition: transform .8s cubic-bezier(.2, .8, .2, 1); }
+  .s6.on .bars i { transform: scaleY(1); }
+  .bars i.hot { background: var(--accent); }
+  .row2 { background: #FFFFFF; border-radius: 14px; padding: 10px 12px; font-size: 12.5px; display: flex; justify-content: space-between; }
+
+  /* ---------- opening: a ticket gets punched three times, the last hole swallows the screen ---------- */
+  #intro { position: fixed; left: 0; right: 0; top: -30vh; bottom: -30vh; z-index: 100; background: var(--bg); display: grid; place-items: center; }
+  .i-ticket {
+    position: relative; width: min(380px, 82vw); aspect-ratio: 2.1; background: var(--accent); color: var(--on-accent);
+    border-radius: 26px; display: flex; align-items: stretch; overflow: hidden;
+  }
+  .i-ticket::before, .i-ticket::after { content: ""; position: absolute; left: 72%; width: 30px; height: 30px; border-radius: 50%; background: var(--bg); transform: translateX(-50%); }
+  .i-ticket::before { top: -15px; } .i-ticket::after { bottom: -15px; }
+  .i-main { flex: 0 0 72%; display: flex; flex-direction: column; justify-content: center; padding-left: 9%; border-right: 3px dashed color-mix(in srgb, var(--on-accent) 35%, transparent); }
+  .i-main b { font-family: var(--brand); font-weight: 400; font-size: clamp(34px, 8vw, 52px); line-height: 1; }
+  .i-main span { font-weight: 700; font-size: clamp(10.5px, 2.9vw, 13px); margin-top: 8px; opacity: .75; white-space: nowrap; }
+  .i-stub { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 9%; }
+  .i-h { width: 30%; aspect-ratio: 1; border-radius: 50%; background: var(--bg); transform: scale(0); }
+  .pre .top { opacity: 0; transform: translateY(-12px); }
+  .top { transition: opacity .6s ease, transform .6s ease; }
+  .pre .phone-in { transform: translateY(70vh) rotate(8deg) scale(.9); transition: none; }
+  .entering .phone-in { transition: transform 1.2s cubic-bezier(.16, 1.2, .3, 1); }
+  .pre .giant span.on { letter-spacing: .3em; opacity: 0; }
+  .pre .scene.on .ln > span { transform: translateY(110%); transition: none; }
+  .pre .scene.on .sub, .pre .clock, .pre .visits { opacity: 0; }
+  .clock, .visits { transition: opacity .6s ease .5s; }
+  .entering .scene.on .ln > span { transition-delay: .35s; }
+  .entering .scene.on .r .ln > span { transition-delay: .5s; }
+
+  /* ---------- below the story ---------- */
+  .who { padding-block: clamp(80px, 12vw, 160px) 40px; }
+  .who h2, .final h2 { font-size: calc(clamp(40px, 6.4vw, 104px) * var(--head-scale)); max-width: 15ch; }
+  .who p { color: var(--mist); font-size: 18px; max-width: 34rem; margin: 20px 0 0; }
+  .marquee { overflow: hidden; padding-block: 48px 20px; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .track { display: flex; gap: 18px; width: max-content; animation: slide 60s linear infinite; }
+  .marquee:hover .track { animation-play-state: paused; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  .marquee .ticket { --tbg: var(--surface); --tfg: var(--on-surface); --hole-bg: var(--bg); width: 270px; flex: none; transform: rotate(var(--rot, 0deg)); }
+  .marquee .ticket.hot { --tbg: var(--accent); --tfg: var(--on-accent); }
+  .marquee .ticket.hot .hole.on::after { background: var(--bg); }
+  .marquee .holes { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .final { padding-block: clamp(80px, 12vw, 160px) 0; }
+  .final p { font-size: clamp(17px, 1.6vw, 20px); color: var(--mist); margin: 26px 0 34px; max-width: 34rem; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .final small { display: block; margin: 16px 0 120px; color: var(--mist); font-size: 14px; }
+
+  /* ---------- phones ---------- */
+  @media (max-width: 860px) {
+    .scene { padding: calc(112px + env(safe-area-inset-top, 0px)) var(--gut) 0; }
+    .scene .l, .scene .r { position: static; width: auto; transform: none; text-align: left; }
+    .scene .ln { display: inline-block; margin-right: .25em; }
+    .hl { font-size: calc(30px * var(--head-scale)); }
+    .sub { position: absolute; left: var(--gut); right: 76px; top: auto; bottom: var(--sub-b, 18px); width: auto; margin: 0; font-size: 14.5px; }
+    .clock { top: calc(72px + env(safe-area-inset-top, 0px)); font-size: 12.5px; }
+    .visits { top: calc(72px + env(safe-area-inset-top, 0px)); }
+    .visits small { display: none; }
+    .visits b { width: 10px; height: 10px; }
+  }
+</style>
+
+<div id="intro" aria-hidden="true">
+  <div class="i-ticket" id="iTicket">
+    <div class="i-main"><b>Tickity</b><span>картка лояльності · вхід вільний</span></div>
+    <div class="i-stub"><span class="i-h"></span><span class="i-h"></span><span class="i-h"></span></div>
+  </div>
+</div>
+
+<header class="top">
+  <a class="logo" href="index.html">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path class="t" d="M3 1h24a2 2 0 0 1 2 2v5a3 3 0 0 0 0 6v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-5a3 3 0 0 0 0-6V3a2 2 0 0 1 2-2z"/><circle class="h1" cx="11" cy="11" r="2.6"/><circle class="h2" cx="19" cy="11" r="2.6"/></svg>
+    Tickity
+  </a>
+  <nav aria-label="Головне меню"><a href="pricing.html">Тарифи</a><a class="in" href="login.html">Увійти</a></nav>
+</header>
+
+<main>
+<section class="story" id="story" aria-label="Історія одного клієнта">
+  <div class="stage">
+    <div class="glow" id="glow"></div>
+    <div class="grain"></div>
+
+    <div class="floor-fade" aria-hidden="true"></div>
+    <div class="giant" aria-hidden="true">
+      <span data-s="0">АНДРІЙ</span>
+      <span data-s="1">QR</span>
+      <span data-s="2">3 СЕК</span>
+      <span data-s="3" id="bigCount">1/8</span>
+      <span data-s="4">ДЗИНЬ</span>
+      <span data-s="5" class="fill">8/8</span>
+      <span data-s="6">71%</span>
+    </div>
+
+    <div class="clock"><i></i><span id="clock">Понеділок · 09:14</span></div>
+    <div class="visits" aria-hidden="true"><small>Візити Андрія</small><div class="row" id="visits"></div></div>
+
+    <div class="scene" data-s="0"><h1 class="hl h l"><span class="ln"><span>Як випадковий</span></span></h1><div class="hl h r"><span class="ln"><span>клієнт стає</span></span><span class="ln"><span><em class="a">постійним</em></span></span><p class="sub">Історія Андрія і барбершопу «Лезо»&nbsp;— за пів хвилини.</p></div></div>
+    <div class="scene" data-s="1"><h2 class="hl h l"><span class="ln"><span>Він бачить</span></span></h2><div class="hl h r"><span class="ln"><span><em class="a">QR</em> на</span></span><span class="ln"><span>дзеркалі</span></span><p class="sub">Постер з вашим QR друкуєте з кабінету за хвилину й ставите біля каси.</p></div></div>
+    <div class="scene" data-s="2"><h2 class="hl h l"><span class="ln"><span>Картка&nbsp;—</span></span></h2><div class="hl h r"><span class="ln"><span><em class="a">без</em></span></span><span class="ln"><span>застосунку</span></span><p class="sub">Відкривається в браузері. Ім'я й телефон&nbsp;— лише за бажанням клієнта.</p></div></div>
+    <div class="scene" data-s="3"><h2 class="hl h l"><span class="ln"><span>Кожен</span></span><span class="ln"><span>візит&nbsp;—</span></span></h2><div class="hl h r"><span class="ln"><span>пробита</span></span><span class="ln"><span><em class="a">дірочка</em></span></span><p class="sub">Майстер сканує картку своїм телефоном. Штамп&nbsp;— за 5 секунд.</p></div></div>
+    <div class="scene" data-s="4"><h2 class="hl h l"><span class="ln"><span>Зник?</span></span></h2><div class="hl h r"><span class="ln"><span>Tickity</span></span><span class="ln"><span><em class="a">нагадає</em></span></span><p class="sub">Автонагадування тим, хто давно не приходив. Лише якщо клієнт сам погодився.</p></div></div>
+    <div class="scene" data-s="5"><h2 class="hl h l"><span class="ln"><span>Восьма</span></span><span class="ln"><span>стрижка&nbsp;—</span></span></h2><div class="hl h r"><span class="ln"><span><em class="a">у подарунок</em></span></span><p class="sub">Андрій більше не «випадковий». Тепер він ваш.</p></div></div>
+    <div class="scene" data-s="6"><h2 class="hl h l"><span class="ln"><span>А ви</span></span><span class="ln"><span>бачите,</span></span></h2><div class="hl h r"><span class="ln"><span>хто</span></span><span class="ln"><span><em class="a">повернувся</em></span></span><p class="sub">Хто прийшов, хто зник і хто з майстрів ставив штампи&nbsp;— в одному кабінеті.</p></div></div>
+
+    <div class="phone-wrap"><div class="phone-in" id="phoneIn">
+      <div class="phone"><div class="screen">
+        <span class="notch"></span>
+        <div class="scr s0" data-s="0">
+          <div class="t">09:14</div>
+          <div class="d">понеділок, 7 жовтня</div>
+          <button type="button" class="go-cue" id="cue">
+            <span class="arr" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M5 12l7 7 7-7"/></svg></span>
+            <b>Гортайте вниз</b>
+            <small id="cueSmall">почнеться історія клієнта</small>
+          </button>
+        </div>
+        <div class="scr s1" data-s="1">
+          <div class="qrbox">
+            <svg viewBox="0 0 23 23" aria-hidden="true"><path d="M1 1h7v7H1zM15 1h7v7h-7zM1 15h7v7H1z" fill="none" stroke="#15171C" stroke-width="1.6"/><path d="M3 3h3v3H3zM17 3h3v3h-3zM3 17h3v3H3zM10 1h2v2h-2zM10 5h3v2h-3zM10 10h2v3h-2zM14 10h3v2h-3zM19 10h3v2h-3zM10 15h2v2h-2zM14 14h2v3h-2zM18 14h4v2h-4zM13 19h3v3h-3zM18 18h2v4h-2zM1 10h3v2H1zM6 10h2v3H6z" fill="#15171C"/></svg>
+            <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+            <span class="scan"></span>
+          </div>
+          <div class="pill"><span class="ava">Л</span><div><b>Barber «Лезо»</b>Отримати картку лояльності</div></div>
+        </div>
+        <div class="scr s2" data-s="2">
+          <div class="biz"><span class="ava">Л</span>Barber «Лезо»</div>
+          <h4>Ваша картка лояльності</h4>
+          <p>8-ма стрижка безкоштовно. Відкриється в браузері.</p>
+          <div class="field"><small>Ім'я · необов'язково</small>Андрій</div>
+          <div class="field"><small>Телефон · необов'язково</small>+380 93 765 43 21</div>
+          <div class="chk"><i><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Хочу отримувати акції від закладу</div>
+          <div class="go">Отримати картку</div>
+        </div>
+        <div class="scr s3" data-s="3">
+          <div class="notif" id="notif"><span class="ava">Л</span><div><b>Barber «Лезо»</b>Андрію, давно не бачились! Цього тижня −20% на стрижку.<br><small>зараз</small></div></div>
+          <div class="ticket" id="ticket">
+            <span class="nt nl"></span><span class="nt nr"></span>
+            <div class="nm">Barber «Лезо»</div>
+            <div class="rw">8-ма стрижка безкоштовно</div>
+            <div class="perf"></div>
+            <div class="holes" id="holes"></div>
+            <div class="ft"><span><b id="cnt">1</b> з 8 візитів</span><span id="left">ще 7</span></div>
+          </div>
+          <div class="giftbar" id="gift"><b>Подарунок ваш!</b><span>Покажіть картку майстру.</span></div>
+          <div class="qrline" id="qrline">
+            <svg width="54" height="54" viewBox="0 0 23 23" aria-hidden="true"><path d="M1 1h7v7H1zM15 1h7v7h-7zM1 15h7v7H1z" fill="none" stroke="#15171C" stroke-width="1.6"/><path d="M3 3h3v3H3zM17 3h3v3h-3zM3 17h3v3H3zM10 1h2v2h-2zM10 5h3v2h-3zM10 10h2v3h-2zM14 10h3v2h-3zM19 10h3v2h-3zM14 14h2v3h-2zM18 14h4v2h-4zM13 19h3v3h-3z" fill="#15171C"/></svg>
+            <div><b>Покажіть код майстру</b>Штамп з'явиться за секунду</div>
+          </div>
+        </div>
+        <div class="scr s6" data-s="6">
+          <h4>Огляд</h4>
+          <div class="owner">Barber «Лезо» · кабінет власника</div>
+          <div class="stats">
+            <div class="st"><b>248</b><span>клієнтів з карткою</span></div>
+            <div class="st"><b>71%</b><span>повернулися</span></div>
+            <div class="st"><b>63</b><span>візити за тиждень</span></div>
+            <div class="st dark"><b>19</b><span>давно не були</span></div>
+          </div>
+          <div class="bars"><i style="height:50%"></i><i style="height:64%;transition-delay:.05s"></i><i style="height:43%;transition-delay:.1s"></i><i style="height:79%;transition-delay:.15s"></i><i class="hot" style="height:100%;transition-delay:.2s"></i><i style="height:86%;transition-delay:.25s"></i><i style="height:29%;transition-delay:.3s"></i></div>
+          <div class="row2"><span><b>Андрій</b> · подарунок</span><span style="color:var(--paper-mist)">11:40 · Максим</span></div>
+        </div>
+      </div></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="who" aria-labelledby="whoH">
+  <div class="wrap">
+    <h2 class="h" id="whoH">Для всіх, до кого <em class="a">повертаються</em></h2>
+    <p>Барбершопи, кав'ярні, манікюр, автомийки — правило винагороди вже підставлене для вашої ніші.</p>
+  </div>
+  <div class="marquee" aria-label="Приклади карток різних закладів"><div class="track" id="track"></div></div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2 class="h">Ваш Андрій уже стоїть <em class="a">на касі</em></h2>
+    <p>Картка закладу&nbsp;— за 5 хвилин. Перші 30 днів тарифу Плюс безкоштовно, далі від 199 ₴ на місяць.</p>
+    <div class="ctas">
+      <a class="btn btn-accent btn-big" href="login.html">Створити картку закладу
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-ghost btn-big" href="pricing.html">Подивитися тарифи</a>
+    </div>
+    <small>Без картки оплати. Без застосунку для клієнтів.</small>
+    <footer class="foot">
+      <span>Tickity · support@tickity.app</span>
+      <nav aria-label="Юридична інформація"><a href="https://tickity.app/legal/terms">Умови використання</a><a href="https://tickity.app/legal/privacy">Конфіденційність</a><a href="https://tickity.app/legal/refund">Повернення коштів</a><a href="https://tickity.app/en/legal/terms">English</a></nav>
+    </footer>
+  </div>
+</section>
+</main>
+
+<script>
+(function () {
+  var STEPS = 7, TOTAL = 8;
+  var reduce = window.TK.reduce;
+  var root = document.documentElement;
+  var story = document.getElementById('story');
+  var giants = [].slice.call(document.querySelectorAll('.giant span'));
+  var scenes = [].slice.call(document.querySelectorAll('.scene'));
+  var scrs = [].slice.call(document.querySelectorAll('.scr'));
+  var holesBox = document.getElementById('holes');
+  var visitsBox = document.getElementById('visits');
+  var ticket = document.getElementById('ticket');
+  var holes = [], dots = [];
+  for (var i = 0; i < TOTAL; i++) {
+    var h = document.createElement('span'); h.className = 'hole'; holesBox.appendChild(h); holes.push(h);
+    var d = document.createElement('b'); visitsBox.appendChild(d); dots.push(d);
+  }
+  var clocks = ['Понеділок · 09:14', 'Понеділок · 09:20', 'Понеділок · 09:21', 'Жовтень — листопад', 'Через 5 тижнів · 18:02', 'Субота · 11:40', 'А тим часом у кабінеті'];
+  var glowI = [.22, .3, .26, .34, .4, .46, .26];
+  var step = -1, count = -1;
+  var cue = document.getElementById('cue');
+  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) document.getElementById('cueSmall').textContent = 'проведіть пальцем угору';
+  var stage = document.querySelector('.stage');
+  cue.addEventListener('click', function () {
+    var total = story.offsetHeight - stage.offsetHeight;
+    scrollTo({ top: Math.round(total * 1.15 / STEPS), behavior: reduce ? 'auto' : 'smooth' });
+  });
+  /* nobody scrolled for a while: the cue jumps to catch the eye */
+  setInterval(function () {
+    if (step !== 0 || document.body.classList.contains('pre') || reduce) return;
+    cue.classList.remove('nudge'); void cue.offsetWidth; cue.classList.add('nudge');
+  }, 4500);
+
+  function setStep(s) {
+    if (s === step) return;
+    step = s;
+    giants.forEach(function (b) { b.classList.toggle('on', +b.getAttribute('data-s') === s); });
+    scenes.forEach(function (c) { c.classList.toggle('on', +c.getAttribute('data-s') === s); });
+    var screen = s >= 3 && s <= 5 ? 3 : s;
+    scrs.forEach(function (x) { x.classList.toggle('on', +x.getAttribute('data-s') === screen); });
+    document.getElementById('clock').textContent = clocks[s];
+    document.getElementById('glow').style.setProperty('--gi', glowI[s]);
+    document.getElementById('notif').classList.toggle('on', s === 4);
+    document.querySelector('.s3').classList.toggle('shift', s === 4);
+    document.getElementById('gift').classList.toggle('on', s === 5);
+    document.getElementById('qrline').style.display = s === 5 ? 'none' : '';
+  }
+
+  function setCount(n) {
+    if (n === count) return;
+    var grew = n > count && count >= 0;
+    count = n;
+    holes.forEach(function (h, i) { h.classList.toggle('on', i < n && !(n === TOTAL && i === TOTAL - 1)); h.classList.toggle('gift', n === TOTAL && i === TOTAL - 1); });
+    dots.forEach(function (d, i) { d.classList.toggle('on', i < n); d.classList.toggle('gift', n === TOTAL && i === TOTAL - 1); });
+    document.getElementById('cnt').textContent = n;
+    document.getElementById('left').textContent = n >= TOTAL ? 'подарунок' : 'ще ' + (TOTAL - n);
+    document.getElementById('bigCount').textContent = n + '/8';
+    if (grew && n > 0) {
+      setTimeout(function () { window.TK.chips(holes[n - 1], 1); ticket.classList.remove('thunk'); void ticket.offsetWidth; ticket.classList.add('thunk'); }, 60);
+      if (n === TOTAL) window.TK.chips(ticket, 12, { jitter: 200, stagger: 60, spread: 520 });
+    }
+  }
+
+  function frame() {
+    var r = story.getBoundingClientRect();
+    var total = story.offsetHeight - stage.offsetHeight;
+    var p = Math.min(1, Math.max(0, -r.top / total));
+    var pos = p * STEPS;
+    var s = Math.min(STEPS - 1, Math.floor(pos));
+    setStep(s);
+    var local = pos - s;
+    var n = 0;
+    if (s === 3) n = 1 + Math.min(5, Math.floor(local * 6));
+    if (s === 4) n = 7;
+    if (s >= 5) n = 8;
+    setCount(n);
+    if (!reduce) document.getElementById('phoneIn').style.rotate = (s === 0 ? 0 : (local - .5) * 2.4) + 'deg';
+    document.querySelector('.top').classList.toggle('solid', r.bottom < innerHeight);
+  }
+  /* size the phone to the room left by the headlines (largest of all scenes, so it never jumps) */
+  var wrap = document.querySelector('.phone-wrap');
+  var meas = document.createElement('span');
+  meas.setAttribute('aria-hidden', 'true');
+  meas.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;font-family:var(--brand);font-size:100px;letter-spacing:0;line-height:1';
+  stage.appendChild(meas);
+  function fitPhone() {
+    var mobile = innerWidth <= 860;
+    var st = stage.getBoundingClientRect();
+    var sceneH = scenes[0].clientHeight, stageH = stage.clientHeight;
+    /* one size for every giant word: the widest one fits the screen */
+    var widest = 1;
+    giants.forEach(function (g) { meas.textContent = g.id === 'bigCount' ? '8/8' : g.textContent; widest = Math.max(widest, meas.getBoundingClientRect().width); });
+    var gfs = Math.min(mobile ? 150 : sceneH * .27, (stage.clientWidth * (mobile ? .9 : .86)) / widest * 100);
+    stage.style.setProperty('--gfs', gfs.toFixed(1) + 'px');
+    /* phones: the caption sits above the word unless the browser bar already hides the word */
+    var subB = mobile ? 18 + Math.max(0, gfs + 6 - (stageH - sceneH)) : 18;
+    stage.style.setProperty('--sub-b', Math.round(subB) + 'px');
+    var top, bottom;
+    if (mobile) {
+      top = 0; bottom = sceneH;
+      scenes.forEach(function (c) {
+        var r = c.querySelector('.r').getBoundingClientRect();
+        var sub = c.querySelector('.sub').getBoundingClientRect();
+        top = Math.max(top, r.bottom - st.top);
+        bottom = Math.min(bottom, sub.top - st.top);
+      });
+      top += 14; bottom -= 14;
+    } else {
+      top = 116; bottom = sceneH - 34;
+    }
+    var room = Math.max(200, bottom - top);
+    var sc = Math.max(.42, Math.min(innerWidth <= 860 ? .92 : 1, room / 620, (innerWidth - 40) / 300));
+    wrap.style.setProperty('--ps', sc.toFixed(3));
+    wrap.style.top = Math.round(top + room / 2) + 'px';
+  }
+  addEventListener('resize', fitPhone);
+  document.addEventListener('tk:style', function () { setTimeout(fitPhone, 60); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPhone);
+  wrap.style.transition = 'none';
+  fitPhone();
+  requestAnimationFrame(function () { requestAnimationFrame(function () { wrap.style.transition = ''; }); });
+
+  var ticking = false;
+  addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(function () { frame(); ticking = false; }); } }, { passive: true });
+  addEventListener('resize', frame);
+  frame();
+
+  /* the marquee of other businesses' tickets */
+  var niches = [
+    ['Barber «Лезо»', '8-ма стрижка безкоштовно', 8, 5],
+    ["Кав'ярня «Зерно»", '7-ма кава в подарунок', 7, 3],
+    ['Студія «Нюанс»', 'Знижка 50% на 6-й візит', 6, 4],
+    ['Автомийка «Блиск»', '6-та мийка безкоштовно', 6, 2],
+    ['Грумінг «Хвостик»', '6-й грумінг зі знижкою 50%', 6, 5],
+    ['СТО «Механік»', '5-та заміна оливи — робота безкоштовно', 5, 1],
+    ['Пекарня «Колосок»', '10-та випічка в подарунок', 10, 7],
+    ['Квіти «Півонія»', '5-й букет зі знижкою 30%', 5, 3]
+  ];
+  var track = document.getElementById('track'), html = '';
+  for (var rep = 0; rep < 2; rep++) {
+    niches.forEach(function (n, i) {
+      var hs = '';
+      for (var k = 0; k < n[2]; k++) hs += '<span class="hole' + (k < n[3] ? ' on' : '') + '"></span>';
+      html += '<div class="ticket' + (i % 3 === 1 ? ' hot' : '') + '" style="--rot:' + ((i % 2 ? 1.6 : -1.4)) + 'deg"' + (rep ? ' aria-hidden="true"' : '') + '>' +
+        '<span class="nt nl"></span><span class="nt nr"></span><div class="nm">' + n[0] + '</div><div class="rw">' + n[1] + '</div><div class="perf"></div>' +
+        '<div class="holes">' + hs + '</div><div class="ft"><span><b>' + n[3] + '</b> з ' + n[2] + '</span><span>ще ' + (n[2] - n[3]) + '</span></div></div>';
+    });
+  }
+  track.innerHTML = html;
+
+  /* opening sequence */
+  var intro = document.getElementById('intro');
+  var running = false;
+  function finish() {
+    intro.style.display = 'none';
+    root.style.overflow = '';
+    document.body.classList.remove('pre');
+    running = false;
+    setTimeout(function () { if (!running) document.body.classList.remove('entering'); }, 1800);
+  }
+  function play(force) {
+    if (reduce || (window.TK.arrived && !force)) { finish(); return; }
+    running = true;
+    scrollTo(0, 0);
+    root.style.overflow = 'hidden';
+    intro.style.display = '';
+    intro.style.webkitMaskImage = intro.style.maskImage = 'none';
+    document.body.classList.add('pre');
+    document.body.classList.remove('entering');
+    var tk = document.getElementById('iTicket');
+    var hs = [].slice.call(intro.querySelectorAll('.i-h'));
+    hs.forEach(function (h) { h.style.transform = 'scale(0)'; });
+    tk.animate([{ transform: 'scale(.3) rotate(-10deg)', opacity: 0 }, { transform: 'scale(1.04) rotate(1deg)', opacity: 1, offset: .7 }, { transform: 'none', opacity: 1 }],
+      { duration: 650, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'both' });
+    [700, 920, 1140].forEach(function (t, i) {
+      setTimeout(function () {
+        if (!running) return;
+        hs[i].animate([{ transform: 'scale(0)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'forwards' });
+        tk.animate([{ transform: 'none' }, { transform: 'translateY(6px) scale(.985)' }, { transform: 'none' }], { duration: 200 });
+        window.TK.chips(hs[i], 1, { size: 22, fall: 260 });
+      }, t);
+    });
+    setTimeout(function () {
+      if (!running) return;
+      var r = hs[1].getBoundingClientRect(), ir = intro.getBoundingClientRect();
+      var cx = r.left + r.width / 2 - ir.left, cy = r.top + r.height / 2 - ir.top;
+      var maxR = Math.hypot(Math.max(cx, ir.width - cx), Math.max(cy, ir.height - cy)) + 20;
+      var start = performance.now(), D = 750;
+      document.body.classList.add('entering');
+      document.body.classList.remove('pre');
+      (function grow(t) {
+        if (!running) return;
+        var p = Math.min(1, (t - start) / D), e = p * p * (3 - 2 * p);
+        var rad = r.width / 2 + (maxR - r.width / 2) * e;
+        var m = 'radial-gradient(circle at ' + cx + 'px ' + cy + 'px, transparent ' + rad + 'px, #000 ' + (rad + 1) + 'px)';
+        intro.style.webkitMaskImage = m; intro.style.maskImage = m;
+        if (p < 1) requestAnimationFrame(grow); else finish();
+      })(start);
+    }, 1450);
+    setTimeout(function () { if (running) finish(); }, 3200);
+  }
+  function skip() { if (running) { document.body.classList.add('entering'); finish(); } }
+  ['click', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { intro.addEventListener(ev, skip, { passive: true }); });
+  addEventListener('keydown', skip);
+  window.TK.replayIntro = function () { play(true); };
+  play();
+})();
+</script>

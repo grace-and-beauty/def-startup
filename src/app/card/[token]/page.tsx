@@ -105,7 +105,7 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
 
       {showGoogleWallet ? (
         <Button asChild size="lg" className="h-12 text-base">
-          <a href={googleWalletSavePath(card.qr_token)}>{t("join.addToGoogleWallet")}</a>
+          <a href={googleWalletSavePath(card.qr_token)} data-no-transition>{t("join.addToGoogleWallet")}</a>
         </Button>
       ) : null}
 

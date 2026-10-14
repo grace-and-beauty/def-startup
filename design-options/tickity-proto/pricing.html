@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тарифи · Tickity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Wix+Madefor+Display:wght@700;800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@800;900&family=Sofia+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<script src="shared.js"></script>
+<style>
+  .hero { padding-block: calc(140px + env(safe-area-inset-top, 0px)) 40px; position: relative; }
+  .hero .eyebrow { font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--mist); margin: 0 0 18px; }
+  .hero h1 { font-size: calc(clamp(44px, 7.4vw, 124px) * var(--head-scale)); max-width: 13ch; }
+  .hero p { font-size: clamp(17px, 1.6vw, 20px); color: var(--mist); max-width: 36rem; margin: 22px 0 0; }
+
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; padding-block: 40px 80px; align-items: start; }
+  .plan {
+    --pbg: var(--bg-2); --pfg: var(--fg); --pmist: var(--mist); --pline: var(--line);
+    position: relative; background: var(--pbg); color: var(--pfg); border-radius: 26px; display: flex; flex-direction: column;
+    animation: deal .9s cubic-bezier(.2, .9, .25, 1.15) both; animation-delay: calc(var(--i) * .12s + .1s);
+  }
+  @keyframes deal { from { transform: translateY(80px) rotate(var(--r0, 3deg)); opacity: 0; } to { transform: none; opacity: 1; } }
+  .plan.hot { --pbg: var(--accent); --pfg: var(--on-accent); --pmist: color-mix(in srgb, var(--on-accent) 72%, transparent); --pline: color-mix(in srgb, var(--on-accent) 30%, transparent); }
+  .plan.soon { --pbg: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+  .plan .main { padding: 30px 28px 26px; display: flex; flex-direction: column; gap: 18px; }
+  .plan h2 { font-size: calc(30px * var(--head-scale)); }
+  .plan .for { margin: -10px 0 0; color: var(--pmist); font-size: 15px; }
+  .price { display: flex; align-items: baseline; gap: 8px; }
+  .price b { font-family: var(--head); font-weight: var(--head-w); letter-spacing: var(--head-ls); font-size: calc(clamp(52px, 5vw, 72px) * var(--head-scale)); line-height: 1; }
+  .price span { color: var(--pmist); font-weight: 600; }
+  .plan ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; font-size: 15px; }
+  .plan li { display: flex; gap: 10px; align-items: flex-start; }
+  .plan li svg { flex: none; margin-top: 3px; }
+  .plan .perf { position: relative; border-top: 2px dashed var(--pline); margin: 0 18px; }
+  .plan .perf::before, .plan .perf::after { content: ""; position: absolute; top: -13px; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); }
+  .plan .perf::before { left: -30px; } .plan .perf::after { right: -30px; }
+  .plan.soon .perf::before, .plan.soon .perf::after { display: none; }
+  .plan .stub { padding: 22px 28px 26px; display: flex; flex-direction: column; gap: 10px; }
+  .plan .stub small { color: var(--pmist); font-size: 13px; text-align: center; }
+  .plan.hot .main h2, .plan.hot .for { padding-right: 84px; }
+  .plan.hot .btn { background: var(--on-accent); color: var(--accent); }
+  .plan.soon .btn { box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; color: var(--mist); cursor: default; }
+  .plan.soon .btn:hover { transform: none; }
+  .stamp {
+    position: absolute; top: -40px; right: -12px; width: 118px; height: 118px; border-radius: 50%; display: grid; place-items: center; text-align: center;
+    border: 3px solid var(--on-accent); color: var(--on-accent); background: var(--accent); font-weight: 800; font-size: 11.5px; line-height: 1.15; text-transform: none; letter-spacing: 0;
+    transform: rotate(-14deg); animation: slam .5s cubic-bezier(.3, 1.6, .5, 1) 1s both; box-shadow: 0 0 0 6px var(--accent);
+  }
+  .stamp span { display: block; font-family: var(--brand); font-size: 30px; letter-spacing: 0; }
+  @keyframes slam { from { transform: rotate(-14deg) scale(2.6); opacity: 0; } to { transform: rotate(-14deg) scale(1); opacity: 1; } }
+
+  .faq { padding-block: 40px 100px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 40px; }
+  .faq h2 { font-size: calc(clamp(36px, 4.4vw, 64px) * var(--head-scale)); }
+  .faq .list { display: flex; flex-direction: column; }
+  details { border-top: 1px solid var(--line); padding-block: 4px; }
+  details:last-child { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 18px; font-family: var(--head); font-weight: var(--head-w); text-transform: var(--head-tt); font-size: calc(20px * var(--head-scale)); }
+  summary::-webkit-details-marker { display: none; }
+  summary i { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2); transition: transform .3s, background .3s; }
+  details[open] summary i { transform: rotate(45deg); background: var(--accent); color: var(--on-accent); }
+  details p { margin: 0 0 20px; color: var(--mist); max-width: 40rem; }
+  @media (max-width: 760px) { .faq { grid-template-columns: 1fr; gap: 16px; } .stamp { right: 10px; top: -34px; width: 104px; height: 104px; } }
+</style>
+</head>
+<body>
+<header class="top solid">
+  <a class="logo" href="index.html">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path class="t" d="M3 1h24a2 2 0 0 1 2 2v5a3 3 0 0 0 0 6v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-5a3 3 0 0 0 0-6V3a2 2 0 0 1 2-2z"/><circle class="h1" cx="11" cy="11" r="2.6"/><circle class="h2" cx="19" cy="11" r="2.6"/></svg>
+    Tickity
+  </a>
+  <nav aria-label="Головне меню"><a href="pricing.html" aria-current="page">Тарифи</a><a class="in" href="login.html">Увійти</a></nav>
+</header>
+
+<main>
+  <section class="hero wrap pt-rise">
+    <p class="eyebrow">Тарифи</p>
+    <h1 class="h">Перший місяць&nbsp;— <em class="a">безкоштовно</em></h1>
+    <p>30&nbsp;днів тарифу Плюс без картки оплати. Потім обираєте тариф або лишаєтеся на Базовому.</p>
+  </section>
+
+  <section class="plans wrap" aria-label="Тарифи">
+    <article class="plan" style="--i:0;--r0:-4deg">
+      <div class="main">
+        <h2 class="h">Базова</h2>
+        <p class="for">Картка й штампи, щоб почати</p>
+        <div class="price"><b>199 ₴</b><span>на місяць</span></div>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>До 300 клієнтів</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>2 розсилки на місяць</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>1 працівник</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Картка в браузері й QR-постер</li>
+        </ul>
+      </div>
+      <div class="perf"></div>
+      <div class="stub"><a class="btn btn-ghost btn-wide" href="login.html">Почати з Базової</a></div>
+    </article>
+
+    <article class="plan hot" style="--i:1;--r0:2deg">
+      <div class="stamp" aria-hidden="true"><div><span>30</span>днів<br>безкоштовно</div></div>
+      <div class="main">
+        <h2 class="h">Плюс</h2>
+        <p class="for">Повертайте клієнтів, які зникли</p>
+        <div class="price"><b>449 ₴</b><span>на місяць</span></div>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>До 2 000 клієнтів</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Розсилки без обмежень</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>До 20 працівників з власним PIN</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Аналітика повернень</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Автонагадування тим, хто давно не приходив</li>
+        </ul>
+      </div>
+      <div class="perf"></div>
+      <div class="stub"><a class="btn btn-wide btn-big" href="login.html">Спробувати 30 днів</a><small>Без картки оплати</small></div>
+    </article>
+
+    <article class="plan soon" style="--i:2;--r0:5deg">
+      <div class="main">
+        <h2 class="h" style="color:var(--mist)">Про</h2>
+        <p class="for">Скоро</p>
+        <div class="price" style="color:var(--mist)"><b>799 ₴</b><span>на місяць</span></div>
+        <ul style="color:var(--mist)">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>Клієнтів без обмежень</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>Бонуси, день народження, «приведи друга»</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>Відгуки й кілька точок</li>
+        </ul>
+      </div>
+      <div class="perf"></div>
+      <div class="stub"><span class="btn btn-wide" aria-disabled="true">З'явиться згодом</span></div>
+    </article>
+  </section>
+
+  <section class="faq wrap" aria-labelledby="faqH">
+    <h2 class="h" id="faqH">Питання про <em class="a">оплату</em></h2>
+    <div class="list">
+      <details open><summary>Як працює оплата?<i aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i></summary><p>Щомісячна підписка карткою. Платіж приймає Paddle — наш партнер з оплат. Скасувати можна будь-коли за посиланням у листі-квитанції.</p></details>
+      <details><summary>Якщо сервіс не підійде?<i aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i></summary><p>Повернемо всю суму за будь-який платіж, якщо напишете протягом 14 днів. Пояснювати причину не потрібно.</p></details>
+      <details><summary>Що буде з картками клієнтів після скасування?<i aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i></summary><p>Картки працюють ще 30 днів. За цей час можна попередити клієнтів і вивантажити дані в CSV.</p></details>
+      <details><summary>Чи потрібен клієнтам застосунок?<i aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></i></summary><p>Ні. Картка відкривається в браузері телефона після сканування QR на касі.</p></details>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span>Tickity · support@tickity.app</span>
+      <nav aria-label="Юридична інформація"><a href="https://tickity.app/legal/terms">Умови використання</a><a href="https://tickity.app/legal/privacy">Конфіденційність</a><a href="https://tickity.app/legal/refund">Повернення коштів</a><a href="https://tickity.app/en/legal/terms">English</a></nav>
+    </footer>
+  </div>
+</main>
+</body>
+</html>

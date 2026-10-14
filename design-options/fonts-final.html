@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tickity — фінал шрифтів</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Wix+Madefor+Display:wght@600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&family=Russo+One&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0}
+  body{background:#EEF0F3;color:#15171C;font-family:system-ui,sans-serif;padding:0 16px 60px}
+  .intro{max-width:1180px;margin:0 auto;padding:28px 0 8px;font-size:15px;line-height:1.5;color:#555}
+  .intro b{color:#15171C}
+  .jump{max-width:1180px;margin:12px auto 0;display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;background:#EEF0F3;padding:10px 0;z-index:2}
+  .jump a{font:600 13px system-ui;color:#15171C;text-decoration:none;background:#fff;border:1px solid #DDE0E5;border-radius:8px;padding:6px 10px}
+  .opt{max-width:1180px;margin:40px auto 0;scroll-margin-top:70px}
+  .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-family:system-ui}
+  .num{font:700 14px system-ui;background:#15171C;color:#fff;border-radius:6px;padding:4px 9px}
+  .names{font-weight:600;font-size:16px}
+  .mood{color:#6A707C;font-size:14px}
+  .grid{display:grid;grid-template-columns:1.5fr 320px;gap:14px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .panel{background:#fff;border:1px solid #E2E4E8;border-radius:18px;padding:26px;min-width:0;font-family:var(--b);position:relative}
+  .where{position:absolute;top:12px;right:14px;font:500 11px system-ui;color:#9AA0AA;letter-spacing:.04em;text-transform:uppercase}
+  .d{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--ls)}
+  /* home */
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px;font-size:14px}
+  .nav .logo{font-size:20px;color:#15171C;margin-left:0}
+  .hero .nav{margin-top:14px}
+  .nav span{color:#5A606B;margin-left:18px}
+  .hero h2{font-size:clamp(34px,4.4vw,56px);line-height:1.02}
+  .hero p.lead{font-size:17px;line-height:1.55;color:#5A606B;margin:16px 0 22px;max-width:34rem}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{font-weight:600;font-size:15px;background:#15171C;color:#fff;border-radius:12px;padding:13px 18px}
+  .btn.ghost{background:#F1F2F4;color:#15171C}
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}
+  @media (max-width:640px){.how{grid-template-columns:1fr}}
+  .how h4{font-size:17px;margin-bottom:6px}
+  .how p{font-size:14px;line-height:1.5;color:#5A606B}
+  .price{display:flex;align-items:baseline;gap:8px;margin-top:30px;padding-top:22px;border-top:1px solid #EEF0F2}
+  .price b{font-size:40px;line-height:1}
+  .price span{font-size:14px;color:#5A606B}
+  /* phone */
+  .phone{background:#15171C;border-radius:36px;padding:12px;margin:18px auto 0;max-width:290px}
+  .screen{background:#F5F6F8;border-radius:26px;padding:18px 14px 22px;min-height:470px}
+  .card{background:#16181D;color:#fff;border-radius:20px;padding:18px}
+  .card .bn{font-size:24px;line-height:1.05}
+  .card .rw{font-size:13px;color:#A9AEB8;margin:6px 0 16px}
+  .card .big{font-size:48px;line-height:1}
+  .card .big small{font-family:var(--b);font-weight:400;font-size:14px;color:#A9AEB8;letter-spacing:0;margin-left:6px}
+  .dots{display:flex;gap:7px;margin-top:14px}
+  .dots i{flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid #ffffff44}
+  .dots i.on{background:#fff;border-color:#fff}
+  .qr{display:grid;place-items:center;background:#fff;border-radius:16px;margin-top:12px;padding:14px;font-size:12px;color:#6A707C;gap:8px}
+  .qr .code{width:96px;height:96px;background:repeating-conic-gradient(#15171C 0 25%,#fff 0 50%) 0 0/16px 16px;border-radius:6px}
+  .msg{background:#fff;border-radius:14px;padding:12px;margin-top:12px;font-size:13px;line-height:1.45}
+  .msg b{display:block;font-size:12px;color:#6A707C;font-weight:500;margin-bottom:3px}
+  /* dashboard */
+  .dash{grid-column:1/-1}
+  .dash h3{font-size:26px;margin-bottom:16px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media (max-width:700px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:#F5F6F8;border-radius:14px;padding:14px}
+  .stat b{display:block;font-size:30px;line-height:1.1}
+  .stat span{font-size:13px;color:#6A707C}
+  table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+  th{text-align:left;font-weight:500;color:#6A707C;font-size:12.5px;padding:8px 6px;border-bottom:1px solid #EEF0F2}
+  td{padding:10px 6px;border-bottom:1px solid #F1F2F4}
+  .pill{font-size:12px;background:#F1F2F4;border-radius:99px;padding:3px 9px}
+  .form{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;flex:1;min-width:200px}
+  .field div{border:1px solid #DDE0E5;border-radius:10px;padding:11px 12px;font-weight:400;font-size:14px;color:#15171C}
+  .small{font-size:12px;color:#8A909A;margin-top:12px}
+</style>
+</head>
+<body>
+<p class="intro"><b>Фінал: ваші 2, 7, 11 + дві пари.</b> Тут більше реального тексту: меню, кроки, ціна, екран телефона, таблиця і поле форми — щоб видно було, як шрифт читається дрібно. Напишіть букву.</p>
+<nav class="jump" id="jump"></nav>
+<main id="list"></main>
+<script>
+const F=[
+ ["A","№2 Manrope","Manrope",800,"Manrope","-.02em","Один шрифт на все — чисто, як у банківських застосунках"],
+ ["B","№7 Wix Madefor","Wix Madefor Display",800,"Wix Madefor Text","-.015em","Один шрифт на все — трохи м'якший і ширший за Manrope"],
+ ["C","№11 Russo One","Russo One",400,"IBM Plex Sans","0","Міцні квадратні заголовки + рідний текстовий шрифт з того варіанта"],
+ ["D","№11 + №2","Russo One",400,"Manrope","0","Заголовки Russo One, увесь інший текст — Manrope"],
+ ["E","№11 + №7","Russo One",400,"Wix Madefor Text","0","Заголовки Russo One, увесь інший текст — Wix Madefor"],
+];
+const list=document.getElementById('list'),jump=document.getElementById('jump');
+F.forEach(([id,label,d,dw,b,ls,mood])=>{
+  const s=document.createElement('section');s.className='opt';s.id='o'+id;
+  s.style.cssText=`--d:"${d}";--dw:${dw};--b:"${b}";--ls:${ls}`;
+  s.innerHTML=`
+  <div class="head"><span class="num">${id}</span><span class="names">${label}${d!==b?' · текст: '+b:''}</span><span class="mood">${mood}</span></div>
+  <div class="grid">
+    <div class="panel hero"><span class="where">Головна</span>
+      <div class="nav"><span class="logo d">Tickity</span><div><span>Тарифи</span><span>Увійти</span></div></div>
+      <h2 class="d">Картка лояльності, яку клієнт не загубить</h2>
+      <p class="lead">Клієнт сканує QR на касі — і картка вже в телефоні. Без застосунків, паперу й печаток. Ви бачите, хто приходить і хто зник.</p>
+      <div class="btns"><span class="btn">Спробувати 30 днів безкоштовно</span><span class="btn ghost">Подивитися тарифи</span></div>
+      <div class="how">
+        <div><h4 class="d">Розмістіть QR</h4><p>Роздрукуйте постер і поставте біля каси.</p></div>
+        <div><h4 class="d">Ставте штампи</h4><p>Працівник сканує картку телефоном — штамп додано.</p></div>
+        <div><h4 class="d">Повертайте клієнтів</h4><p>Нагадування тим, хто давно не приходив.</p></div>
+      </div>
+      <div class="price"><b class="d">449 ₴</b><span>на місяць · тариф Плюс · до 2 000 клієнтів</span></div>
+    </div>
+    <div class="panel"><span class="where">Телефон клієнта</span>
+      <div class="phone"><div class="screen">
+        <div class="card"><div class="bn d">Барбершоп Бритва</div><div class="rw">6 візитів → стрижка в подарунок</div>
+        <div class="big d">4<small>з 6 штампів</small></div><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+        <div class="qr"><div class="code"></div>Покажіть код працівнику</div>
+        <div class="msg"><b>Барбершоп Бритва · 12 жовт.</b>У п'ятницю −20% на бороду. Запис за телефоном 067 123 45 67.</div>
+      </div></div>
+    </div>
+    <div class="panel dash"><span class="where">Кабінет</span>
+      <h3 class="d">Огляд за тиждень</h3>
+      <div class="stats">
+        <div class="stat"><b class="d">1 248</b><span>Клієнтів</span></div>
+        <div class="stat"><b class="d">63</b><span>Візитів</span></div>
+        <div class="stat"><b class="d">17</b><span>Нових карток</span></div>
+        <div class="stat"><b class="d">9</b><span>Подарунків видано</span></div>
+      </div>
+      <table><thead><tr><th>Клієнт</th><th>Телефон</th><th>Штампи</th><th>Останній візит</th></tr></thead>
+      <tbody><tr><td>Олена Коваль</td><td>+380 67 123 45 67</td><td>4 з 6</td><td>вчора</td></tr>
+      <tr><td>Андрій Шевчук</td><td>+380 93 765 43 21</td><td><span class="pill">подарунок</span></td><td>12.10.2026</td></tr>
+      <tr><td>Ігор Ткаченко</td><td>—</td><td>1 з 6</td><td>28.09.2026</td></tr></tbody></table>
+      <div class="form"><label class="field">Текст розсилки<div>У п'ятницю −20% на бороду</div></label><span class="btn">Надіслати 214 клієнтам</span></div>
+      <p class="small">Отримають лише клієнти, які погодилися на повідомлення.</p>
+    </div>
+  </div>`;
+  list.appendChild(s);
+  const a=document.createElement('a');a.href='#o'+id;a.textContent=id+' · '+label;jump.appendChild(a);
+});
+</script>
+</body>
+</html>

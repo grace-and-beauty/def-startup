@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Вхід · Tickity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Wix+Madefor+Display:wght@700;800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@800;900&family=Sofia+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<script src="shared.js"></script>
+<style>
+  .split { min-height: 100vh; min-height: 100svh; display: flex; flex-wrap: wrap; align-items: center; gap: 48px; padding-block: calc(110px + env(safe-area-inset-top, 0px)) 120px; }
+  .form-side { flex: 1 1 420px; min-width: 0; max-width: 560px; }
+  .form-side h1 { font-size: calc(clamp(46px, 6.6vw, 100px) * var(--head-scale)); }
+  .form-side p.lead { color: var(--mist); font-size: 18px; margin: 18px 0 30px; max-width: 30rem; }
+  .step { display: flex; flex-direction: column; gap: 14px; }
+  .step[hidden] { display: none; }
+  .step label { font-weight: 700; font-size: 14px; color: var(--mist); }
+  .email { font: 600 18px var(--body); color: var(--fg); background: var(--bg-2); border: 1.5px solid var(--line); border-radius: 16px; padding: 16px 18px; min-height: 60px; }
+  .email:focus-visible, .code input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 420px; }
+  .code input {
+    width: 100%; aspect-ratio: .82; text-align: center; font-family: var(--head); font-weight: var(--head-w); font-size: calc(30px * var(--head-scale));
+    color: var(--fg); background: var(--bg-2); border: 1.5px solid var(--line); border-radius: 14px; caret-color: var(--accent);
+  }
+  .code input.filled { border-color: var(--accent); animation: tap .25s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes tap { 50% { transform: scale(1.08); } }
+  .sent { color: var(--mist); font-size: 15px; margin: 0; }
+  .sent b { color: var(--fg); }
+  .small { font-size: 14px; color: var(--mist); }
+  .linkbtn { background: none; border: 0; color: var(--fg); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; padding: 6px 0; }
+  .linkbtn:disabled { color: var(--mist); text-decoration: none; cursor: default; }
+  .art { flex: 1 1 360px; min-width: 0; display: flex; justify-content: center; position: relative; }
+  .art::before { content: ""; position: absolute; inset: -10%; background: radial-gradient(closest-side, rgba(var(--glow), .28), transparent 70%); }
+  .art .ticket { --tbg: var(--accent); --tfg: var(--on-accent); --hole-bg: var(--bg); --hole-line: color-mix(in srgb, var(--on-accent) 35%, transparent);
+    width: min(400px, 100%); transform: rotate(-6deg); padding: 26px 26px 22px; }
+  .art .ticket .perf { margin: 0 -26px 16px; }
+  .art .ticket .nm { font-family: var(--brand); font-weight: 400; text-transform: none; font-size: 34px; }
+  .art .hole:nth-child(-n+3)::after { transform: scale(1); }
+  .art .hole:nth-child(4)::after { animation: punchLoop 3s cubic-bezier(.3, 1.6, .5, 1) infinite; }
+  @keyframes punchLoop { 0%, 35% { transform: scale(0); } 45%, 90% { transform: scale(1); } 100% { transform: scale(0); } }
+  .art .ft b { font-family: var(--brand); font-weight: 400; }
+  @media (max-width: 860px) { .art { display: none; } .split { padding-top: calc(96px + env(safe-area-inset-top, 0px)); align-items: flex-start; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="index.html">
+    <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path class="t" d="M3 1h24a2 2 0 0 1 2 2v5a3 3 0 0 0 0 6v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-5a3 3 0 0 0 0-6V3a2 2 0 0 1 2-2z"/><circle class="h1" cx="11" cy="11" r="2.6"/><circle class="h2" cx="19" cy="11" r="2.6"/></svg>
+    Tickity
+  </a>
+  <nav aria-label="Головне меню"><a href="pricing.html">Тарифи</a></nav>
+</header>
+
+<main class="wrap split pt-rise">
+  <section class="form-side">
+    <h1 class="h">Вхід у <em class="a">кабінет</em></h1>
+    <p class="lead">Без пароля: надішлемо 6-значний код на пошту. Нового закладу зареєструємо автоматично.</p>
+
+    <form class="step" id="stepEmail" novalidate>
+      <label for="email">Електронна пошта</label>
+      <input class="email" type="email" id="email" autocomplete="email" placeholder="you@barber.ua" value="owner@lezo.ua">
+      <button type="submit" class="btn btn-accent btn-big">Надіслати код</button>
+      <p class="small">Продовжуючи, ви погоджуєтеся з <a href="https://tickity.app/legal/terms">умовами використання</a>.</p>
+    </form>
+
+    <form class="step" id="stepCode" hidden novalidate>
+      <p class="sent">Код надіслано на <b id="sentTo">owner@lezo.ua</b>. Він діє 10 хвилин.</p>
+      <div class="code" id="code" role="group" aria-label="Код з листа">
+        <input inputmode="numeric" aria-label="Цифра 1" id="c1"><input inputmode="numeric" aria-label="Цифра 2" id="c2"><input inputmode="numeric" aria-label="Цифра 3" id="c3"><input inputmode="numeric" aria-label="Цифра 4" id="c4"><input inputmode="numeric" aria-label="Цифра 5" id="c5"><input inputmode="numeric" aria-label="Цифра 6" id="c6">
+      </div>
+      <a class="btn btn-accent btn-big" href="dashboard.html" id="enter" aria-disabled="true" style="opacity:.45;pointer-events:none">Увійти</a>
+      <p class="small">Не прийшов лист? Перевірте «Спам» або <button type="button" class="linkbtn" id="resend" disabled>надішліть ще раз через 0:59</button></p>
+      <button type="button" class="linkbtn" id="back" style="align-self:flex-start">Змінити пошту</button>
+    </form>
+  </section>
+
+  <div class="art" aria-hidden="true">
+    <div class="ticket">
+      <span class="nt nl"></span><span class="nt nr"></span>
+      <div class="nm">Tickity</div>
+      <div class="rw">Ваш кабінет · клієнти · штампи · розсилки</div>
+      <div class="perf"></div>
+      <div class="holes"><span class="hole"></span><span class="hole"></span><span class="hole"></span><span class="hole"></span><span class="hole"></span><span class="hole"></span><span class="hole"></span><span class="hole"></span></div>
+      <div class="ft"><span>вхід за кодом</span><b>№ 000001</b></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var stepEmail = document.getElementById('stepEmail'), stepCode = document.getElementById('stepCode');
+  var inputs = [].slice.call(document.querySelectorAll('#code input'));
+  var enter = document.getElementById('enter'), resend = document.getElementById('resend');
+  var timer;
+  function startTimer() {
+    var left = 59;
+    resend.disabled = true;
+    clearInterval(timer);
+    timer = setInterval(function () {
+      left--;
+      if (left <= 0) { clearInterval(timer); resend.disabled = false; resend.textContent = 'надішліть ще раз'; return; }
+      resend.textContent = 'надішліть ще раз через 0:' + (left < 10 ? '0' : '') + left;
+    }, 1000);
+  }
+  stepEmail.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = document.getElementById('email').value.trim() || 'owner@lezo.ua';
+    document.getElementById('sentTo').textContent = v;
+    stepEmail.hidden = true; stepCode.hidden = false;
+    inputs[0].focus();
+    startTimer();
+  });
+  document.getElementById('back').addEventListener('click', function () { stepCode.hidden = true; stepEmail.hidden = false; document.getElementById('email').focus(); });
+  resend.addEventListener('click', startTimer);
+  function check() {
+    var full = inputs.every(function (i) { return /^\d$/.test(i.value); });
+    enter.style.opacity = full ? '1' : '.45';
+    enter.style.pointerEvents = full ? '' : 'none';
+    enter.setAttribute('aria-disabled', String(!full));
+  }
+  inputs.forEach(function (inp, i) {
+    inp.addEventListener('input', function () {
+      var d = inp.value.replace(/\D/g, '');
+      if (d.length > 1) {
+        d.split('').slice(0, 6 - i).forEach(function (ch, k) { inputs[i + k].value = ch; inputs[i + k].classList.add('filled'); });
+        inputs[Math.min(5, i + d.length - 1)].focus();
+      } else {
+        inp.value = d;
+        inp.classList.toggle('filled', !!d);
+        if (d && inputs[i + 1]) inputs[i + 1].focus();
+      }
+      check();
+    });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Backspace' && !inp.value && inputs[i - 1]) inputs[i - 1].focus(); });
+  });
+})();
+</script>
+</body>
+</html>

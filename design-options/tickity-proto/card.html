@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Картка клієнта · Tickity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Wix+Madefor+Display:wght@700;800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Sofia+Sans+Extra+Condensed:wght@800;900&family=Sofia+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<script src="shared.js"></script>
+<style>
+  /* the customer's page lives on light "paper"; the palette shows up in the ticket and the accent */
+  html, body { background: var(--paper); color: var(--ink); color-scheme: light; }
+  .col { max-width: 440px; margin: 0 auto; padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(110px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px; }
+  .biz { display: flex; align-items: center; gap: 12px; }
+  .biz .ava { width: 48px; height: 48px; border-radius: 14px; font-size: 20px; }
+  .biz b { display: block; font-family: var(--head); font-weight: var(--head-w); text-transform: var(--head-tt); font-size: calc(19px * var(--head-scale)); line-height: 1.1; }
+  .biz span { font-size: 13px; color: var(--paper-mist); }
+  .biz .via { margin-left: auto; font-family: var(--brand); font-size: 13px; color: var(--paper-mist); }
+  h1 { font-size: calc(clamp(34px, 9vw, 44px) * var(--head-scale)); }
+  .lead { margin: -4px 0 0; color: var(--paper-mist); font-size: 15px; }
+  .preview { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+  .preview span { aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--paper-line); }
+  .preview span:last-child { background: var(--accent); border-color: var(--accent); }
+  form { display: flex; flex-direction: column; gap: 14px; background: #FFFFFF; border-radius: 22px; padding: 18px; }
+  label.f { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700; }
+  label.f small { font-weight: 500; color: var(--paper-mist); font-size: 12.5px; }
+  input[type="text"], input[type="tel"] { font: 500 16px var(--body); border: 1.5px solid var(--paper-line); border-radius: 14px; padding: 13px 14px; min-height: 50px; color: var(--ink); background: #FFFFFF; }
+  input:focus-visible { outline: 3px solid var(--ink); outline-offset: 1px; }
+  .consent { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--paper-mist); }
+  .consent input { width: 22px; height: 22px; margin: 0; flex: none; accent-color: var(--ink); }
+  .note { font-size: 12px; color: var(--paper-mist); text-align: center; margin: 0; }
+  .note a { color: var(--paper-mist); }
+
+  /* the printer slot the ticket comes out of */
+  .slot { height: 16px; margin: 0 -6px; border-radius: 10px; background: var(--ink); position: relative; z-index: 2; box-shadow: inset 0 -5px 6px rgba(0, 0, 0, .45), 0 6px 12px -6px rgba(0, 0, 0, .5); }
+  .feed { overflow: hidden; margin-top: -8px; padding: 0 2px 4px; }
+  .feed .ticket { --hole-bg: var(--paper); }
+  .printing .ticket { animation: print 1.1s steps(1) both, printSlide 1.1s cubic-bezier(.4, 0, .2, 1) both; }
+  @keyframes printSlide { from { transform: translateY(-104%); } to { transform: none; } }
+  @keyframes print { from { opacity: 1; } }
+  .ticket .nm { font-size: calc(24px * var(--head-scale)); }
+  .giftbar { display: none; background: var(--accent); color: var(--on-accent); border-radius: 18px; padding: 16px 18px; }
+  .giftbar.on { display: block; animation: giftIn .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+  @keyframes giftIn { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+  .giftbar b { display: block; font-family: var(--head); font-weight: var(--head-w); text-transform: var(--head-tt); font-size: calc(21px * var(--head-scale)); }
+  .giftbar span { font-size: 14px; }
+  .qr { background: #FFFFFF; border-radius: 20px; padding: 16px; display: flex; gap: 16px; align-items: center; }
+  .qr b { display: block; font-size: 15px; }
+  .qr span { font-size: 13px; color: var(--paper-mist); }
+  .card-demo { color: var(--ink); }
+  .msgs { display: flex; flex-direction: column; gap: 8px; }
+  .msgs h2 { font-size: calc(18px * var(--head-scale)); margin: 8px 0 2px; }
+  .msg { background: #FFFFFF; border-radius: 18px; padding: 14px 16px; font-size: 14px; line-height: 1.45; }
+  .msg small { display: block; font-size: 12px; color: var(--paper-mist); margin-bottom: 4px; }
+  .sw-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 18px; padding: 14px 16px; }
+  .sw-row b { display: block; font-size: 14px; }
+  .sw-row span { font-size: 12.5px; color: var(--paper-mist); }
+  .switch { flex: none; position: relative; width: 52px; height: 32px; border-radius: 99px; border: 0; background: var(--paper-line); cursor: pointer; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; left: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .25s cubic-bezier(.3, 1.4, .5, 1); }
+  .switch[aria-checked="true"] { background: var(--ink); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .fine { font-size: 12px; color: var(--paper-mist); text-align: center; }
+  .fine a { color: var(--paper-mist); }
+  #join, #card { display: flex; flex-direction: column; gap: 16px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main class="col pt-rise">
+  <div class="biz">
+    <span class="ava">Л</span>
+    <div><b>Barber «Лезо»</b><span>Рівне, вул. Соборна 12</span></div>
+    <span class="via">Tickity</span>
+  </div>
+
+  <section id="join">
+    <h1 class="h">Ваша картка <em class="a" style="color:inherit;background:linear-gradient(transparent 62%, var(--accent) 62%)">лояльності</em></h1>
+    <p class="lead">8-ма стрижка безкоштовно. Картка відкриється в браузері&nbsp;— застосунок не потрібен.</p>
+    <div class="preview" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <form id="joinForm" novalidate>
+      <label class="f" for="name">Ім'я <small>необов'язково</small>
+        <input type="text" id="name" autocomplete="given-name" placeholder="Як до вас звертатися" value="Андрій">
+      </label>
+      <label class="f" for="phone">Телефон <small>необов'язково&nbsp;— щоб відновити картку</small>
+        <input type="tel" id="phone" autocomplete="tel" placeholder="+380">
+      </label>
+      <label class="consent" for="consent"><input type="checkbox" id="consent">Хочу отримувати акції та нагадування від закладу. Вимкнути можна будь-коли на картці.</label>
+      <button type="submit" class="btn btn-accent btn-big btn-wide">Отримати картку</button>
+    </form>
+    <p class="note">Натискаючи кнопку, ви погоджуєтеся з <a href="https://tickity.app/legal/privacy">політикою конфіденційності</a>.</p>
+  </section>
+
+  <section id="card" hidden>
+    <div>
+      <div class="slot" aria-hidden="true"></div>
+      <div class="feed" id="feed">
+        <div class="ticket" id="ticket">
+          <span class="nt nl"></span><span class="nt nr"></span>
+          <div class="nm" id="who">Андрій</div>
+          <div class="rw">Barber «Лезо» · 8-ма стрижка безкоштовно</div>
+          <div class="perf"></div>
+          <div class="holes" id="holes"></div>
+          <div class="ft"><span><b id="cnt">0</b> з 8 візитів</span><span id="left">ще 8 до подарунка</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="giftbar" id="gift" role="status"><b>Подарунок ваш!</b><span>Покажіть картку майстру — стрижка безкоштовно.</span></div>
+    <div class="qr">
+      <svg width="96" height="96" viewBox="0 0 23 23" role="img" aria-label="QR-код вашої картки"><rect width="23" height="23" fill="#FFFFFF"/><path d="M1 1h7v7H1zM15 1h7v7h-7zM1 15h7v7H1z" fill="none" stroke="#15171C" stroke-width="1.6"/><path d="M3 3h3v3H3zM17 3h3v3h-3zM3 17h3v3H3zM10 1h2v2h-2zM10 5h3v2h-3zM10 10h2v3h-2zM14 10h3v2h-3zM19 10h3v2h-3zM10 15h2v2h-2zM14 14h2v3h-2zM18 14h4v2h-4zM13 19h3v3h-3zM18 18h2v4h-2zM1 10h3v2H1zM6 10h2v3H6z" fill="#15171C"/></svg>
+      <div><b>Покажіть код майстру</b><span>Штамп з'явиться тут за кілька секунд</span></div>
+    </div>
+    <button type="button" class="btn btn-demo btn-wide card-demo" id="stamp">Поставити штамп (демо)</button>
+    <div class="sw-row">
+      <div><b>Повідомлення від закладу</b><span id="consentText">Ви отримуєте акції та нагадування</span></div>
+      <button type="button" class="switch" role="switch" aria-checked="true" aria-label="Повідомлення від закладу" id="consentSw"></button>
+    </div>
+    <div class="msgs">
+      <h2 class="h">Повідомлення</h2>
+      <div class="msg"><small>12 жовтня</small>У п'ятницю −20% на оформлення бороди. Запис: 067 123 45 67.</div>
+      <div class="msg"><small>1 жовтня</small>Ми тепер працюємо до 21:00 у будні.</div>
+    </div>
+    <p class="fine">Картка працює через Tickity · <a href="https://tickity.app/legal/privacy">Конфіденційність</a></p>
+  </section>
+</main>
+
+<script>
+(function () {
+  var TOTAL = 8, n = 0;
+  var holesBox = document.getElementById('holes'), holes = [];
+  for (var i = 0; i < TOTAL; i++) { var h = document.createElement('span'); h.className = 'hole'; holesBox.appendChild(h); holes.push(h); }
+  var ticket = document.getElementById('ticket');
+  var join = document.getElementById('join'), card = document.getElementById('card');
+
+  document.getElementById('joinForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = document.getElementById('name').value.trim();
+    document.getElementById('who').textContent = name || 'Ваша картка';
+    var on = document.getElementById('consent').checked;
+    setConsent(on);
+    join.hidden = true;
+    card.hidden = false;
+    var feed = document.getElementById('feed');
+    feed.classList.remove('printing'); void feed.offsetWidth; feed.classList.add('printing');
+    scrollTo(0, 0);
+  });
+
+  function render(grew) {
+    holes.forEach(function (h, i) { h.classList.toggle('on', i < n && !(n === TOTAL && i === TOTAL - 1)); h.classList.toggle('gift', n === TOTAL && i === TOTAL - 1); });
+    document.getElementById('cnt').textContent = n;
+    document.getElementById('left').textContent = n >= TOTAL ? 'подарунок готовий' : 'ще ' + (TOTAL - n) + ' до подарунка';
+    document.getElementById('gift').classList.toggle('on', n >= TOTAL);
+    document.getElementById('stamp').textContent = n >= TOTAL ? 'Почати картку знову (демо)' : 'Поставити штамп (демо)';
+    if (grew) {
+      window.TK.chips(holes[n - 1], 1);
+      ticket.classList.remove('thunk'); void ticket.offsetWidth; ticket.classList.add('thunk');
+      if (n === TOTAL) window.TK.chips(ticket, 14, { jitter: 260, spread: 420, stagger: 50 });
+    }
+  }
+  document.getElementById('stamp').addEventListener('click', function () {
+    if (n >= TOTAL) { n = 0; render(false); return; }
+    n++; render(true);
+  });
+
+  function setConsent(on) {
+    var sw = document.getElementById('consentSw');
+    sw.setAttribute('aria-checked', String(on));
+    document.getElementById('consentText').textContent = on ? 'Ви отримуєте акції та нагадування' : 'Ви не отримуєте повідомлень';
+  }
+  document.getElementById('consentSw').addEventListener('click', function () { setConsent(this.getAttribute('aria-checked') !== 'true'); });
+  render(false);
+})();
+</script>
+</body>
+</html>

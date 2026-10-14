@@ -2,61 +2,96 @@
 @import "tw-animate-css";
 
 /*
- * Design tokens. Palette "Класика": black and white on warm paper, no accent color; Playfair Display for display type, Inter for text — both with
- * Ukrainian Cyrillic. Rebranding = change the variables below; components
- * only reference tokens (see docs/architecture.md §9).
+ * Design tokens. Palette "Слива й помаранч" (chosen 2026-10-14): public pages
+ * and the staff scanner live on a dark plum stage lit by one orange accent;
+ * the owner's workspace and the customer's card sit on light lilac paper.
+ * Type: Wix Madefor Display (headlines) + Wix Madefor Text (everything else),
+ * Russo One only for the wordmark and the giant scene words. Rebranding =
+ * change the variables below; components only reference tokens
+ * (docs/architecture.md §9).
  */
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --font-sans:
-    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+    var(--font-text), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: var(--font-display-face), var(--font-text), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-brand-face), var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   --radius: 1rem;
 
   /*
-   * Palette "Класика":
-   *   paper  #f4f2ee   ink   #141414
-   *   line   #e2ded7   wash  #ebe8e2   graphite #5f5c57
+   * Paper (light surfaces):  paper #f6f2f8   ink #2c1236
+   *   line #e6deea   wash #ede5f0   mist #6a5873
+   * Stage (dark surfaces):   stage #26102f   raised #3a1a46   mist #d2b8dc
+   * Accent: orange #ff9a3c on dark, text on it #2a0f00
    */
-  --background: #f4f2ee;
-  --foreground: #141414;
+  --background: #f6f2f8;
+  --foreground: #2c1236;
   --card: #ffffff;
-  --card-foreground: #141414;
+  --card-foreground: #2c1236;
   --popover: #ffffff;
-  --popover-foreground: #141414;
-  --primary: #141414;
+  --popover-foreground: #2c1236;
+  --primary: #2c1236;
   --primary-foreground: #ffffff;
-  --secondary: #ebe8e2;
-  --secondary-foreground: #141414;
-  --muted: #ebe8e2;
-  --muted-foreground: #5f5c57;
-  --accent: #ebe8e2;
-  --accent-foreground: #141414;
+  --secondary: #ede5f0;
+  --secondary-foreground: #2c1236;
+  --muted: #ede5f0;
+  --muted-foreground: #6a5873;
+  --accent: #ede5f0;
+  --accent-foreground: #2c1236;
   --destructive: #c8323a;
   --success: #13795b;
   --success-foreground: #f2fbf7;
-  --border: #e2ded7;
-  --input: #d3cec6;
-  --ring: #141414;
+  --border: #e6deea;
+  --input: #dccfe2;
+  --ring: #2c1236;
 
-  /* The dark blocks (hero, phone frames): ink with paper-white text. */
-  --ink: #141414;
-  --ink-foreground: #faf8f5;
-  --ink-muted: #a8a59f;
-  /* The accent on ink: plain paper white. */
-  --accent-on-ink: #faf8f5;
+  /* The dark stage (public pages, scanner, dashboard rail). */
+  --ink: #26102f;
+  --ink-2: #3a1a46;
+  --ink-foreground: #ffffff;
+  --ink-muted: #d2b8dc;
+  --ink-line: rgb(255 255 255 / 0.14);
+  /* The one accent. Used on dark, and as fills (holes, gift) on paper. */
+  --accent-on-ink: #ff9a3c;
+  --brand: #ff9a3c;
+  --brand-foreground: #2a0f00;
+  --glow: 255 154 60;
 
-  /* Gray ramp for charts: deep → pale. */
-  --chart-1: #141414;
-  --chart-2: #4a4845;
-  --chart-3: #807d78;
-  --chart-4: #b3b0aa;
-  --chart-5: #dcd9d3;
+  /* Charts: plum ramp, the brand orange marks the peak. */
+  --chart-1: #2c1236;
+  --chart-2: #5a3468;
+  --chart-3: #8a6a96;
+  --chart-4: #bba7c4;
+  --chart-5: #e2d8e7;
+}
+
+/* The dark stage for shadcn components: wrap a subtree in .theme-stage
+   (public pages, the staff scanner, the dashboard rail). */
+.theme-stage {
+  --background: var(--ink);
+  --foreground: #ffffff;
+  --card: var(--ink-2);
+  --card-foreground: #ffffff;
+  --popover: var(--ink-2);
+  --popover-foreground: #ffffff;
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--ink-2);
+  --secondary-foreground: #ffffff;
+  --muted: var(--ink-2);
+  --muted-foreground: var(--ink-muted);
+  --accent: rgb(255 255 255 / 0.08);
+  --accent-foreground: #ffffff;
+  --destructive: #ff8a7a;
+  --border: var(--ink-line);
+  --input: rgb(255 255 255 / 0.2);
+  --ring: var(--brand);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -93,6 +128,11 @@
   --color-ink-foreground: var(--ink-foreground);
   --color-ink-muted: var(--ink-muted);
   --color-accent-on-ink: var(--accent-on-ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-line: var(--ink-line);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --font-brand: var(--font-brand);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -109,10 +149,15 @@
   }
 }
 
-/* Playfair's default old-style figures make 0 read as the letter O. */
 @layer components {
   .font-display {
+    font-weight: 800;
+    letter-spacing: -0.02em;
     font-variant-numeric: lining-nums;
+  }
+  .font-brand {
+    font-weight: 400;
+    letter-spacing: 0;
   }
 }
 
@@ -223,5 +268,186 @@
   }
   .pulse-ring {
     opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Page transitions (src/lib/motion/transitions.ts) and falling punch chips.
+ * Layers overhang the screen by 30vh so iOS bars are covered too.
+ * ------------------------------------------------------------------------- */
+.pt-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -30vh;
+  bottom: -30vh;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: all;
+  background: var(--brand);
+  color: var(--brand-foreground);
+}
+.pt-layer.pt-clear {
+  background: transparent;
+}
+.pt-layer.pt-clear.pt-solid {
+  background: var(--brand);
+}
+.pt-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: clamp(36px, 7vw, 64px);
+  color: var(--brand-foreground);
+  pointer-events: none;
+}
+.pt-strip,
+.pt-dot,
+.pt-ink,
+.pt-sheet {
+  position: absolute;
+  background: var(--brand);
+}
+.pt-strip {
+  top: 0;
+  bottom: 0;
+}
+.pt-dot {
+  border-radius: 50%;
+}
+.pt-ink {
+  inset: 0;
+}
+.pt-sheet {
+  left: 0;
+  right: 0;
+}
+.pt-perf-top {
+  -webkit-mask: radial-gradient(circle 9px at 50% 0, transparent 96%, #000 100%) 0 0 / 28px 100% repeat-x;
+  mask: radial-gradient(circle 9px at 50% 0, transparent 96%, #000 100%) 0 0 / 28px 100% repeat-x;
+}
+.pt-perf-bottom {
+  -webkit-mask: radial-gradient(circle 9px at 50% 100%, transparent 96%, #000 100%) 0 0 / 28px 100% repeat-x;
+  mask: radial-gradient(circle 9px at 50% 100%, transparent 96%, #000 100%) 0 0 / 28px 100% repeat-x;
+}
+.pt-stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  box-shadow:
+    inset 0 0 0 5px var(--brand-foreground),
+    inset 0 0 0 12px var(--brand),
+    inset 0 0 0 14px var(--brand-foreground);
+}
+.pt-stamp b {
+  font-size: clamp(30px, 6vw, 58px);
+  line-height: 1;
+}
+.pt-stamp small {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+html.pt-arrived .pt-rise {
+  animation: pt-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+@keyframes pt-rise {
+  from {
+    opacity: 0.4;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.chipfx {
+  position: fixed;
+  z-index: 60;
+  border-radius: 50%;
+  background: var(--brand);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.pt-arrived .pt-rise {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Ticket holes (StampProgress): a collected stamp is punched through and
+ * shows the page behind the card (--hole-fill). A fresh one is punched with
+ * a little chip falling out.
+ * ------------------------------------------------------------------------- */
+.hole {
+  background: var(--hole-fill, var(--background));
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.18);
+}
+.hole-punch {
+  animation: hole-punch 480ms cubic-bezier(0.3, 1.6, 0.5, 1) var(--punch-delay, 0ms) both;
+}
+.hole-punch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: hole-chip 900ms cubic-bezier(0.4, 0.1, 0.7, 1) var(--punch-delay, 0ms) both;
+}
+@keyframes hole-punch {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes hole-chip {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(22px, 140px) rotate(150deg) scale(0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hole-punch,
+  .hole-punch::after {
+    animation: none;
+  }
+  .hole-punch::after {
+    opacity: 0;
+  }
+}
+
+/* Scanner: the line sweeping the camera frame. */
+.scan-sweep {
+  top: 8px;
+  box-shadow: 0 0 18px 4px rgb(var(--glow) / 0.55);
+  animation: scan-sweep 1.6s ease-in-out infinite alternate;
+}
+@keyframes scan-sweep {
+  to {
+    top: calc(100% - 11px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-sweep {
+    animation: none;
   }
 }

@@ -22,12 +22,23 @@ export interface CardPreviewProps {
   className?: string;
 }
 
+/** A perforation line across the card with the two notches punched out of its edges. */
+function Perforation({ color }: { color: string }) {
+  return (
+    <div aria-hidden className="relative -mx-5 my-1 border-t-2 border-dashed" style={{ borderColor: color }}>
+      <span className="absolute -top-3 -left-3 size-6 rounded-full bg-[var(--hole-fill,var(--background))]" />
+      <span className="absolute -top-3 -right-3 size-6 rounded-full bg-[var(--hole-fill,var(--background))]" />
+    </div>
+  );
+}
+
 /**
  * The business' loyalty card as the customer sees it (web card, join page,
- * landing examples, onboarding live preview), wallet-pass style: the
- * business' colors on top, a big stamp count, an optional white strip with
- * the code at the bottom. Colors are the business' own (validated hex values
- * from the database / niche config).
+ * landing examples, onboarding live preview) — a ticket: the business'
+ * colors, a perforation, stamps punched through as holes, and an optional
+ * white stub at the bottom (e.g. the QR code). Holes and notches show
+ * `--hole-fill`, the page behind the card. Colors are the business' own
+ * (validated hex values from the database / niche config).
  */
 export function CardPreview({
   businessName,
@@ -45,70 +56,69 @@ export function CardPreview({
   className,
 }: CardPreviewProps) {
   const shown = Math.min(stampsCount, stampsRequired);
+  const line = `color-mix(in srgb, ${fgColor} 35%, transparent)`;
   return (
     <article
-      className={cn(
-        "flex w-full flex-col overflow-hidden rounded-[1.5rem] shadow-[0_24px_48px_-28px_rgb(20_20_20/0.55)]",
-        className,
-      )}
-      // The check on a stamp is cut out in the card's own background color.
+      className={cn("flex w-full flex-col rounded-[1.4rem] shadow-[0_26px_50px_-30px_rgb(20_10_30/0.65)]", className)}
       style={{ backgroundColor: bgColor, color: fgColor, "--stamp-check": bgColor } as CSSProperties}
     >
-      <div className="flex flex-col gap-5 p-5">
+      <div className="flex flex-col gap-4 p-5">
         <header className="flex items-center gap-3">
           {logoUrl ? (
             // Owner-uploaded logo from Supabase Storage; next/image would need remotePatterns per project.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="size-10 shrink-0 rounded-full bg-white/10 object-cover" />
+            <img src={logoUrl} alt="" className="size-11 shrink-0 rounded-xl bg-white/10 object-cover" />
           ) : (
             <span
               aria-hidden
-              className="font-display flex size-10 shrink-0 items-center justify-center rounded-full border border-current text-base font-bold opacity-80"
+              className="font-display flex size-11 shrink-0 items-center justify-center rounded-xl border-2 border-current text-lg opacity-80"
             >
               {businessName.trim().charAt(0).toUpperCase()}
             </span>
           )}
-          <h2 className="font-display min-w-0 flex-1 truncate text-lg leading-tight font-semibold">{businessName}</h2>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h2 className="font-display truncate text-[1.35rem] leading-tight">{businessName}</h2>
+            <p className="truncate text-sm" style={{ color: labelColor }}>
+              {rewardText}
+            </p>
+          </div>
         </header>
 
-        <section className="flex flex-col gap-3">
-          <div className="flex items-end justify-between gap-2">
-            <span className="text-sm" style={{ color: labelColor }}>
-              {t("card.stampsTitle")}
-            </span>
-            <span className="font-display leading-none lining-nums tabular-nums" aria-hidden>
-              <span className="text-[2.6rem] font-bold">{shown}</span>
-              <span className="text-xl font-semibold opacity-70"> / {stampsRequired}</span>
-            </span>
-          </div>
-          <StampProgress
-            count={stampsCount}
-            total={stampsRequired}
-            animateFrom={animateStampsFrom}
-            animationDelay={animationDelay}
-          />
-        </section>
+        <Perforation color={line} />
 
-        <div className="flex flex-wrap gap-x-8 gap-y-4">
-          <section className="flex min-w-0 flex-col gap-0.5">
+        <StampProgress
+          count={stampsCount}
+          total={stampsRequired}
+          animateFrom={animateStampsFrom}
+          animationDelay={animationDelay}
+        />
+
+        <div className="flex items-end justify-between gap-3">
+          <span className="font-display leading-none lining-nums tabular-nums" aria-hidden>
+            <span className="text-[2.4rem]">{shown}</span>
+            <span className="text-lg opacity-70"> / {stampsRequired}</span>
+          </span>
+          <span className="flex min-w-0 flex-col items-end text-right text-sm">
             <span className="text-xs tracking-wide uppercase" style={{ color: labelColor }}>
-              {t("card.rewardLabel")}
+              {customerName ? t("card.customerLabel") : t("card.stampsTitle")}
             </span>
-            <p className="text-base font-medium">{rewardText}</p>
-          </section>
-
-          {customerName ? (
-            <section className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-xs tracking-wide uppercase" style={{ color: labelColor }}>
-                {t("card.customerLabel")}
-              </span>
-              <p className="text-base">{customerName}</p>
-            </section>
-          ) : null}
+            {customerName ? <span className="max-w-full truncate font-semibold">{customerName}</span> : null}
+          </span>
         </div>
+        <p className="sr-only">
+          {t("card.rewardLabel")}: {rewardText}
+        </p>
       </div>
 
-      {children ? <div className="bg-white px-5 py-4 text-[#141414]">{children}</div> : null}
+      {children ? (
+        <div className="relative rounded-b-[1.4rem] bg-white px-5 pt-5 pb-4 text-[#2c1236]">
+          <div aria-hidden className="absolute inset-x-0 -top-px border-t-2 border-dashed border-[#2c1236]/20">
+            <span className="absolute -top-3 -left-3 size-6 rounded-full bg-[var(--hole-fill,var(--background))]" />
+            <span className="absolute -top-3 -right-3 size-6 rounded-full bg-[var(--hole-fill,var(--background))]" />
+          </div>
+          {children}
+        </div>
+      ) : null}
     </article>
   );
 }

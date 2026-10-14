@@ -2,6 +2,7 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { CountUp } from "@/components/count-up";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Change } from "@/lib/domain/analytics";
@@ -21,7 +22,7 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between print:hidden">
       <div className="flex flex-col gap-1">
-        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-[clamp(32px,4vw,48px)] leading-[1.05]">{title}</h1>
         {description ? <p className="text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -47,7 +48,7 @@ export function Section({
     <Card className={cn("gap-4", className)}>
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <CardTitle className="text-base">{title}</CardTitle>
+          <CardTitle className="font-display text-xl">{title}</CardTitle>
           {action}
         </div>
         {hint ? <CardDescription>{hint}</CardDescription> : null}
@@ -84,10 +85,12 @@ export function StatCard({
         ? "text-success"
         : "text-destructive";
   return (
-    <Card className="gap-2 py-4">
-      <CardContent className="flex flex-col gap-1 px-4">
-        <span className="text-muted-foreground text-sm">{label}</span>
-        <span className="font-display text-[1.7rem] leading-tight font-bold lining-nums tabular-nums">{value}</span>
+    <Card className="gap-2 py-5">
+      <CardContent className="flex flex-col gap-1 px-5">
+        <span className="text-muted-foreground text-sm font-semibold">{label}</span>
+        <span className="font-display text-[2.4rem] leading-tight lining-nums tabular-nums">
+          {typeof value === "string" ? <CountUp text={value} /> : value}
+        </span>
         {delta ? <span className={cn("text-xs", tone)}>{deltaText(delta)}</span> : null}
         {hint ? <span className="text-muted-foreground text-xs">{hint}</span> : null}
       </CardContent>
@@ -98,15 +101,15 @@ export function StatCard({
 /** Notice for a feature that needs the Plus plan. */
 export function LockedFeature({ title, text }: { title: string; text?: string }) {
   return (
-    <div className="bg-muted flex flex-col gap-3 rounded-lg p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="bg-ink text-ink-foreground flex flex-col gap-3 rounded-[1.4rem] p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex gap-3">
         <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
         <div className="flex flex-col gap-1">
           <p className="font-medium">{title}</p>
-          {text ? <p className="text-muted-foreground text-sm">{text}</p> : null}
+          {text ? <p className="text-ink-muted text-sm">{text}</p> : null}
         </div>
       </div>
-      <Button asChild size="sm" className="shrink-0">
+      <Button asChild size="sm" variant="brand" className="shrink-0">
         <Link href="/dashboard/billing">{t("dashboard.upgradeCta")}</Link>
       </Button>
     </div>
@@ -127,7 +130,7 @@ export function Banner({
     <div
       role="status"
       className={cn(
-        "flex flex-col gap-2 rounded-lg border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between print:hidden",
+        "flex flex-col gap-2 rounded-2xl border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between print:hidden",
         tone === "warning" ? "border-destructive/40 bg-destructive/5" : "bg-muted",
       )}
     >

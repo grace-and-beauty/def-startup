@@ -28,6 +28,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
+    // Static design prototypes (plain HTML/JS, not part of the app)
+    "design-options/**",
   ]),
 ]);
 

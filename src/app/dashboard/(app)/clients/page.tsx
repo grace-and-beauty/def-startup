@@ -68,13 +68,13 @@ export default async function ClientsPage({ searchParams }: PageProps<"/dashboar
           <>
             {/* Plain links: a file download, not a client-side navigation. */}
             <Button asChild variant="outline" size="sm">
-              <a href="/dashboard/clients/export?kind=customers">
+              <a href="/dashboard/clients/export?kind=customers" data-no-transition>
                 <Download aria-hidden />
                 {t("clients.exportCustomers")}
               </a>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <a href="/dashboard/clients/export?kind=events">
+              <a href="/dashboard/clients/export?kind=events" data-no-transition>
                 <Download aria-hidden />
                 {t("clients.exportEvents")}
               </a>
