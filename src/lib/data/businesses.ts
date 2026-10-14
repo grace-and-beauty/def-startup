@@ -125,6 +125,11 @@ export async function setBusinessLogo(admin: Db, id: string, logoUrl: string | n
   unwrap("setBusinessLogo", await admin.from("businesses").update({ logo_url: logoUrl }).eq("id", id));
 }
 
+/** Service role only: the owner's own category after «Інше» (shown in /admin). */
+export async function setBusinessNicheLabel(admin: Db, id: string, label: string): Promise<void> {
+  unwrap("setBusinessNicheLabel", await admin.from("businesses").update({ niche_label: label }).eq("id", id));
+}
+
 /** Service role only (manual plan changes in the MVP). */
 export async function updateBusinessBilling(
   admin: Db,

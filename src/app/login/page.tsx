@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 import { TicketGlyph } from "@/components/brand-mark";
 import { PublicShell } from "@/components/public-shell";
-import { isNicheSlug } from "@/config/niches";
 import { accent } from "@/lib/accent";
+import { cardDraftQuery, parseCardDraft } from "@/lib/domain/card-draft";
 import { t } from "@/lib/i18n";
 
 import { LoginForm } from "./login-form";
@@ -13,7 +13,8 @@ export const metadata: Metadata = { title: t("login.title") };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
-  const niche = typeof params.niche === "string" && isNicheSlug(params.niche) ? params.niche : undefined;
+  // ?niche=… from /dlya/[niche], or a whole card from the builder on the home page.
+  const draft = parseCardDraft(params);
   const callbackError = params.error === "callback";
 
   return (
@@ -31,7 +32,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               {t("login.callbackError")}
             </p>
           ) : null}
-          <LoginForm niche={niche} />
+          <LoginForm draft={draft ? cardDraftQuery(draft) : undefined} />
         </section>
 
         <div className="lg-art relative hidden min-w-0 flex-[1_1_360px] justify-center md:flex" aria-hidden>

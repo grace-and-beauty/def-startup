@@ -134,6 +134,29 @@ describe("owner contacts (migration *_owner_contacts.sql)", () => {
     });
   });
 
+  it("the own category of «Інше» is written by the server only, 2–60 characters", async () => {
+    await asRole(db, "authenticated", OWNER2, async (c) => {
+      const { rows } = await c.query(CALL, ARGS("niche-label"));
+      const id = rows[0].business_id;
+      await c.query("savepoint owner");
+      await expect(
+        c.query("update public.businesses set niche_label = 'Кальянна' where id = $1", [id]),
+      ).rejects.toMatchObject({ code: "42501" });
+      await c.query("rollback to savepoint owner");
+
+      await c.query("reset role");
+      await c.query("set local role service_role");
+      await c.query("update public.businesses set niche_label = 'Кальянна' where id = $1", [id]);
+      const business = await c.query("select niche_label from public.businesses where id = $1", [id]);
+      expect(business.rows[0]).toEqual({ niche_label: "Кальянна" });
+      await c.query("savepoint short");
+      await expect(
+        c.query("update public.businesses set niche_label = ' К ' where id = $1", [id]),
+      ).rejects.toMatchObject({ code: "23514" });
+      await c.query("rollback to savepoint short");
+    });
+  });
+
   it("owners can fill in contacts later in settings", async () => {
     await asRole(db, "authenticated", OWNER2, async (c) => {
       const { rows } = await c.query(CALL, ARGS("contacts-later"));

@@ -86,7 +86,11 @@ export function BusinessesTable({ rows, nicheNames }: { rows: AdminRow[]; nicheN
             <span>{t("admin.colContact")}</span>
           </li>
           {shown.map((row) => (
-            <BusinessRow key={row.id} row={row} niche={nicheNames[row.nicheSlug] ?? row.nicheSlug} />
+            <BusinessRow
+              key={row.id}
+              row={row}
+              niche={[nicheNames[row.nicheSlug] ?? row.nicheSlug, row.nicheLabel].filter(Boolean).join(" · ")}
+            />
           ))}
         </ul>
       )}

@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { Niche, NicheSlug } from "@/config/niches";
+import { OTHER_NICHE, type Niche, type NicheSlug } from "@/config/niches";
 import { normalizeOwnerPhone } from "@/lib/domain/business-input";
+import type { CardDraft } from "@/lib/domain/card-draft";
 import { isValidSlug, normalizeSlugInput, slugify } from "@/lib/domain/slug";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { isValidNewPin } from "@/lib/security/pin-format";
@@ -31,13 +32,17 @@ const STEPS: readonly TranslationKey[] = [
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 interface WizardProps {
+  /** The niches, then «Інше» (nicheChoices()). */
   niches: Niche[];
-  initialNiche: NicheSlug | null;
+  /** Preselected niche, and maybe a whole card from the builder on the home page. */
+  draft: CardDraft | null;
   siteUrl: string;
 }
 
 interface FormState {
   niche: NicheSlug | null;
+  /** The owner's own category, with «Інше». */
+  nicheLabel: string;
   name: string;
   slug: string;
   slugTouched: boolean;
@@ -67,13 +72,15 @@ function presetFor(niche: Niche | undefined): Partial<FormState> {
 
 type FieldErrors = Partial<Record<OnboardingField, string>>;
 
-export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps) {
-  const initial = niches.find((n) => n.slug === initialNiche);
-  const [step, setStep] = useState(initial ? 1 : 0);
+export function OnboardingWizard({ niches, draft, siteUrl }: WizardProps) {
+  const initial = niches.find((n) => n.slug === draft?.niche);
+  // «Інше» without a category name starts on the first step to ask for it.
+  const [step, setStep] = useState(initial && (initial.slug !== OTHER_NICHE || draft?.nicheLabel) ? 1 : 0);
   const [form, setForm] = useState<FormState>({
     niche: initial?.slug ?? null,
-    name: "",
-    slug: "",
+    nicheLabel: draft?.nicheLabel ?? "",
+    name: draft?.businessName ?? "",
+    slug: draft?.businessName ? slugify(draft.businessName) : "",
     slugTouched: false,
     contactPhone: "",
     city: "",
@@ -86,6 +93,11 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
     pin: "",
     pinConfirm: "",
     ...presetFor(initial),
+    ...(draft?.stampsRequired ? { stampsRequired: draft.stampsRequired } : {}),
+    ...(draft?.rewardText ? { rewardText: draft.rewardText } : {}),
+    ...(draft?.colors
+      ? { bgColor: draft.colors.bg, fgColor: draft.colors.fg, labelColor: draft.colors.label }
+      : {}),
   });
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -108,6 +120,8 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
   }
 
   function chooseNiche(slug: NicheSlug) {
+    // Re-clicking the chosen niche keeps what the owner (or the builder) already set.
+    if (slug === form.niche) return;
     update({ niche: slug, ...presetFor(niches.find((n) => n.slug === slug)) });
   }
 
@@ -129,6 +143,10 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
   function validate(index: number): FieldErrors {
     const e: FieldErrors = {};
     if (index === 0 && !form.niche) e.niche = t("onboarding.nicheTitle");
+    if (index === 0 && form.niche === OTHER_NICHE) {
+      const label = form.nicheLabel.replace(/\s+/g, " ").trim();
+      if (label.length < 2 || label.length > 60) e.nicheLabel = t("onboarding.nicheLabelInvalid");
+    }
     if (index === 1) {
       const name = form.name.trim();
       if (name.length < 1 || name.length > 80) e.name = t("onboarding.nameInvalid");
@@ -190,6 +208,7 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
 
     const data = new FormData();
     data.set("niche", form.niche ?? "");
+    data.set("nicheLabel", form.niche === OTHER_NICHE ? form.nicheLabel : "");
     data.set("name", form.name);
     data.set("slug", form.slug);
     data.set("contactPhone", form.contactPhone);
@@ -260,9 +279,10 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
         <div className="flex min-w-0 flex-col gap-5">
           {step === 0 ? (
             <StepBlock title={t("onboarding.nicheTitle")} hint={t("onboarding.nicheHint")}>
-              <div role="radiogroup" aria-label={t("onboarding.nicheTitle")} className="grid gap-2 sm:grid-cols-2">
+              <div role="radiogroup" aria-label={t("onboarding.nicheTitle")} className="grid grid-cols-2 gap-2">
                 {niches.map((n) => {
                   const selected = form.niche === n.slug;
+                  const other = n.slug === OTHER_NICHE;
                   return (
                     <button
                       key={n.slug}
@@ -271,19 +291,35 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
                       aria-checked={selected}
                       onClick={() => chooseNiche(n.slug)}
                       className={cn(
-                        "hover:border-foreground/40 flex items-start justify-between gap-2 rounded-lg border p-3 text-left transition-colors",
-                        selected && "border-foreground ring-foreground ring-1",
+                        "hover:border-foreground/40 flex min-w-0 items-start justify-between gap-2 rounded-lg border p-3 text-left transition-colors",
+                        other && "col-span-2 border-dashed",
+                        selected && "border-foreground ring-foreground border-solid ring-1",
                       )}
                     >
-                      <span className="flex flex-col gap-0.5">
+                      <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="font-medium">{n.name}</span>
-                        <span className="text-muted-foreground text-xs">{n.rewardText}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {other ? t("onboarding.nicheOtherHint") : n.rewardText}
+                        </span>
                       </span>
                       {selected ? <Check className="size-4 shrink-0" aria-hidden /> : null}
                     </button>
                   );
                 })}
               </div>
+              {form.niche === OTHER_NICHE ? (
+                <Field id="nicheLabel" label={t("onboarding.nicheLabel")} error={errors.nicheLabel}>
+                  <Input
+                    id="nicheLabel"
+                    value={form.nicheLabel}
+                    maxLength={60}
+                    autoFocus={!form.nicheLabel}
+                    placeholder={t("onboarding.nicheLabelPlaceholder")}
+                    onChange={(e) => update({ nicheLabel: e.target.value })}
+                    aria-invalid={Boolean(errors.nicheLabel)}
+                  />
+                </Field>
+              ) : null}
               <FieldError message={errors.niche} />
             </StepBlock>
           ) : null}
@@ -296,7 +332,11 @@ export function OnboardingWizard({ niches, initialNiche, siteUrl }: WizardProps)
                   value={form.name}
                   maxLength={80}
                   autoComplete="organization"
-                  placeholder={t("onboarding.namePlaceholder", { example: niche?.sampleBusinessName ?? "" })}
+                  placeholder={
+                    niche && niche.slug !== OTHER_NICHE
+                      ? t("onboarding.namePlaceholder", { example: niche.sampleBusinessName })
+                      : t("onboarding.namePlaceholderOther")
+                  }
                   onChange={(e) => setName(e.target.value)}
                   aria-invalid={Boolean(errors.name)}
                   className="h-11 text-base"

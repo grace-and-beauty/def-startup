@@ -2,6 +2,7 @@ import type { TranslationKey } from "@/lib/i18n";
 
 export const ONBOARDING_FIELDS = [
   "niche",
+  "nicheLabel",
   "name",
   "slug",
   "contactPhone",
@@ -26,6 +27,7 @@ export function isOnboardingField(value: unknown): value is OnboardingField {
 /** Wizard step (0-based) where a field lives — the wizard jumps there on an error. */
 export const FIELD_STEP: Record<OnboardingField, number> = {
   niche: 0,
+  nicheLabel: 0,
   name: 1,
   slug: 1,
   contactPhone: 1,
@@ -43,6 +45,7 @@ export const FIELD_STEP: Record<OnboardingField, number> = {
 
 export const FIELD_ERROR_KEYS: Record<OnboardingField, TranslationKey> = {
   niche: "common.error",
+  nicheLabel: "onboarding.nicheLabelInvalid",
   name: "onboarding.nameInvalid",
   slug: "onboarding.slugInvalid",
   contactPhone: "onboarding.contactPhoneInvalid",

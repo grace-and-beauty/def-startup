@@ -3,9 +3,9 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { getNiche, isNicheSlug } from "@/config/niches";
+import { getNiche, isNicheSlug, OTHER_NICHE } from "@/config/niches";
 import { getOwnerBusiness, getOwnerSession } from "@/lib/auth/owner";
-import { DataError, isSlugTaken, onboardBusiness, setBusinessLogo } from "@/lib/data";
+import { DataError, isSlugTaken, onboardBusiness, setBusinessLogo, setBusinessNicheLabel } from "@/lib/data";
 import {
   businessNameSchema,
   citySchema,
@@ -13,6 +13,7 @@ import {
   formString,
   hexColorSchema,
   newPinSchema,
+  nicheLabelSchema,
   ownerPhoneSchema,
   rewardTextSchema,
   slugSchema,
@@ -69,6 +70,7 @@ export async function checkSlug(rawSlug: string): Promise<SlugCheckResult> {
 
 const schema = z.object({
   niche: z.string().refine(isNicheSlug),
+  nicheLabel: z.string(),
   name: businessNameSchema,
   slug: slugSchema,
   contactPhone: ownerPhoneSchema,
@@ -98,6 +100,7 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
 
   const parsed = schema.safeParse({
     niche: formString(formData, "niche"),
+    nicheLabel: formString(formData, "nicheLabel"),
     name: formString(formData, "name"),
     slug: formString(formData, "slug"),
     contactPhone: formString(formData, "contactPhone"),
@@ -123,6 +126,13 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
 
   const niche = getNiche(input.niche);
   if (!niche) return fieldError("niche");
+  // «Інше» needs the owner's own category; other niches ignore the field.
+  let nicheLabel: string | null = null;
+  if (niche.slug === OTHER_NICHE) {
+    const label = nicheLabelSchema.safeParse(input.nicheLabel);
+    if (!label.success) return fieldError("nicheLabel");
+    nicheLabel = label.data;
+  }
 
   let businessId: string;
   let alreadyDone = false;
@@ -146,7 +156,7 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
     });
     alreadyDone = result.status === "already_done";
     businessId = result.business_id;
-    if (!alreadyDone) logEvent("info", "business_onboarded", { businessId, niche: niche.slug });
+    if (!alreadyDone) logEvent("info", "business_onboarded", { businessId, niche: niche.slug, nicheLabel });
   } catch (error) {
     if (error instanceof DataError && error.isUniqueViolation) {
       const suggestions = (await freeSlugs(input.slug, null).catch(() => null)) ?? [];
@@ -156,6 +166,16 @@ export async function completeOnboarding(formData: FormData): Promise<Onboarding
     return { status: "error", reason: "unknown" };
   }
   if (alreadyDone) redirect("/dashboard");
+
+  if (nicheLabel) {
+    // Nice to have (only /admin shows it): a failure never fails onboarding.
+    try {
+      const admin = tryCreateSupabaseAdminClient();
+      if (admin) await setBusinessNicheLabel(admin, businessId, nicheLabel);
+    } catch (error) {
+      logEvent("warn", "action_failed", { action: "onboarding niche label", error });
+    }
+  }
 
   let logoFailed = false;
   if (logo) {

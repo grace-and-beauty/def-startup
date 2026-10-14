@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { isNicheSlug } from "@/config/niches";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { onboardingPathForDraft } from "@/lib/domain/card-draft";
 import { hitLoginRateLimit } from "@/lib/data";
 import { ipHashSecret, isAdminEmail, isSupabaseConfigured, MissingEnvError, siteUrl } from "@/lib/env";
 import { logEvent } from "@/lib/log";
@@ -32,7 +32,8 @@ const emailSchema = z.string().trim().toLowerCase().max(254).pipe(z.email());
 
 const sendSchema = z.object({
   email: emailSchema,
-  niche: z.string().optional(),
+  // A broken draft never blocks sign-in: it is dropped.
+  draft: z.string().max(4000).optional().catch(undefined),
 });
 
 const verifySchema = z.object({
@@ -42,13 +43,17 @@ const verifySchema = z.object({
     .string()
     .transform((value) => value.replace(/\s+/g, ""))
     .pipe(z.string().regex(/^\d{6,10}$/)),
-  niche: z.string().optional(),
+  // A broken draft never blocks sign-in: it is dropped.
+  draft: z.string().max(4000).optional().catch(undefined),
 });
 
-/** After sign-in: the service admin goes to /admin, an owner to the dashboard (or the wizard for a niche). */
-function nextPathFor(niche: string | undefined, email: string): string {
+/**
+ * After sign-in: the service admin goes to /admin, an owner to the dashboard,
+ * or to the wizard with the card they started (src/lib/domain/card-draft.ts).
+ */
+function nextPathFor(draft: string | undefined, email: string): string {
   if (isAdminEmail(email)) return "/admin";
-  return safeNextPath(niche && isNicheSlug(niche) ? `/dashboard/onboarding?niche=${niche}` : "/dashboard");
+  return safeNextPath(onboardingPathForDraft(draft) ?? "/dashboard");
 }
 
 function ipHashSecretOrNull(): string | null {
@@ -68,14 +73,14 @@ function ipHashSecretOrNull(): string | null {
 export async function sendLoginCode(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = sendSchema.safeParse({
     email: formData.get("email"),
-    niche: formData.get("niche") ?? undefined,
+    draft: formData.get("draft") ?? undefined,
   });
   if (!parsed.success) return { status: "error", reason: "invalidEmail" };
   if (!isSupabaseConfigured()) return { status: "error", reason: "notConfigured" };
 
-  const { email, niche } = parsed.data;
+  const { email, draft } = parsed.data;
   const callback = new URL("/auth/callback", siteUrl());
-  callback.searchParams.set("next", nextPathFor(niche, email));
+  callback.searchParams.set("next", nextPathFor(draft, email));
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithOtp({
@@ -100,7 +105,7 @@ export async function verifyLoginCode(_prev: VerifyState, formData: FormData): P
   const parsed = verifySchema.safeParse({
     email: formData.get("email"),
     code: formData.get("code") ?? "",
-    niche: formData.get("niche") ?? undefined,
+    draft: formData.get("draft") ?? undefined,
   });
   if (!parsed.success) return { status: "error", reason: "invalidCode" };
   if (!isSupabaseConfigured()) return { status: "error", reason: "notConfigured" };
@@ -109,7 +114,7 @@ export async function verifyLoginCode(_prev: VerifyState, formData: FormData): P
   const secret = ipHashSecretOrNull();
   if (!admin || !secret) return { status: "error", reason: "notConfigured" };
 
-  const { email, code, niche } = parsed.data;
+  const { email, code, draft } = parsed.data;
 
   try {
     const emailAllowed = await hitLoginRateLimit(admin, {
@@ -140,5 +145,5 @@ export async function verifyLoginCode(_prev: VerifyState, formData: FormData): P
     return { status: "error", reason: "invalidCode" };
   }
 
-  redirect(nextPathFor(niche, email));
+  redirect(nextPathFor(draft, email));
 }

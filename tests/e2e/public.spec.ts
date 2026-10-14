@@ -13,6 +13,27 @@ test("home page tells the story and lists the niches", async ({ page }) => {
   await expect(page.getByRole("link", { name: t("story.finalCta") })).toBeVisible();
 });
 
+test("the card builder on the home page carries the card to sign-in", async ({ page }) => {
+  await page.goto("/");
+  const builder = page.locator("#konstruktor");
+  await builder.getByRole("radio", { name: "Інше", exact: true }).click();
+  await builder.getByLabel(t("onboarding.nicheLabel")).fill("Кальянна");
+  await builder.getByLabel(t("builder.reward")).fill("Кальян у подарунок");
+  await builder.getByRole("button", { name: t("builder.more") }).click();
+  await expect(builder.getByRole("heading", { name: "Кальянна" })).toBeVisible();
+  await expect(builder.getByText("Кальян у подарунок", { exact: true })).toBeVisible();
+
+  await builder.getByRole("link", { name: t("builder.cta") }).click();
+  await expect(page).toHaveURL(/\/login\?/);
+  const draft = await page.locator('input[name="draft"]').first().inputValue();
+  expect(Object.fromEntries(new URLSearchParams(draft))).toEqual({
+    niche: "inshe",
+    stamps: "7",
+    reward: "Кальян у подарунок",
+    label: "Кальянна",
+  });
+});
+
 test("pricing lists the three plans", async ({ page }) => {
   await page.goto("/pricing");
   await expect(page.getByRole("heading", { name: plain(t("pricing.heroTitle")), level: 1 })).toBeVisible();

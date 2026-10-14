@@ -20,6 +20,19 @@ export async function listAllBusinesses(admin: Db): Promise<AdminBusiness[]> {
   );
 }
 
+/**
+ * Own categories typed with «Інше» (businesses.niche_label), by business id.
+ * A separate read so /admin still opens where migration 20261014000100 is
+ * not applied yet: the caller treats a failure as "no labels".
+ */
+export async function listNicheLabels(admin: Db): Promise<Map<string, string>> {
+  const rows = unwrapRequired(
+    "listNicheLabels",
+    await admin.from("businesses").select("id, niche_label").not("niche_label", "is", null),
+  );
+  return new Map(rows.flatMap((r) => (r.niche_label ? [[r.id, r.niche_label] as const] : [])));
+}
+
 export async function getAdminBusinessStats(
   admin: Db,
   range: { from: Date; to: Date; prevFrom: Date; prevTo: Date },

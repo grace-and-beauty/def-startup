@@ -1,15 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import { FEATURES, PLAN_IDS, PLANS } from "@/config/plans";
-import { listNiches, NICHE_SLUGS, NICHES } from "@/config/niches";
+import { listNiches, NICHE_SLUGS, nicheChoices, NICHES, OTHER_NICHE } from "@/config/niches";
 import { interpolate, t } from "@/lib/i18n";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 describe("niches config", () => {
-  it("has the 8 MVP niches", () => {
-    expect(NICHE_SLUGS).toHaveLength(8);
+  it("has 14 niches plus «Інше»", () => {
+    expect(NICHE_SLUGS).toHaveLength(15);
+    expect(listNiches()).toHaveLength(14);
     expect(listNiches()[0]?.slug).toBe("avtomyika");
+  });
+
+  it("keeps «Інше» out of landing pages and last in the wizard", () => {
+    expect(listNiches().map((n) => n.slug)).not.toContain(OTHER_NICHE);
+    expect(nicheChoices().at(-1)?.slug).toBe(OTHER_NICHE);
+    expect(nicheChoices()).toHaveLength(NICHE_SLUGS.length);
+  });
+
+  it("matches the DB slug pattern", () => {
+    for (const slug of NICHE_SLUGS) expect(slug).toMatch(/^[a-z0-9-]{1,40}$/);
   });
 
   it.each(NICHE_SLUGS)("%s satisfies DB constraints", (slug) => {

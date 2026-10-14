@@ -35,7 +35,7 @@ const ERROR = "text-sm font-semibold text-[#ffb4a8]";
 const RESEND_AFTER_MS = 60_000;
 
 /** Owner sign-in in two steps: email → one-time code from the letter. */
-export function LoginForm({ niche }: { niche?: string }) {
+export function LoginForm({ draft }: { draft?: string }) {
   const [sendState, sendAction, sending] = useActionState<LoginState, FormData>(sendLoginCode, {
     status: "idle",
   });
@@ -47,7 +47,7 @@ export function LoginForm({ niche }: { niche?: string }) {
       <CodeStep
         email={sendState.email}
         sentAt={sendState.sentAt}
-        niche={niche}
+        draft={draft}
         onChangeEmail={() => setChangingEmail(true)}
       />
     );
@@ -55,7 +55,7 @@ export function LoginForm({ niche }: { niche?: string }) {
 
   return (
     <form action={sendAction} onSubmit={() => setChangingEmail(false)} className="flex flex-col gap-3.5" noValidate>
-      {niche ? <input type="hidden" name="niche" value={niche} /> : null}
+      {draft ? <input type="hidden" name="draft" value={draft} /> : null}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email" className="text-ink-muted font-bold">
           {t("login.email")}
@@ -89,12 +89,12 @@ export function LoginForm({ niche }: { niche?: string }) {
 function CodeStep({
   email,
   sentAt,
-  niche,
+  draft,
   onChangeEmail,
 }: {
   email: string;
   sentAt: number;
-  niche?: string;
+  draft?: string;
   onChangeEmail: () => void;
 }) {
   const [verifyState, verifyAction, verifying] = useActionState<VerifyState, FormData>(verifyLoginCode, {
@@ -115,7 +115,7 @@ function CodeStep({
 
       <form action={verifyAction} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="email" value={email} />
-        {niche ? <input type="hidden" name="niche" value={niche} /> : null}
+        {draft ? <input type="hidden" name="draft" value={draft} /> : null}
         <div className="flex flex-col gap-2">
           <Label htmlFor="code" className="text-ink-muted font-bold">
             {t("login.code")}
@@ -148,7 +148,7 @@ function CodeStep({
       <div className="flex flex-col items-start gap-1 text-sm">
         <form action={resendAction}>
           <input type="hidden" name="email" value={email} />
-          {niche ? <input type="hidden" name="niche" value={niche} /> : null}
+          {draft ? <input type="hidden" name="draft" value={draft} /> : null}
           <Button type="submit" variant="link" className="text-ink-foreground h-auto px-0" disabled={resending || secondsLeft > 0}>
             {secondsLeft > 0 ? t("login.resendIn", { seconds: secondsLeft }) : t("login.resend")}
           </Button>

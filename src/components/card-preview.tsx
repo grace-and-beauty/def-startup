@@ -78,7 +78,7 @@ export function CardPreview({
           )}
           <div className="flex min-w-0 flex-1 flex-col">
             <h2 className="font-display truncate text-[1.35rem] leading-tight">{businessName}</h2>
-            <p className="truncate text-sm" style={{ color: labelColor }}>
+            <p className="line-clamp-2 text-sm" style={{ color: labelColor }}>
               {rewardText}
             </p>
           </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { citySchema, normalizeOwnerPhone } from "@/lib/domain/business-input";
+import { citySchema, nicheLabelSchema, normalizeOwnerPhone } from "@/lib/domain/business-input";
 import { normalizeCustomerName, normalizePhone } from "@/lib/domain/customer-input";
 import { isValidSlug } from "@/lib/domain/slug";
 
@@ -19,6 +19,15 @@ describe("customer input", () => {
     expect(normalizePhone("abc")).toBeUndefined();
     expect(normalizePhone("12345")).toBeUndefined();
     expect(normalizePhone("1".repeat(16))).toBeUndefined();
+  });
+});
+
+describe("own category («Інше»)", () => {
+  it("collapses spaces and keeps 2–60 characters", () => {
+    expect(nicheLabelSchema.parse("  Кальянна   біля  парку ")).toBe("Кальянна біля парку");
+    expect(nicheLabelSchema.safeParse(" К ").success).toBe(false);
+    expect(nicheLabelSchema.safeParse("к".repeat(61)).success).toBe(false);
+    expect(nicheLabelSchema.safeParse("к".repeat(60)).success).toBe(true);
   });
 });
 

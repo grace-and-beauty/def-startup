@@ -8,13 +8,13 @@ import { PhoneFrame, SampleBarcode } from "@/components/phone-frame";
 import { PublicShell } from "@/components/public-shell";
 import { StampMark } from "@/components/stamp-progress";
 import { Button } from "@/components/ui/button";
-import { getNiche, NICHE_SLUGS } from "@/config/niches";
+import { getNiche, listNiches } from "@/config/niches";
 import { t } from "@/lib/i18n";
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return NICHE_SLUGS.map((niche) => ({ niche }));
+  return listNiches().map(({ slug }) => ({ niche: slug }));
 }
 
 export async function generateMetadata({

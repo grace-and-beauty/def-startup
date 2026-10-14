@@ -20,6 +20,8 @@ export interface AdminBusiness {
   name: string;
   slug: string;
   niche_slug: string;
+  /** Own category typed with «Інше» (listNicheLabels). */
+  niche_label?: string | null;
   city: string | null;
   contact_phone: string | null;
   plan: "trial" | PlanId;
@@ -56,6 +58,7 @@ export interface AdminRow {
   name: string;
   slug: string;
   nicheSlug: string;
+  nicheLabel: string | null;
   city: string | null;
   phone: string | null;
   email: string | null;
@@ -133,6 +136,7 @@ export function buildAdminOverview(input: {
       name: b.name,
       slug: b.slug,
       nicheSlug: b.niche_slug,
+      nicheLabel: b.niche_label ?? null,
       city: b.city,
       phone: b.contact_phone,
       email: s?.owner_email ?? null,

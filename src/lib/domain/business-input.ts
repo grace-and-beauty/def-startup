@@ -19,6 +19,11 @@ const optionalText = (max: number) =>
     .transform((value) => (value === "" ? null : value));
 
 export const businessNameSchema = trimmed(80);
+/** The owner's own category when they pick «Інше»: spaces collapsed, 2–60 characters. */
+export const nicheLabelSchema = z
+  .string()
+  .transform((raw) => raw.replace(/\s+/g, " ").trim())
+  .pipe(z.string().min(2).max(60));
 export const slugSchema = z.string().trim().regex(SLUG_PATTERN);
 export const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const stampsRequiredSchema = z.coerce.number().int().min(2).max(20);

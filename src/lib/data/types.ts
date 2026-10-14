@@ -45,6 +45,7 @@ export type Database = {
           name: string;
           slug: string;
           niche_slug: string;
+          niche_label: string | null;
           logo_url: string | null;
           bg_color: string;
           fg_color: string;
@@ -69,6 +70,7 @@ export type Database = {
           name: string;
           slug: string;
           niche_slug: string;
+          niche_label?: string | null;
           logo_url?: string | null;
           bg_color?: string;
           fg_color?: string;
@@ -94,6 +96,7 @@ export type Database = {
           name?: string;
           slug?: string;
           niche_slug?: string;
+          niche_label?: string | null;
           logo_url?: string | null;
           bg_color?: string;
           fg_color?: string;

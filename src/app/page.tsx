@@ -2,9 +2,10 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
+import { CardBuilder, type BuilderChoice } from "@/components/home/card-builder";
 import { HomeStory, type StoryScene, type StoryTexts } from "@/components/home/home-story";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { getNiche, listNiches } from "@/config/niches";
+import { getNiche, listNiches, nicheChoices } from "@/config/niches";
 import { PLANS } from "@/config/plans";
 import { accent } from "@/lib/accent";
 import { t, type TranslationKey } from "@/lib/i18n";
@@ -74,6 +75,15 @@ export default function HomePage() {
     reward: barbershop.rewardText,
     stamps: barbershop.stampsRequired,
   };
+  const choices: BuilderChoice[] = nicheChoices().map((n) => ({
+    slug: n.slug,
+    name: n.name,
+    sampleBusinessName: n.sampleBusinessName,
+    rewardText: n.rewardText,
+    stampsRequired: n.stampsRequired,
+    colors: n.colors,
+    customerName: n.landing.sampleCustomerName,
+  }));
   // The marquee runs twice so it can loop; the second copy is hidden from assistive tech.
   const tickets = [...niches, ...niches];
 
@@ -123,6 +133,14 @@ export default function HomePage() {
               })}
             </div>
           </div>
+        </section>
+
+        <section id="konstruktor" className="hs-build hs-section" aria-labelledby="build-title">
+          <h2 id="build-title" className="hs-big">
+            {accent(t("builder.title"))}
+          </h2>
+          <p className="hs-lead">{t("builder.lead")}</p>
+          <CardBuilder choices={choices} initial={barbershop.slug} />
         </section>
 
         <section className="hs-final hs-section" aria-labelledby="final-title">

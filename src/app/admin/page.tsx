@@ -2,7 +2,7 @@ import { deltaText } from "@/components/dashboard/blocks";
 import { PLAN_IDS, PLANS } from "@/config/plans";
 import { getNiche } from "@/config/niches";
 import { requireAdmin } from "@/lib/auth/admin";
-import { getAdminBusinessStats, getAdminWeeklyGrowth, listAllBusinesses } from "@/lib/data";
+import { getAdminBusinessStats, getAdminWeeklyGrowth, listAllBusinesses, listNicheLabels } from "@/lib/data";
 import { buildAdminOverview, type AdminOverview } from "@/lib/domain/admin-overview";
 import { addDays, monthToDateComparison, toLocalDate, zonedMidnight } from "@/lib/domain/dates";
 import { formatNumber } from "@/lib/format";
@@ -29,8 +29,9 @@ export default async function AdminPage() {
   const previousPeriodStart = zonedMidnight(previous.from, TIME_ZONE);
   const previousPeriodEnd = zonedMidnight(addDays(previous.to, 1), TIME_ZONE);
 
-  const [businesses, stats, weeks] = await Promise.all([
+  const [allBusinesses, labels, stats, weeks] = await Promise.all([
     listAllBusinesses(admin),
+    listNicheLabels(admin).catch(() => new Map<string, string>()),
     getAdminBusinessStats(admin, {
       from: periodStart,
       to: now,
@@ -41,6 +42,7 @@ export default async function AdminPage() {
   ]);
   logEvent("info", "admin_viewed", { userId: user.id });
 
+  const businesses = allBusinesses.map((b) => ({ ...b, niche_label: labels.get(b.id) ?? null }));
   const overview = buildAdminOverview({
     businesses,
     stats,
