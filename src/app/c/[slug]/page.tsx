@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CardPreview } from "@/components/card-preview";
+import { PoweredBy } from "@/components/powered-by";
 import { MessageScreen, ServiceUnavailable } from "@/components/message-screen";
 import { t } from "@/lib/i18n";
 import { isAcceptingCustomers, loadPublicBusiness } from "@/lib/public/loaders";
@@ -63,6 +64,8 @@ export default async function JoinPage({ params }: PageProps<"/c/[slug]">) {
         action={joinProgram.bind(null, business.slug)}
         googleWalletEnabled={isGoogleWalletConfigured()}
       />
+
+      <PoweredBy nicheSlug={business.niche_slug} source="join" />
     </main>
   );
 }

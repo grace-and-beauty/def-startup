@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { Russo_One, Wix_Madefor_Display, Wix_Madefor_Text } from "next/font/google";
 
@@ -37,6 +38,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <PageTransitions stampCaption={t("transitions.stampCaption")} />
         <Toaster />
+        {/* Cookieless visit statistics (Vercel Web Analytics); see the privacy policy. */}
+        <Analytics />
       </body>
     </html>
   );

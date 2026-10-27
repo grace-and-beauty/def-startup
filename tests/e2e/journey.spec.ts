@@ -115,6 +115,11 @@ test("customer joins from the QR page and gets a web card", async () => {
   await expect(customer.getByText(t("webCard.remaining", { count: business.stamps }))).toBeVisible();
   await expect(customer.getByText(customerName)).toBeVisible();
   await expect(customer.getByText(t("webCard.consentOn"))).toBeVisible();
+  // Every card advertises the service to the business' own customers.
+  await expect(customer.getByRole("link", { name: t("poweredBy.cta") })).toHaveAttribute(
+    "href",
+    /^\/dlya\/[a-z-]+\?utm_source=card$/,
+  );
 });
 
 test("staff log in with the PIN, a wrong PIN is refused", async () => {

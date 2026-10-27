@@ -14,7 +14,7 @@ export * from "./types";
 export { REFUND_WINDOW_DAYS } from "./refund";
 
 /** ISO date of the current version of all legal texts. */
-export const LEGAL_UPDATED_AT = "2026-10-11";
+export const LEGAL_UPDATED_AT = "2026-10-27";
 
 /** Page chrome. Lives here, not in uk.json, because it is also shown in English. */
 export const LEGAL_UI: Record<

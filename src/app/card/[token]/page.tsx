@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CardPreview } from "@/components/card-preview";
+import { PoweredBy } from "@/components/powered-by";
 import { ServiceUnavailable } from "@/components/message-screen";
 import { QrCode } from "@/components/qr-code";
 import { Button } from "@/components/ui/button";
@@ -124,6 +125,8 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
         <p>{t("webCard.autoUpdate")}</p>
         <p>{t("webCard.privateNote")}</p>
       </footer>
+
+      <PoweredBy nicheSlug={business.niche_slug} source="card" />
     </main>
   );
 }

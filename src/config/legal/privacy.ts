@@ -60,7 +60,7 @@ export const privacy: Record<LegalLocale, LegalDocument> = {
             "щоб захищати сервіс від зловживань і розслідувати збої (законний інтерес);",
             "щоб приймати оплату і вести облік (виконання договору, вимоги закону).",
           ],
-          "Ми не продаємо дані, не показуємо рекламу і не використовуємо рекламні чи аналітичні трекери.",
+          "Ми не продаємо дані, не показуємо рекламу і не використовуємо рекламні трекери. Загальну статистику відвідувань сайту рахує Vercel Web Analytics: без cookie, без імен і контактів, лише знеособлені дані (сторінка, країна, тип пристрою, звідки прийшов відвідувач).",
         ],
       },
       {
@@ -75,7 +75,7 @@ export const privacy: Record<LegalLocale, LegalDocument> = {
           "Лише постачальникам, без яких сервіс не працює, і лише в потрібному обсязі:",
           [
             "Supabase — база даних і зберігання файлів (сервери у Франкфурті, ЄС);",
-            "Vercel — хостинг сайту (обробка запитів у Франкфурті, ЄС);",
+            "Vercel — хостинг сайту (обробка запитів у Франкфурті, ЄС) і знеособлена статистика відвідувань;",
             "Resend — надсилання листів із кодом входу;",
             "ImprovMX — пересилання листів, надісланих на адресу підтримки;",
             "Paddle — прийом оплати як продавець (Merchant of Record); Paddle обробляє платіжні дані за власною політикою конфіденційності;",
@@ -182,7 +182,7 @@ export const privacy: Record<LegalLocale, LegalDocument> = {
             "to protect the service from abuse and investigate failures (legitimate interest);",
             "to take payments and keep records (performance of contract, legal obligation).",
           ],
-          "We do not sell data, show ads, or use advertising or analytics trackers.",
+          "We do not sell data, show ads, or use advertising trackers. Aggregate website visit statistics are counted by Vercel Web Analytics: no cookies, no names or contacts, only anonymous data (page, country, device type, referring site).",
         ],
       },
       {
@@ -197,7 +197,7 @@ export const privacy: Record<LegalLocale, LegalDocument> = {
           "Only with providers the service cannot run without, and only as much as needed:",
           [
             "Supabase — database and file storage (Frankfurt, EU);",
-            "Vercel — website hosting (requests processed in Frankfurt, EU);",
+            "Vercel — website hosting (requests processed in Frankfurt, EU) and anonymous visit statistics;",
             "Resend — sending sign-in code emails;",
             "ImprovMX — forwarding emails sent to our support address;",
             "Paddle — payment processing as Merchant of Record; Paddle processes payment data under its own privacy policy;",
