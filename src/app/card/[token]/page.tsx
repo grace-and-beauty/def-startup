@@ -1,4 +1,3 @@
-import { Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -11,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { loadPublicCard } from "@/lib/public/loaders";
 import { googleWalletSavePath, isGoogleWalletConfigured } from "@/lib/wallet";
 
+import { AddToHome } from "./add-to-home";
 import { AutoRefresh } from "./auto-refresh";
 import { ConsentForm } from "./consent-form";
 
@@ -112,13 +112,7 @@ export default async function WebCardPage({ params, searchParams }: PageProps<"/
 
       <ConsentForm token={card.qr_token} granted={card.customer?.marketing_consent_at != null} />
 
-      <section className="bg-card flex gap-3 rounded-2xl border p-4">
-        <Smartphone className="mt-0.5 size-5 shrink-0" aria-hidden />
-        <div className="flex flex-col gap-1">
-          <h2 className="font-medium">{t("webCard.homeScreenTitle")}</h2>
-          <p className="text-muted-foreground text-sm">{t("webCard.homeScreenText")}</p>
-        </div>
-      </section>
+      <AddToHome />
 
       <footer className="text-muted-foreground flex flex-col gap-1 text-xs">
         <p>{t("webCard.code", { code: card.qr_token })}</p>
